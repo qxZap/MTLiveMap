@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Player Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        crossorigin="anonymous">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Floating player panel */
+        #player-panel {
+            position: absolute;
+            top: 10%;
+            right: 3%;
+            width: 280px;
+            max-height: 70%;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+            z-index: 2000;
+        }
+
+        .player-label {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .card-header {
+            padding: 0.5rem;
+        }
+
+        .card-body {
+            padding: 0.5rem;
+        }
+
+        .list-group-item {
+            padding: 0.5rem;
+            font-size: 14px;
+        }
+
+        .leaflet-bottom.leaflet-right {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="player-panel" class="card">
+        <div class="accordion" id="playerAccordion">
+            <div class="card">
+                <div class="card-header" id="playerHeading">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse"
+                            data-target="#playerCollapse" aria-expanded="true">
+                            Players
+                        </button>
+                    </h2>
+                </div>
+                <div id="playerCollapse" class="collapse show" aria-labelledby="playerHeading"
+                    data-parent="#playerAccordion">
+                    <div class="card-body">
+                        <ul id="player-list" class="list-group">
+                            <!-- Players added here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        crossorigin="anonymous"></script>
+    <script>
+        const DEBUG_MODE = false; // Set to false to hide debug dots in player panel
+        const minX = -1280000;
+        const minY = -320000;
+        const maxX = 920000;
+        const maxY = 1880000;
+        const labelOffsetGame = 10000; // Game units for label above marker
+        const currentDateTime = '2025-08-26 17:10:00 EEST';
+
+        function coordinatesToMapUnits(x, y) {
+            const mapX = ((x - minX) / (maxX - minX)) * 256;
+            const mapY = ((y - minY) / (maxY - minY)) * 256;
+            return { x: mapX, y: mapY };
+        }
+
+        const map = L.map('map', {
+            crs: L.CRS.Simple,
+            worldCopyJump: false,
+            minZoom: 1,
+            maxZoom: 6,
+            maxBounds: [[-1880000, -1280000], [320000, 920000]], // Game bounds: (-1280000, -320000) to (920000, 1880000)
+            maxBoundsViscosity: 1.0
+        }).setView([0, 0], 2); // Center: game (0, 0) -> Leaflet (0, 0)
+
+        L.tileLayer('file:///D:/MT/LiveMap/tiles/{z}_{x}_{y}.avif', {
+            minZoom: 1,
+            maxZoom: 6,
+            tileSize: 256,
+            noWrap: true,
+            attribution: 'Custom Map Tiles',
+            bounds: [[-1880000, -1280000], [320000, 920000]]
+        }).addTo(map);
+
+        const playerMarkers = {};
+        const playerLabels = {};
+        const debugDots = new Set(); // Track debug dot IDs
+
+        // Function to compute latLng from game X, Y
+        function getLatLng(X, Y) {
+            return [-Y, X]; // Direct mapping: lat = -Y, lng = X
+            // Room for multipliers: e.g., return [-(Y + yOffset) / scaleFactor, (X + xOffset) / scaleFactor];
+        }
+
+        // Function to create a new debug dot
+        function newDot(id, x, y, type) {
+            if (x < minX || x > maxX || y < minY || y > maxY) {
+                console.warn(`${currentDateTime} - Debug dot ${id} coordinates out of bounds: Game (${x.toFixed(2)}, ${y.toFixed(2)})`);
+                return;
+            }
+            debugDots.add(id);
+            updateDot(id, x, y, type);
+            if (DEBUG_MODE) {
+                console.log(`${currentDateTime} - Created debug dot ${id}: Game (${x.toFixed(2)}, ${y.toFixed(2)})`);
+            }
+
+        }
+
+        // Function to update or create a debug dot
+        function updateDot(id, x, y, type) {
+            if (x < minX || x > maxX || y < minY || y > maxY) {
+                console.warn(`${currentDateTime} - Debug dot ${id} coordinates out of bounds: Game (${x.toFixed(2)}, ${y.toFixed(2)})`);
+                return;
+            }
+            const latLng = getLatLng(x, y);
+            const isPlayerType = type === 'player';
+            const markerStyle = {
+                radius: isPlayerType ? 8 : 6,
+                fillColor: isPlayerType ? '#ff0000' : '#0000ff',
+                color: '#000000',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            };
+            if (playerMarkers[id]) {
+                playerMarkers[id].setLatLng(latLng);
+                playerMarkers[id].setPopupContent(`${id} (${x.toFixed(2)}, ${y.toFixed(2)})`);
+                playerMarkers[id].setStyle(markerStyle);
+                playerMarkers[id].gameX = x;
+                playerMarkers[id].gameY = y;
+                playerMarkers[id].playerName = id;
+                const labelLatLng = getLatLng(x, y - labelOffsetGame);
+                playerLabels[id].setLatLng(labelLatLng);
+            } else {
+                playerMarkers[id] = L.circleMarker(latLng, markerStyle)
+                    .addTo(map)
+                    .bindPopup(`${id} (${x.toFixed(2)}, ${y.toFixed(2)})`);
+                playerMarkers[id].gameX = x;
+                playerMarkers[id].gameY = y;
+                playerMarkers[id].playerName = id;
+                const labelLatLng = getLatLng(x, y - labelOffsetGame);
+                playerLabels[id] = L.marker(labelLatLng, {
+                    icon: L.divIcon({
+                        className: 'player-label',
+                        html: id
+                    })
+                }).addTo(map);
+                playerMarkers[id].on('popupopen', () => {
+                    map.removeLayer(playerLabels[id]);
+                });
+                playerMarkers[id].on('popupclose', () => {
+                    playerLabels[id].addTo(map);
+                });
+            }
+            debugDots.add(id);
+            updatePlayerPanel(Object.keys(playerMarkers).map(name => ({
+                Name: name,
+                X: playerMarkers[name].gameX,
+                Y: playerMarkers[name].gameY
+            })));
+            if (DEBUG_MODE) {
+                console.log(`${currentDateTime} - Updated debug dot ${id}: Game (${x.toFixed(2)}, ${y.toFixed(2)}) -> Leaflet (${latLng[1].toFixed(4)}, ${latLng[0].toFixed(4)})`);
+            }
+        }
+
+        // Function to update player panel list
+        function updatePlayerPanel(players) {
+            const list = document.getElementById('player-list');
+            list.innerHTML = '';
+            players.forEach(player => {
+                if (!DEBUG_MODE && debugDots.has(player.Name)) return; // Skip debug dots if not in debug mode
+                const li = document.createElement('li');
+                li.className = 'list-group-item list-group-item-action';
+                li.textContent = player.Name;
+                li.addEventListener('click', () => {
+                    const marker = playerMarkers[player.Name];
+                    if (marker) {
+                        map.setView(marker.getLatLng(), 4);
+                    }
+                });
+                list.appendChild(li);
+            });
+        }
+
+        // Function to update player positions
+        async function updatePlayerPositions() {
+            try {
+                const response = await fetch('http://localhost:8000/playerlocations');
+                const data = await response.json();
+                if (DEBUG_MODE) {
+                    console.log(`${currentDateTime} - API Response:`, data);
+                }
+
+                if (data.status === 'ok' && data.players) {
+                    data.players.forEach(player => {
+                        const Name = player.Name || 'Unknown';
+                        const X = player.X || 0;
+                        const Y = player.Y || 0;
+
+                        let data = coordinatesToMapUnits(X, Y);
+                        let gameX = data.x;
+                        let gameY = data.y;
+
+                        if (gameX < minX || gameX > maxX || gameY < minY || gameY > maxY) {
+                            console.warn(`${currentDateTime} - Player ${Name} coordinates out of bounds: Game (${gameX.toFixed(2)}, ${gameY.toFixed(2)})`);
+                            return;
+                        }
+                        const latLng = getLatLng(gameX, gameY);
+                        if (DEBUG_MODE) {
+                            console.log(`${currentDateTime} - Player ${Name}: Game (${gameX.toFixed(2)}, ${gameY.toFixed(2)}) -> Leaflet (${latLng[1].toFixed(4)}, ${latLng[0].toFixed(4)})`);
+                        }
+                        if (playerMarkers[Name]) {
+                            playerMarkers[Name].setLatLng(latLng);
+                            playerMarkers[Name].setPopupContent(`${Name} (${gameX.toFixed(2)}, ${gameY.toFixed(2)})`);
+                            playerMarkers[Name].gameX = gameX;
+                            playerMarkers[Name].gameY = gameY;
+                            playerMarkers[Name].playerName = Name;
+                            const labelLatLng = getLatLng(gameX, gameY - labelOffsetGame);
+                            playerLabels[Name].setLatLng(labelLatLng);
+                        } else {
+                            playerMarkers[Name] = L.circleMarker(latLng, {
+                                radius: 8,
+                                fillColor: '#ff0000',
+                                color: '#000000',
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).addTo(map).bindPopup(`${Name} (${gameX.toFixed(2)}, ${gameY.toFixed(2)})`);
+                            playerMarkers[Name].gameX = gameX;
+                            playerMarkers[Name].gameY = gameY;
+                            playerMarkers[Name].playerName = Name;
+                            const labelLatLng = getLatLng(gameX, gameY - labelOffsetGame);
+                            playerLabels[Name] = L.marker(labelLatLng, {
+                                icon: L.divIcon({
+                                    className: 'player-label',
+                                    html: Name
+                                })
+                            }).addTo(map);
+                            playerMarkers[Name].on('popupopen', () => {
+                                map.removeLayer(playerLabels[Name]);
+                            });
+                            playerMarkers[Name].on('popupclose', () => {
+                                playerLabels[Name].addTo(map);
+                            });
+                        }
+                    });
+
+                    Object.keys(playerMarkers).forEach(name => {
+                        if (!debugDots.has(name) && !data.players.some(p => p.Name === name)) {
+                            map.removeLayer(playerMarkers[name]);
+                            map.removeLayer(playerLabels[name]);
+                            delete playerMarkers[name];
+                            delete playerLabels[name];
+                        }
+                    });
+
+                    // Update player panel
+                    const allPlayers = Object.keys(playerMarkers).map(name => ({
+                        Name: name,
+                        X: playerMarkers[name].gameX,
+                        Y: playerMarkers[name].gameY
+                    }));
+                    updatePlayerPanel(allPlayers);
+                } else {
+                    console.warn(`${currentDateTime} - No players found or invalid API response:`, data);
+                    updatePlayerPanel([...debugDots].map(id => ({
+                        Name: id,
+                        X: playerMarkers[id]?.gameX || 0,
+                        Y: playerMarkers[id]?.gameY || 0
+                    })));
+                }
+            } catch (error) {
+                console.error(`${currentDateTime} - Error fetching player locations:`, error);
+                updatePlayerPanel([...debugDots].map(id => ({
+                    Name: id,
+                    X: playerMarkers[id]?.gameX || 0,
+                    Y: playerMarkers[id]?.gameY || 0
+                })));
+            }
+        }
+
+        // Expose functions to window for console access
+        window.newDot = newDot;
+        window.updateDot = updateDot;
+
+        // Initial setup
+        updatePlayerPositions();
+        setInterval(updatePlayerPositions, 2000);
+    </script>
+</body>
+
+</html>
