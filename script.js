@@ -6,6 +6,14 @@ const maxY = 1880000;
 const labelOffsetGame = 10000; // Game units for label above marker
 let currentDateTime = '';
 
+PIN_DATA = {
+    'player': { color: '#b8bb28ff', radius: 8 },
+    'npc': { color: '#00ff00', radius: 6 },
+    'garage': { color: '#272885ff', radius: 4 },
+    'police': { color: '#1539daff', radius: 8 },
+    'admin': { color: '#f0540bff', radius: 8 }
+}
+
 function coordinatesToMapUnits(x, y) {
     const mapX = ((x - minX) / (maxX - minX)) * 256;
     const mapY = ((y - minY) / (maxY - minY)) * 256;
@@ -151,7 +159,7 @@ function updatePlayerPanel(players) {
         li.innerHTML = `
             <div class="player-entry">
                 <div class="player-data-row">
-                    <div class="player-name">${player.DisplayName || player.Name}</div>
+                    <div class="player-name" style="color: ${PIN_DATA[player.PlayerType]}">${player.DisplayName || player.Name}</div>
                     ${vehicleHtml}
                 </div>
                 <div class="player-data-row">
@@ -167,7 +175,6 @@ function updatePlayerPanel(players) {
         list.appendChild(li);
     });
 }
-
 async function updatePlayerPositions() {
     try {
         if (DEBUG_MODE) currentDateTime = getCurrentDateTime();
@@ -181,6 +188,8 @@ async function updatePlayerPositions() {
                 const Y = player.Y || 0;
                 const SpeedKMH = player.SpeedKMH || 0;
                 const VehicleKey = player.VehicleKey || 'None';
+                // Get PlayerType, default to 'player' if missing or invalid
+                const PlayerType = ['player', 'admin', 'police'].includes(player.PlayerType) ? player.PlayerType : 'player';
                 let dataMapped = coordinatesToMapUnits(X, Y);
                 let gameX = dataMapped.x;
                 let gameY = dataMapped.y;
@@ -189,31 +198,38 @@ async function updatePlayerPositions() {
                     return;
                 }
                 const latLng = getLatLng(gameX, gameY);
+                // Get marker style from PIN_DATA based on PlayerType
+                const markerStyle = {
+                    radius: PIN_DATA[PlayerType].radius,
+                    fillColor: PIN_DATA[PlayerType].color,
+                    color: '#000000', // Border color remains consistent
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                };
                 if (playerMarkers[Name]) {
                     playerMarkers[Name].setLatLng(latLng);
                     playerMarkers[Name].setPopupContent(`${Name} (${gameX.toFixed(2)}, ${gameY.toFixed(2)})`);
+                    playerMarkers[Name].setStyle(markerStyle);
                     playerMarkers[Name].gameX = gameX;
                     playerMarkers[Name].gameY = gameY;
                     playerMarkers[Name].playerName = Name;
                     playerMarkers[Name].speedKMH = SpeedKMH;
                     playerMarkers[Name].vehicleKey = VehicleKey;
+                    playerMarkers[Name].playerType = PlayerType; // Store PlayerType
                     const labelLatLng = getLatLng(gameX, gameY - labelOffsetGame);
                     playerLabels[Name].setLatLng(labelLatLng);
                     playerLabels[Name].setIcon(L.divIcon({ className: 'player-label', html: Name }));
                 } else {
-                    playerMarkers[Name] = L.circleMarker(latLng, {
-                        radius: 6,
-                        fillColor: '#b8bb28ff',
-                        color: '#000000',
-                        weight: 1,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(map).bindPopup(`${Name} (${gameX.toFixed(2)}, ${gameY.toFixed(2)})`);
+                    playerMarkers[Name] = L.circleMarker(latLng, markerStyle)
+                        .addTo(map)
+                        .bindPopup(`${Name} (${gameX.toFixed(2)}, ${gameY.toFixed(2)})`);
                     playerMarkers[Name].gameX = gameX;
                     playerMarkers[Name].gameY = gameY;
                     playerMarkers[Name].playerName = Name;
                     playerMarkers[Name].speedKMH = SpeedKMH;
                     playerMarkers[Name].vehicleKey = VehicleKey;
+                    playerMarkers[Name].playerType = PlayerType; // Store PlayerType
                     const labelLatLng = getLatLng(gameX, gameY - labelOffsetGame);
                     playerLabels[Name] = L.marker(labelLatLng, {
                         icon: L.divIcon({ className: 'player-label', html: Name })
@@ -222,6 +238,7 @@ async function updatePlayerPositions() {
                     playerMarkers[Name].on('popupclose', () => { playerLabels[Name].addTo(map); });
                 }
             });
+            // Remove markers for players no longer in the API response (excluding debug dots)
             Object.keys(playerMarkers).forEach(name => {
                 if (!debugDots.has(name) && !data.players.some(p => p.Name === name)) {
                     map.removeLayer(playerMarkers[name]);
@@ -230,13 +247,15 @@ async function updatePlayerPositions() {
                     delete playerLabels[name];
                 }
             });
+            // Update player panel with all current players
             const allPlayers = Object.keys(playerMarkers).map(name => ({
                 Name: name,
                 DisplayName: playerMarkers[name].playerName,
                 Vehicle: playerMarkers[name].vehicleKey,
                 X: playerMarkers[name].gameX,
                 Y: playerMarkers[name].gameY,
-                SpeedKMH: playerMarkers[name].speedKMH
+                SpeedKMH: playerMarkers[name].speedKMH,
+                PlayerType: playerMarkers[name].playerType // Include PlayerType if needed in panel
             }));
             updatePlayerPanel(allPlayers);
         } else {

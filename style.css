@@ -1,119 +1,194 @@
-/* style.css */
+/* Enhanced style.css */
 body {
     margin: 0;
     height: 100vh;
     width: 100%;
     overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 #map {
     height: 100%;
     width: 100%;
     background-color: #5e88c8;
-
 }
 
-/* Floating player panel */
+/* Enhanced Floating Player Panel */
 #player-panel {
     position: absolute;
     top: 10%;
     right: 1%;
-    width: 280px;
-    max-height: 70%;
+    width: 320px;
+    max-height: 80%;
     overflow-y: auto;
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
     z-index: 2000;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.player-label {
-    background: rgba(255, 255, 255, 0.7);
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-size: 12px;
-    font-weight: bold;
-    color: #333;
+/* Scrollbar Styling */
+#player-panel::-webkit-scrollbar {
+    width: 8px;
 }
 
-.card-header {
-    padding: 0.5rem;
+#player-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
 }
 
-.card-body {
-    padding: 0.5rem;
+#player-panel::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.5);
+    border-radius: 10px;
+}
+
+/* Accordion Styling */
+.accordion .card {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
+.accordion .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0;
+    border-radius: 0;
+}
+
+.accordion .btn-link {
+    color: #343a40;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 1rem 1.25rem;
 }
 
 .list-group-item {
-    padding: 0.5rem;
-    font-size: 14px;
-}
-
-.leaflet-bottom.leaflet-right {
-    display: none !important;
-}
-
-.player-entry {
-    display: flex;
-    flex-direction: column;
-    font-size: 13px;
-}
-
-.player-name {
-    font-weight: bold;
-    color: #222;
-}
-
-.player-vehicle {
-    font-size: 12px;
-    color: #0066cc;
-    margin-left: 5px;
-}
-
-.player-coords {
-    font-size: 11px;
-    color: #666;
-}
-
-.player-speed {
-    font-size: 11px;
-    color: #444;
-}
-
-.player-vehicle a {
-    color: #0066cc;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.player-vehicle a:hover {
-    text-decoration: underline;
-}
-
-.player-data-row {
+    background-color: transparent;
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
-    margin-bottom: 3px;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    transition: background-color 0.2s;
 }
 
-/* Search bar styling */
-#player-search {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    padding: 5px 10px;
-    font-size: 13px;
-    color: #333;
+.list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
-#player-search::placeholder {
-    color: #888;
-    font-style: italic;
+.list-group-item .player-info {
+    display: flex;
+    flex-direction: column;
 }
 
-.npc-label {
-    color: #00ff00; /* Green to match NPC marker color */
-    font-size: 12px;
+.list-group-item .player-name {
     font-weight: bold;
-    text-shadow: 1px 1px 1px #000; /* Optional: for readability */
+    color: #2c3e50;
+}
+
+.list-group-item .player-location {
+    font-size: 0.8em;
+    color: #7f8c8d;
+}
+
+/* Custom Marker Labels */
+.player-label, .npc-label, .garage-label {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    font-weight: bold;
+    white-space: nowrap;
+    text-align: center;
+    transform: translate(-50%, -100%); /* Adjust to be centered above marker */
+}
+.player-label { color: #b8bb28; }
+.npc-label { color: #00ff00; }
+.garage-label { color: #272885; }
+
+/* Stats Panel Styling */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 0.9em;
+}
+
+.stats-grid .stat-item {
+    padding: 8px;
+    background-color: #ecf0f1;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.stats-grid .stat-item span {
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+/* Collapsible Section Styling */
+.accordion .card:last-child {
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+.accordion .card-header {
+    border-radius: 0;
+}
+
+.accordion .card:first-child .card-header {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+/* Animation for collapsible sections */
+.collapse {
+    transition: height 0.3s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #player-panel {
+        width: 90%;
+        right: 5%;
+        left: 5%;
+        max-height: 60%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-height: 600px) {
+    #player-panel {
+        max-height: 90%;
+        top: 5%;
+    }
+}
+
+/* Custom marker pulse animation for important players */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.player-data-row{
+    display: flex;
+    justify-content: space-between;
 }

@@ -58,8 +58,8 @@ function updateDot(id, x, y, type) {
 
     if (type === 'garage') {
         const markerStyle = {
-            radius: 4,
-            fillColor: '#007bff', // Blue
+            radius: PIN_DATA['garage'].radius,
+            fillColor: PIN_DATA['garage'].color,
             color: '#000000',
             weight: 1,
             opacity: 1,

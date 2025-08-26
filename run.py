@@ -1,3 +1,6 @@
+
+import json
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,11 +20,29 @@ app.add_middleware(
 )
 
 
+player_ranks = {}
+
+PLAYER_RANKS_FILE = Path("players_ranks.json")
+
 raw_player_data = {"status": "initializing"}
 npc_data = {"status": "initializing"}
 garages_data = {"status": "initializing"}
 
 last_positions = {}
+
+
+def fetch_player_ranks_loop():
+    global player_ranks
+    while True:
+        try:
+            if PLAYER_RANKS_FILE.exists():
+                with PLAYER_RANKS_FILE.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    player_ranks = data
+        except Exception as e:
+            print(f"Error reading player_ranks.json: {e}")
+        
+        time.sleep(20)
 
 def convert_xyz_speed_to_kmh(x1, y1, z1, x2, y2, z2, time_diff_in_seconds):
     distance = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
@@ -70,7 +91,7 @@ def fetch_npcs_loop():
         except Exception as e:
             npc_data = {"status": f"fetch error: {e}"}
         
-        time.sleep(10)
+        time.sleep(30)
 
 def fetch_garages_loop():
     global garages_data
@@ -168,7 +189,8 @@ def simplify_player_data(data: dict):
             "Name": p.get("Name"),
             "VehicleKey": p.get("VehicleKey"),
             "UniqueID": p.get("UniqueID"),
-            "SpeedKMH": p.get("SpeedKMH") # Add the new speed field
+            "SpeedKMH": p.get("SpeedKMH"),
+            "PlayerType" : player_ranks.get(p.get("UniqueID"), "player")
         })
     return {"status": "ok", "players": simplified}
 
@@ -179,12 +201,15 @@ def start_fetcher():
     players_thread.start()
     
     # Start NPCs loop
-    # npcs_thread = threading.Thread(target=fetch_npcs_loop, daemon=True)
-    # npcs_thread.start()
+    npcs_thread = threading.Thread(target=fetch_npcs_loop, daemon=True)
+    npcs_thread.start()
 
     # Start garages loop
     garages_thread = threading.Thread(target=fetch_garages_loop, daemon=True)
     garages_thread.start()
+
+    ranks_thread = threading.Thread(target=fetch_player_ranks_loop, daemon=True)
+    ranks_thread.start()
 
 @app.get("/playerlocations")
 async def player_locations():
@@ -194,9 +219,9 @@ async def player_locations():
 async def garages_location():
     return JSONResponse(content=garages_data)
 
-# @app.get("/npcs")
-# async def npc_locations():
-#     return JSONResponse(content=npc_data)
+@app.get("/npcs")
+async def npc_locations():
+    return JSONResponse(content=npc_data)
 
 if __name__ == "__main__":
     uvicorn.run("run:app", host="127.0.0.1", port=8000, reload=False)
