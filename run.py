@@ -10,6 +10,8 @@ import threading
 import time
 import random
 import uuid
+from typing import Dict, Set
+import re
 
 app = FastAPI()
 
@@ -56,12 +58,23 @@ SPEED_ALLOW_ZONES = {
         "maxX": -133551.84,
         "minY": -21131.95,
         "maxY": 24852.31
+    },
+    "drag_strip_north": {
+        "minX": 447157.12,
+        "maxX": 447164.59,
+        "minY": 1214688.82,
+        "maxY": 1214692.85
     }
 }
 
 
 MAXIMUM_SPEEDING_FINE = 600
 
+active_events: Dict[str, dict] = {}
+
+# Constants
+HOOK_SERVER_CHANGE_EVENT_STATE = '/Script/MotorTown.MotorTownPlayerController:ServerChangeEventState'
+HOOK_SERVER_PASSED_RACE_SECTION = '/Script/MotorTown.MotorTownPlayerController:ServerPassedRaceSection'
 HOOK_ENTER_VEHICLE = '/Script/MotorTown.MotorTownPlayerController:ServerEnterVehicle'
 
 DEBUG_PLAYERS_FAKE = False  # Toggle to include fake players alongside real players
@@ -96,6 +109,31 @@ FAKE_NAMES = [
     "SkyRacer", "NeonDrift", "StarBlaze", "GhostRider", "ThunderBolt",
     "FrostByte", "ShadowHawk", "LunarWolf", "BlazeViper", "StormChaser"
 ]
+
+EVENT_READY = 3
+EVENT_FINISH = 2
+EVENT_START = 1
+
+def extract_ep_number(s):
+    match = re.search(r'EP(\d+)EP', s)
+    if match:
+        return int(match.group(1))
+    return 0
+
+def build_image(id):
+    return f"""<img id=\"{id}"/>"""
+
+def distance_2d(x1, y1, x2, y2):
+    return ((x2 - x1)**2 + (y2 - y1)**2) ** 0.5
+
+def is_near_garage(x, y, max_distance=3000):
+    global garages_data
+    for garage in garages_data.get("data", []):
+        gx, gy = garage.get("X"), garage.get("Y")
+        if gx is not None and gy is not None:
+            if distance_2d(x, y, gx, gy) <= max_distance:
+                return True
+    return False
 
 def in_speed_allow_zone(x: float, y: float) -> bool:
     """Check if coordinates fall inside any of the exempt zones."""
@@ -231,7 +269,7 @@ async def player_in_police_vehicle(unique_id: str):
     # Fire-and-forget tasks for eject, fine, and announce
     asyncio.create_task(eject_player(unique_id))
     asyncio.create_task(money_player(unique_id, -5000, "Driving a police vehicle without authorization"))
-    asyncio.create_task(announce_player(unique_id, "<Title>VEHICLE NOT ALLOWED</>\n\nYou are not allowed to drive this type of vehicle as is strictly restricted only to police officers that went through the rigorous program of training of the server!\n\n-5000\n\n<Small>Contact server administration to get approved</>"))
+    asyncio.create_task(announce_player(unique_id, f"<Title>VEHICLE NOT ALLOWED</>\n\nYou are not allowed to drive this type of vehicle as is strictly restricted only to police officers that went through the rigorous program of training of the server!\n\n- {build_image('Money')} 5.000\n\n<Small>Contact server administration to get approved</>"))
 
 async def speeding_player(unique_id: str, speed_kmh: float):
     for (low, high), fine_formula in SPEED_LIMITS.items():
@@ -240,7 +278,7 @@ async def speeding_player(unique_id: str, speed_kmh: float):
             asyncio.create_task(money_player(
                 unique_id, 
                 fine, 
-                f"You have been fined {abs(fine):,} for speeding at {speed_kmh:.1f} KMH"
+                f"You have been fined for speeding at {speed_kmh:.1f} KMH"
             ))
             return
 
@@ -339,11 +377,20 @@ async def fetch_players_loop():
                             # Check for speeding
                             speed = p["SpeedKMH"]
                             pos = p.get("Location", {})
-                            if speed > SPEEDING_THRESHOLD and player_ranks.get(unique_id) != 'admin' and not is_cop_car(p.get("VehicleKey", "")) and speed < MAXIMUM_SPEEDING_FINE:
-                                if not in_speed_allow_zone(pos.get("X", 0), pos.get("Y", 0)):  # <-- Check zone
-                                    if unique_id not in last_speeding_fines or current_time - last_speeding_fines[unique_id] > SPEEDING_FINE_COOLDOWN:
-                                        last_speeding_fines[unique_id] = current_time
-                                        await speeding_player(unique_id, speed)
+                            prev_pos = last_positions.get(unique_id, {})
+
+                            if (
+                                speed > SPEEDING_THRESHOLD
+                                and player_ranks.get(unique_id) != 'admin'
+                                and not is_cop_car(p.get("VehicleKey", ""))
+                                and speed < MAXIMUM_SPEEDING_FINE
+                                and not in_speed_allow_zone(pos.get("X", 0), pos.get("Y", 0))
+                                and not is_near_garage(pos.get("X", 0), pos.get("Y", 0))
+                                and not is_near_garage(prev_pos.get("X", 0), prev_pos.get("Y", 0))
+                            ):
+                                if unique_id not in last_speeding_fines or current_time - last_speeding_fines[unique_id] > SPEEDING_FINE_COOLDOWN:
+                                    last_speeding_fines[unique_id] = current_time
+                                    await speeding_player(unique_id, speed)
 
                         raw_player_data = {"status": "ok", "data": processed_data}
                     else:
@@ -462,23 +509,54 @@ async def garages_location():
 
 @app.post("/")
 async def handle_webhook(request: Request):
+    global active_events
     body = await request.body()
     data = json.loads(body.decode('utf-8'))
     for event in data:
         hook_type = event.get("hook", "")
-        print(f"Received webhook of type: {hook_type}")
+        # print(f"Received webhook of type: {hook_type}")
 
         hook_data = event.get("data", {})
         player_id = hook_data.get("PlayerId", "")
 
-        if hook_type == HOOK_ENTER_VEHICLE+"PLM":
-            seat_type = hook_data.get("SeatType", 0)
-            if seat_type == 1:  # Driver seat
-                player_data = await get_player_data(player_id)
-                player_data_resp = player_data.get("data", [{}])[0]
-                vehicle_key = player_data_resp.get("VehicleKey", "")
-                if is_cop_car(vehicle_key) and player_ranks.get(player_id) not in ['police', 'admin']:
-                    await player_in_police_vehicle(player_id)
+        if hook_type == HOOK_SERVER_CHANGE_EVENT_STATE:
+            event_data = hook_data.get("Event", {})
+            event_guid = event_data.get("EventGuid", "")
+            state = event_data.get("State", 0)
+            route_name = event_data.get("RaceSetup", {}).get("Route", {}).get("RouteName", "")
+            
+            entry_pool = extract_ep_number(route_name)
+            if state == EVENT_START and entry_pool>0:
+                race_setup = event_data.get("RaceSetup", {})
+                player_count = len(hook_data.get("Players", []))
+                if(player_count>1):
+                    waypoints = len(race_setup.get("Route", {}).get("Waypoints", []))
+                    last_waypoint_index = waypoints - 1 if waypoints>0 else 0
+
+                    active_events[event_guid] = {
+                        "entry_pool": entry_pool,
+                        "last_waypoint_index": last_waypoint_index,
+                        "race_name": route_name,
+                        "reward_pool" : 0
+                    }
+        
+        if hook_type == HOOK_SERVER_PASSED_RACE_SECTION:
+            event_guid = hook_data.get("EventGuid", "")
+            section_index = hook_data.get("SectionIndex", -1)
+            if event_guid in active_events:
+                if section_index == 0:
+                    event_info = active_events[event_guid]
+                    entry_pool = event_info["entry_pool"]
+                    if entry_pool > 0:
+                        active_events[event_guid]["reward_pool"] += entry_pool
+                        asyncio.create_task(money_player(player_id, -entry_pool, f"Entry free for {active_events[event_guid]['race_name']}" ))
+                if section_index == active_events.get(event_guid, {}).get("last_waypoint_index", -1):
+                    active_events[event_guid]["entry_pool"] = 0
+                    total_reward = active_events[event_guid]["reward_pool"]
+                    active_events[event_guid]["reward_pool"] = 0
+                    if total_reward > 0:
+                        race_name = active_events[event_guid]["race_name"]
+                        asyncio.create_task(money_player(player_id, total_reward, f"Reward for winning {race_name}"))
     
     return {"status": "ok"}
 
