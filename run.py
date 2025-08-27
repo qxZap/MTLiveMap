@@ -517,10 +517,13 @@ async def handle_webhook(request: Request):
     data = json.loads(body.decode('utf-8'))
     for event in data:
         hook_type = event.get("hook", "")
-        # print(f"Received webhook of type: {hook_type}")
+        print(f"Received webhook of type: {hook_type}")
 
         hook_data = event.get("data", {})
         player_id = hook_data.get("PlayerId", "")
+
+        # if hook_type == '/Script/MotorTown.MotorTownPlayerController:ServerSendChat':
+        #     print(hook_data)
 
         if hook_type == HOOK_SERVER_CHANGE_EVENT_STATE:
             event_data = hook_data.get("Event", {})
@@ -554,7 +557,7 @@ async def handle_webhook(request: Request):
                         active_events[event_guid]["reward_pool"] += entry_pool
                         race_name = active_events[event_guid]['race_name']
                         race_name_clean = race_name.replace(f"EP{entry_pool}EP","")
-                        asyncio.create_task(money_player(player_id, -entry_pool, f"Entry free for {race_name_clean}" ))
+                        asyncio.create_task(money_player(player_id, -entry_pool, f"Entry fee for {race_name_clean}" ))
                 if section_index == active_events.get(event_guid, {}).get("last_waypoint_index", -1):
                     entry_pool = active_events[event_guid]["entry_pool"]
                     active_events[event_guid]["entry_pool"] = 0
