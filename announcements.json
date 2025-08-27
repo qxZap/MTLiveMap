@@ -1,0 +1,12 @@
+[
+    {
+        "message": "Welcome to the server! Follow the rules and have fun!",
+        "interval": 300,
+        "isPinned": false
+    },
+    {
+        "message": "Server maintenance scheduled at midnight.",
+        "interval": 600,
+        "isPinned": true
+    }
+]

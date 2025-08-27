@@ -21,6 +21,47 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+SPEED_LIMITS = {
+    (300, 400): lambda v: -2000 - int((v - 300) * 10),
+    (400, 500): lambda v: -8000 - int((v - 400) * 40),
+    (500, float("inf")): lambda v: -20000 - int((v - 500) ** 2),
+}
+SPEED_ALLOW_ZONES = {
+    "ansan_racing": {
+        "minX": -276358.95,
+        "maxX": -112504.23,
+        "minY": 274476.92,
+        "maxY": 335837.02
+    },
+    "olle_track": {
+        "minX": -298974.21,
+        "maxX": -272370.78,
+        "minY": 171035.48,
+        "maxY": 215267.80
+    },
+    "harbor": {
+        "minX": -70816.14,
+        "maxX": 44680.59,
+        "minY": -243812.75,
+        "maxY": -171259.99
+    },
+    "desert_patch": {
+        "minX": -879360.30,
+        "maxX": -224863.32,
+        "minY": 1056796.30,
+        "maxY": 1658226.04
+    },
+    "aewol": {
+        "minX": -199680.32,
+        "maxX": -133551.84,
+        "minY": -21131.95,
+        "maxY": 24852.31
+    }
+}
+
+
+MAXIMUM_SPEEDING_FINE = 600
+
 HOOK_ENTER_VEHICLE = '/Script/MotorTown.MotorTownPlayerController:ServerEnterVehicle'
 
 DEBUG_PLAYERS_FAKE = False  # Toggle to include fake players alongside real players
@@ -28,15 +69,20 @@ DEBUG_PLAYERS_FAKE = False  # Toggle to include fake players alongside real play
 ALLOW_NPC_QUERY = False
 
 POLICE_FINE_COOLDOWN = 2.0  # Configurable cooldown in seconds to prevent duplicate fines
+SPEEDING_FINE_COOLDOWN = 10.0  # Configurable cooldown in seconds to prevent duplicate speeding fines
+SPEEDING_THRESHOLD = 300.0  # Minimum speed in km/h to trigger a fine
 
 player_ranks = {}
 PLAYER_RANKS_FILE = Path("players_ranks.json")
+ANNOUNCEMENTS_FILE = Path("announcements.json")
+
 raw_player_data = {"status": "initializing"}
 npc_data = {"status": "initializing"}
 garages_data = {"status": "initializing"}
 last_positions = {}
 fake_players = {}  # Store persistent fake player data
 last_police_fines = {}  # unique_id: last_fine_time to prevent duplicate fines
+last_speeding_fines = {}  # unique_id: last_fine_time to prevent duplicate speeding fines
 
 # Map boundaries
 minX = -1280000
@@ -50,6 +96,14 @@ FAKE_NAMES = [
     "SkyRacer", "NeonDrift", "StarBlaze", "GhostRider", "ThunderBolt",
     "FrostByte", "ShadowHawk", "LunarWolf", "BlazeViper", "StormChaser"
 ]
+
+def in_speed_allow_zone(x: float, y: float) -> bool:
+    """Check if coordinates fall inside any of the exempt zones."""
+    for zone_name, bounds in SPEED_ALLOW_ZONES.items():
+        if (bounds["minX"] <= x <= bounds["maxX"] and
+            bounds["minY"] <= y <= bounds["maxY"]):
+            return True
+    return False
 
 def generate_fake_player():
     """Generate a fake player with random position and name."""
@@ -179,6 +233,19 @@ async def player_in_police_vehicle(unique_id: str):
     asyncio.create_task(money_player(unique_id, -5000, "Driving a police vehicle without authorization"))
     asyncio.create_task(announce_player(unique_id, "<Title>VEHICLE NOT ALLOWED</>\n\nYou are not allowed to drive this type of vehicle as is strictly restricted only to police officers that went through the rigorous program of training of the server!\n\n-5000\n\n<Small>Contact server administration to get approved</>"))
 
+async def speeding_player(unique_id: str, speed_kmh: float):
+    for (low, high), fine_formula in SPEED_LIMITS.items():
+        if low <= speed_kmh < high:
+            fine = fine_formula(speed_kmh)
+            asyncio.create_task(money_player(
+                unique_id, 
+                fine, 
+                f"You have been fined {abs(fine):,} for speeding at {speed_kmh:.1f} KMH"
+            ))
+            return
+
+    return
+
 async def fetch_npcs_loop():
     global npc_data
     async with httpx.AsyncClient() as client:
@@ -269,6 +336,15 @@ async def fetch_players_loop():
                             if is_cop_car(p.get("VehicleKey", "")) and player_ranks.get(unique_id) not in ['police', 'admin']:
                                 await player_in_police_vehicle(unique_id)
 
+                            # Check for speeding
+                            speed = p["SpeedKMH"]
+                            pos = p.get("Location", {})
+                            if speed > SPEEDING_THRESHOLD and player_ranks.get(unique_id) != 'admin' and not is_cop_car(p.get("VehicleKey", "")) and speed < MAXIMUM_SPEEDING_FINE:
+                                if not in_speed_allow_zone(pos.get("X", 0), pos.get("Y", 0)):  # <-- Check zone
+                                    if unique_id not in last_speeding_fines or current_time - last_speeding_fines[unique_id] > SPEEDING_FINE_COOLDOWN:
+                                        last_speeding_fines[unique_id] = current_time
+                                        await speeding_player(unique_id, speed)
+
                         raw_player_data = {"status": "ok", "data": processed_data}
                     else:
                         raw_player_data = {"status": f"error {resp.status_code}"}
@@ -330,13 +406,48 @@ def simplify_player_data(data: dict):
         })
     return {"status": "ok", "players": simplified}
 
+async def announce_loop():
+    """Run a loop to send configured announcements at specified intervals."""
+    async with httpx.AsyncClient() as client:
+        while True:
+            try:
+                announcements = []
+                if ANNOUNCEMENTS_FILE.exists():
+                    try:
+                        with ANNOUNCEMENTS_FILE.open("r", encoding="utf-8") as f:
+                            announcements = json.load(f)
+                    except Exception as e:
+                        print(f"Error reading announcements.json: {e}")
+
+                for announcement in announcements:
+                    message = announcement.get("message", "")
+                    interval = announcement.get("interval", 60)  # Default to 60 seconds
+                    is_pinned = announcement.get("isPinned", False)
+                    payload = {
+                        "message": message,
+                        # "playerId": "",
+                        "isPinned": is_pinned
+                    }
+                    try:
+                        await client.post("http://localhost:5001/messages/announce", json=payload, timeout=5)
+                    except Exception as e:
+                        print(f"Error sending announcement '{message}': {e}")
+                    await asyncio.sleep(interval)
+            except Exception as e:
+                print(f"Unexpected error in announce_loop: {e}")
+            await asyncio.sleep(10)  # Check file every 10 seconds
+
 @app.on_event("startup")
 async def start_fetcher():
     # Start background loops as async tasks
     asyncio.create_task(fetch_players_loop())
     if ALLOW_NPC_QUERY:
         asyncio.create_task(fetch_npcs_loop())
+
     asyncio.create_task(fetch_garages_loop())
+
+    asyncio.create_task(announce_loop())
+
     # Non-async thread for file-based player ranks
     ranks_thread = threading.Thread(target=fetch_player_ranks_loop, daemon=True)
     ranks_thread.start()
@@ -360,7 +471,7 @@ async def handle_webhook(request: Request):
         hook_data = event.get("data", {})
         player_id = hook_data.get("PlayerId", "")
 
-        if hook_type == HOOK_ENTER_VEHICLE:
+        if hook_type == HOOK_ENTER_VEHICLE+"PLM":
             seat_type = hook_data.get("SeatType", 0)
             if seat_type == 1:  # Driver seat
                 player_data = await get_player_data(player_id)
