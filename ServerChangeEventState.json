@@ -1,17 +1,27 @@
-{'hook': '/Script/MotorTown.MotorTownPlayerController:ServerChangeEventState', 'data': {'Event': {'State': 1, 'RaceSetup': {'NumLaps': 0, 'VehicleKeys': {}, 'Route': {'Waypoints': [
-                        {'Translation': {'Y': 1217596.5683918, 'X': 450000.00009371, 'Z': -19504.998649861
-                            }, 'Scale3D': {'Y': 22, 'X': 1, 'Z': 10
-                            }, 'Rotation': {'Y': -6.6160062980991e-07, 'X': 6.6160062402225e-07, 'W': 0.70710678427911, 'Z': 0.70710677809337
+{'hook': '/Script/MotorTown.MotorTownPlayerController:ServerChangeEventState', 
+
+'data': {'Event': 
+{'State': 1, 
+'RaceSetup': 
+    {
+    'NumLaps': 0, 'VehicleKeys': {}, 
+    'Route': {
+        'Waypoints': [
+                            {'Translation': {'Y': 1217596.5683918, 'X': 450000.00009371, 'Z': -19504.998649861
+                                }, 'Scale3D': {'Y': 22, 'X': 1, 'Z': 10
+                                }, 'Rotation': {'Y': -6.6160062980991e-07, 'X': 6.6160062402225e-07, 'W': 0.70710678427911, 'Z': 0.70710677809337
+                                }
+                            },
+                            {'Translation': {'Y': 1253066.7246108, 'X': 450000.00173914, 'Z': -19505.003006128
+                                }, 'Scale3D': {'Y': 22, 'X': 1, 'Z': 10
+                                }, 'Rotation': {'Y': -6.3833851757559e-07, 'X': 6.3833848840661e-07, 'W': 0.70710679734193, 'Z': 0.70710676503058
+                                }
                             }
-                        },
-                        {'Translation': {'Y': 1253066.7246108, 'X': 450000.00173914, 'Z': -19505.003006128
-                            }, 'Scale3D': {'Y': 22, 'X': 1, 'Z': 10
-                            }, 'Rotation': {'Y': -6.3833851757559e-07, 'X': 6.3833848840661e-07, 'W': 0.70710679734193, 'Z': 0.70710676503058
-                            }
-                        }
-                    ], 'RouteName': 'Drag EP10000'
-                }, 'EngineKeys': {}
-            }, 'EventType': 1, 'EventGuid': 'AFC561E94099B971585A8FAE4E71BC06', 'Players': [
+                        ], 'RouteName': 'Drag EP10000'
+                    }, 'EngineKeys': {}
+                }, 
+'EventType': 1, 'EventGuid': 'AFC561E94099B971585A8FAE4E71BC06', 
+'Players': [
                 {'SectionIndex': -1, 'PC': {}, 'bFinished': False, 'BestLapTime': 0, 'Laps': 0, 'Reward_Money': {'BaseValue': 0, 'ShadowedValue': 521312
                     }, 'Reward_RacingExp': 4, 'bWrongVehicle': False, 'LapTimes': {}, 'bWrongEngine': False, 'PlayerName': 'qxZap[SLE
                     ]', 'bDisqualified': False, 'CharacterId': {'CharacterGuid': 'B91D01F94FFDBD09F4F509BEFC4D8780', 'UniqueNetId': '76561198231558864'

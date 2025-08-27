@@ -378,19 +378,22 @@ async def fetch_players_loop():
                             speed = p["SpeedKMH"]
                             pos = p.get("Location", {})
                             prev_pos = last_positions.get(unique_id, {})
-
-                            if (
-                                speed > SPEEDING_THRESHOLD
-                                and player_ranks.get(unique_id) != 'admin'
-                                and not is_cop_car(p.get("VehicleKey", ""))
-                                and speed < MAXIMUM_SPEEDING_FINE
-                                and not in_speed_allow_zone(pos.get("X", 0), pos.get("Y", 0))
-                                and not is_near_garage(pos.get("X", 0), pos.get("Y", 0))
-                                and not is_near_garage(prev_pos.get("X", 0), prev_pos.get("Y", 0))
-                            ):
-                                if unique_id not in last_speeding_fines or current_time - last_speeding_fines[unique_id] > SPEEDING_FINE_COOLDOWN:
-                                    last_speeding_fines[unique_id] = current_time
-                                    await speeding_player(unique_id, speed)
+                            vehicle_key = p.get("VehicleKey", "")
+                            
+                            if vehicle_key!="None":
+                                if (
+                                    speed > SPEEDING_THRESHOLD
+                                    and player_ranks.get(unique_id) != 'admin'
+                                    and vehicle_key!="None"
+                                    and not is_cop_car(vehicle_key)
+                                    and speed < MAXIMUM_SPEEDING_FINE
+                                    and not in_speed_allow_zone(pos.get("X", 0), pos.get("Y", 0))
+                                    and not is_near_garage(pos.get("X", 0), pos.get("Y", 0))
+                                    and not is_near_garage(prev_pos.get("X", 0), prev_pos.get("Y", 0))
+                                ):
+                                    if unique_id not in last_speeding_fines or current_time - last_speeding_fines[unique_id] > SPEEDING_FINE_COOLDOWN:
+                                        last_speeding_fines[unique_id] = current_time
+                                        await speeding_player(unique_id, speed)
 
                         raw_player_data = {"status": "ok", "data": processed_data}
                     else:
@@ -549,14 +552,18 @@ async def handle_webhook(request: Request):
                     entry_pool = event_info["entry_pool"]
                     if entry_pool > 0:
                         active_events[event_guid]["reward_pool"] += entry_pool
-                        asyncio.create_task(money_player(player_id, -entry_pool, f"Entry free for {active_events[event_guid]['race_name']}" ))
+                        race_name = active_events[event_guid]['race_name']
+                        race_name_clean = race_name.replace(f"EP{entry_pool}EP","")
+                        asyncio.create_task(money_player(player_id, -entry_pool, f"Entry free for {race_name_clean}" ))
                 if section_index == active_events.get(event_guid, {}).get("last_waypoint_index", -1):
+                    entry_pool = active_events[event_guid]["entry_pool"]
                     active_events[event_guid]["entry_pool"] = 0
                     total_reward = active_events[event_guid]["reward_pool"]
                     active_events[event_guid]["reward_pool"] = 0
                     if total_reward > 0:
                         race_name = active_events[event_guid]["race_name"]
-                        asyncio.create_task(money_player(player_id, total_reward, f"Reward for winning {race_name}"))
+                        race_name_clean = race_name.replace(f"EP{entry_pool}EP","")
+                        asyncio.create_task(money_player(player_id, total_reward, f"Reward for winning {race_name_clean}"))
     
     return {"status": "ok"}
 
