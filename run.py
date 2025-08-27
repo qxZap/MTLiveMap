@@ -528,7 +528,7 @@ async def handle_webhook(request: Request):
             entry_pool = extract_ep_number(route_name)
             if state == EVENT_START and entry_pool>0:
                 race_setup = event_data.get("RaceSetup", {})
-                player_count = len(hook_data.get("Players", []))
+                player_count = len(hook_data.get("Event",{}).get("Players", []))
                 if(player_count>1):
                     waypoints = len(race_setup.get("Route", {}).get("Waypoints", []))
                     last_waypoint_index = waypoints - 1 if waypoints>0 else 0
