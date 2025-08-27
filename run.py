@@ -1,10 +1,11 @@
 import json
+import asyncio
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-import requests
+import httpx
 import threading
 import time
 import random
@@ -20,9 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DEBUG_PLAYERS_FAKE = True  # Toggle to include fake players alongside real players
+HOOK_ENTER_VEHICLE = '/Script/MotorTown.MotorTownPlayerController:ServerEnterVehicle'
+
+DEBUG_PLAYERS_FAKE = False  # Toggle to include fake players alongside real players
 
 ALLOW_NPC_QUERY = False
+
+POLICE_FINE_COOLDOWN = 2.0  # Configurable cooldown in seconds to prevent duplicate fines
 
 player_ranks = {}
 PLAYER_RANKS_FILE = Path("players_ranks.json")
@@ -31,6 +36,7 @@ npc_data = {"status": "initializing"}
 garages_data = {"status": "initializing"}
 last_positions = {}
 fake_players = {}  # Store persistent fake player data
+last_police_fines = {}  # unique_id: last_fine_time to prevent duplicate fines
 
 # Map boundaries
 minX = -1280000
@@ -62,14 +68,12 @@ def generate_fake_player():
 def update_fake_player_position(player, time_diff):
     """Update fake player's position with a maximum speed of 3500 units/second."""
     max_distance = MAX_SPEED_UNITS_PER_SECOND * time_diff
-    # Generate random movement within max_distance
     angle = random.uniform(0, 2 * 3.14159)  # Random direction
     distance = random.uniform(0, max_distance)  # Random distance up to max
     delta_x = distance * random.uniform(-1, 1)
     delta_y = distance * random.uniform(-1, 1)
     delta_z = distance * random.uniform(-0.5, 0.5)  # Smaller Z movement
 
-    # Update position, ensuring it stays within map boundaries
     new_x = max(minX, min(maxX, player["Location"]["X"] + delta_x))
     new_y = max(minY, min(maxY, player["Location"]["Y"] + delta_y))
     new_z = max(0, min(10000, player["Location"]["Z"] + delta_z))
@@ -108,191 +112,208 @@ def is_npc_driven(npc_data_item):
             return True
     return False
 
-def eject_player(user_id: str):
-    url = f"http://localhost:5001/players/{user_id}/eject"
-    try:
-        resp = requests.post(url, timeout=5)
-        if resp.status_code == 200:
-            return {"status": "ok", "response": resp.json() if resp.text else {}}
-        else:
-            return {"status": f"error {resp.status_code}", "response": resp.text}
-    except Exception as e:
-        return {"status": f"request error: {e}"}
+async def eject_player(user_id: str):
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.post(f"http://localhost:5001/players/{user_id}/eject", timeout=5)
+            if resp.status_code == 200:
+                return {"status": "ok", "response": resp.json() if resp.text else {}}
+            else:
+                return {"status": f"error {resp.status_code}", "response": resp.text}
+        except Exception as e:
+            return {"status": f"request error: {e}"}
 
+async def get_player_data(user_id: str):
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(f"http://localhost:5001/players/{user_id}", timeout=5)
+            if resp.status_code == 200:
+                return resp.json()
+            else:
+                return {"status": f"error {resp.status_code}", "response": resp.text}
+        except Exception as e:
+            return {"status": f"request error: {e}"}
 
 def is_cop_car(vehicle_key: str):
     return 'police' in vehicle_key.lower()
 
-def annouce_player(user_id: str, message: str):
-    url = f"http://localhost:5001/messages/popup"
-    payload = {
-        "message": message,
-        "playerId" : user_id
-    }
-    try:
-        resp = requests.post(url, json=payload, timeout=5)
-        if resp.status_code == 200:
-            return {"status": "ok", "response": resp.json() if resp.text else {}}
-        else:
-            return {"status": f"error {resp.status_code}", "response": resp.text}
-    except Exception as e:
-        return {"status": f"request error: {e}"}
+async def announce_player(user_id: str, message: str):
+    async with httpx.AsyncClient() as client:
+        payload = {
+            "message": message,
+            "playerId": user_id
+        }
+        try:
+            resp = await client.post("http://localhost:5001/messages/popup", json=payload, timeout=5)
+            if resp.status_code == 200:
+                return {"status": "ok", "response": resp.json() if resp.text else {}}
+            else:
+                return {"status": f"error {resp.status_code}", "response": resp.text}
+        except Exception as e:
+            return {"status": f"request error: {e}"}
 
-def money_player(user_id: str, amount: int, reason: str):
-    url = f"http://localhost:5001/players/{user_id}/money"
-    payload = {
-        "Amount": amount,
-        "Message": reason,
-        "AllowNegative": False
-    }
-    try:
-        resp = requests.post(url, json=payload, timeout=5)
-        if resp.status_code == 200:
-            return {"status": "ok", "response": resp.json() if resp.text else {}}
-        else:
-            return {"status": f"error {resp.status_code}", "response": resp.text}
-    except Exception as e:
-        return {"status": f"request error: {e}"}
+async def money_player(user_id: str, amount: int, reason: str):
+    async with httpx.AsyncClient() as client:
+        payload = {
+            "Amount": amount,
+            "Message": reason,
+            "AllowNegative": False
+        }
+        try:
+            resp = await client.post(f"http://localhost:5001/players/{user_id}/money", json=payload, timeout=5)
+            if resp.status_code == 200:
+                return {"status": "ok", "response": resp.json() if resp.text else {}}
+            else:
+                return {"status": f"error {resp.status_code}", "response": resp.text}
+        except Exception as e:
+            return {"status": f"request error: {e}"}
 
-def fetch_npcs_loop():
+async def player_in_police_vehicle(unique_id: str):
+    current_time = time.time()
+    if unique_id in last_police_fines and current_time - last_police_fines[unique_id] < POLICE_FINE_COOLDOWN:
+        return  # Skip if within cooldown
+    # Update the last fine time before firing tasks
+    last_police_fines[unique_id] = current_time
+    # Fire-and-forget tasks for eject, fine, and announce
+    asyncio.create_task(eject_player(unique_id))
+    asyncio.create_task(money_player(unique_id, -5000, "Driving a police vehicle without authorization"))
+    asyncio.create_task(announce_player(unique_id, "<Title>VEHICLE NOT ALLOWED</>\n\nYou are not allowed to drive this type of vehicle as is strictly restricted only to police officers that went through the rigorous program of training of the server!\n\n-5000\n\n<Small>Contact server administration to get approved</>"))
+
+async def fetch_npcs_loop():
     global npc_data
-    while True:
-        try:
-            resp = requests.get("http://localhost:5001/vehicles?isPlayerControlled=false&Net_CompanyGuid=00000000000000000000000000000000", timeout=50)
-            if resp.status_code == 200:
-                response_data = resp.json()
-                npc_data_list = response_data.get("data", [])
-                data = []
-                for npc_data_item in npc_data_list:
-                    if is_npc_driven(npc_data_item):
-                        data.append({
-                            "X": npc_data_item.get("VehicleReplicatedMovement", {}).get("Location", {}).get("X"),
-                            "Y": npc_data_item.get("VehicleReplicatedMovement", {}).get("Location", {}).get("Y"),
-                            "Z": npc_data_item.get("VehicleReplicatedMovement", {}).get("Location", {}).get("Z"),
-                        })
-                npc_data = {"status": "ok", "data": data}
-            else:
-                npc_data = {"status": f"error {resp.status_code}"}
-        except Exception as e:
-            npc_data = {"status": f"fetch error: {e}"}
-        time.sleep(30)
-
-def fetch_garages_loop():
-    global garages_data
-    while True:
-        try:
-            resp = requests.get("http://localhost:5001/garages", timeout=50)
-            if resp.status_code == 200:
-                response_data = resp.json()
-                garages = []
-                for response_item_data in response_data.get("data", []):
-                    location_Data = response_item_data.get("Location", {})
-                    if location_Data:
-                        garages.append({
-                            "X": location_Data.get("X"),
-                            "Y": location_Data.get("Y"),
-                            "Z": location_Data.get("Z"),
-                        })
-                garages_data = {"status": "ok", "data": garages}
-            else:
-                garages_data = {"status": f"error {resp.status_code}"}
-        except Exception as e:
-            garages_data = {"status": f"fetch error: {e}"}
-        time.sleep(20)
-
-
-def fetch_players_loop():
-    global raw_player_data
-    global last_positions
-    global fake_players
-    while True:
-        try:
-            current_time = time.time()
-            processed_data = []
-
-            # Fetch real players
+    async with httpx.AsyncClient() as client:
+        while True:
             try:
-                resp = requests.get("http://localhost:5001/players", timeout=2)
+                resp = await client.get("http://localhost:5001/vehicles?isPlayerControlled=false&Net_CompanyGuid=00000000000000000000000000000000", timeout=50)
                 if resp.status_code == 200:
-                    new_data = resp.json()
-                    for p in new_data.get("data", []):
-                        unique_id = p.get("UniqueID")
-                        if unique_id and unique_id in last_positions:
+                    response_data = resp.json()
+                    npc_data_list = response_data.get("data", [])
+                    data = []
+                    for npc_data_item in npc_data_list:
+                        if is_npc_driven(npc_data_item):
+                            data.append({
+                                "X": npc_data_item.get("VehicleReplicatedMovement", {}).get("Location", {}).get("X"),
+                                "Y": npc_data_item.get("VehicleReplicatedMovement", {}).get("Location", {}).get("Y"),
+                                "Z": npc_data_item.get("VehicleReplicatedMovement", {}).get("Location", {}).get("Z"),
+                            })
+                    npc_data = {"status": "ok", "data": data}
+                else:
+                    npc_data = {"status": f"error {resp.status_code}"}
+            except Exception as e:
+                npc_data = {"status": f"fetch error: {e}"}
+            await asyncio.sleep(30)
+
+async def fetch_garages_loop():
+    global garages_data
+    async with httpx.AsyncClient() as client:
+        while True:
+            try:
+                resp = await client.get("http://localhost:5001/garages", timeout=50)
+                if resp.status_code == 200:
+                    response_data = resp.json()
+                    garages = []
+                    for response_item_data in response_data.get("data", []):
+                        location_data = response_item_data.get("Location", {})
+                        if location_data:
+                            garages.append({
+                                "X": location_data.get("X"),
+                                "Y": location_data.get("Y"),
+                                "Z": location_data.get("Z"),
+                            })
+                    garages_data = {"status": "ok", "data": garages}
+                else:
+                    garages_data = {"status": f"error {resp.status_code}"}
+            except Exception as e:
+                garages_data = {"status": f"fetch error: {e}"}
+            await asyncio.sleep(20)
+
+async def fetch_players_loop():
+    global raw_player_data, last_positions, fake_players
+    async with httpx.AsyncClient() as client:
+        while True:
+            try:
+                current_time = time.time()
+                processed_data = []
+
+                # Fetch real players
+                try:
+                    resp = await client.get("http://localhost:5001/players", timeout=2)
+                    if resp.status_code == 200:
+                        new_data = resp.json()
+                        for p in new_data.get("data", []):
+                            unique_id = p.get("UniqueID")
+                            if unique_id and unique_id in last_positions:
+                                last_pos = last_positions[unique_id]
+                                time_diff = current_time - last_pos["timestamp"]
+                                if time_diff > 0:
+                                    speed = convert_xyz_speed_to_kmh(
+                                        last_pos["X"], last_pos["Y"], last_pos["Z"],
+                                        p.get("Location", {}).get("X"),
+                                        p.get("Location", {}).get("Y"),
+                                        p.get("Location", {}).get("Z"),
+                                        time_diff
+                                    )
+                                    p["SpeedKMH"] = speed
+                                else:
+                                    p["SpeedKMH"] = 0.0
+                            else:
+                                p["SpeedKMH"] = 0.0
+                            processed_data.append(p)
+                            last_positions[unique_id] = {
+                                "X": p.get("Location", {}).get("X"),
+                                "Y": p.get("Location", {}).get("Y"),
+                                "Z": p.get("Location", {}).get("Z"),
+                                "timestamp": current_time
+                            }
+
+                            if is_cop_car(p.get("VehicleKey", "")) and player_ranks.get(unique_id) not in ['police', 'admin']:
+                                await player_in_police_vehicle(unique_id)
+
+                        raw_player_data = {"status": "ok", "data": processed_data}
+                    else:
+                        raw_player_data = {"status": f"error {resp.status_code}"}
+                except Exception as e:
+                    raw_player_data = {"status": f"fetch error: {e}"}
+
+                # Add fake players if DEBUG_PLAYERS_FAKE is True
+                if DEBUG_PLAYERS_FAKE:
+                    if not fake_players:
+                        for _ in range(random.randint(5, 40)):
+                            player = generate_fake_player()
+                            fake_players[player["UniqueID"]] = player
+
+                    for unique_id, player in list(fake_players.items()):
+                        time_diff = 0.2  # Loop interval
+                        player = update_fake_player_position(player, time_diff)
+                        if unique_id in last_positions:
                             last_pos = last_positions[unique_id]
                             time_diff = current_time - last_pos["timestamp"]
                             if time_diff > 0:
                                 speed = convert_xyz_speed_to_kmh(
                                     last_pos["X"], last_pos["Y"], last_pos["Z"],
-                                    p.get("Location", {}).get("X"),
-                                    p.get("Location", {}).get("Y"),
-                                    p.get("Location", {}).get("Z"),
+                                    player["Location"]["X"],
+                                    player["Location"]["Y"],
+                                    player["Location"]["Z"],
                                     time_diff
                                 )
-                                p["SpeedKMH"] = speed
+                                player["SpeedKMH"] = speed
                             else:
-                                p["SpeedKMH"] = 0.0
+                                player["SpeedKMH"] = 0.0
                         else:
-                            p["SpeedKMH"] = 0.0
-                        processed_data.append(p)
+                            player["SpeedKMH"] = 0.0
+                        processed_data.append(player)
                         last_positions[unique_id] = {
-                            "X": p.get("Location", {}).get("X"),
-                            "Y": p.get("Location", {}).get("Y"),
-                            "Z": p.get("Location", {}).get("Z"),
+                            "X": player["Location"]["X"],
+                            "Y": player["Location"]["Y"],
+                            "Z": player["Location"]["Z"],
                             "timestamp": current_time
                         }
 
-                        if( is_cop_car(p.get("VehicleKey", "")) and not player_ranks.get(unique_id) in ['police', 'admin'] ):
-                            eject_player(unique_id)
-                            money_player(unique_id, -5000, "Driving a police vehicle without authorization")
-                            annouce_player(unique_id, "<Title>VEHICLE NOT ALLOWED</>\n\nYou are not allowed to drive this type of vehicle as is strictly restricted only to police officers that went through the rigirous program of traning of the server!\n\n-5000\n\n<Small>Constact server administration to get approved</>")
-
                     raw_player_data = {"status": "ok", "data": processed_data}
-                else:
-                    raw_player_data = {"status": f"error {resp.status_code}"}
+
             except Exception as e:
                 raw_player_data = {"status": f"fetch error: {e}"}
-
-            # Add fake players if DEBUG_PLAYERS_FAKE is True
-            if DEBUG_PLAYERS_FAKE:
-                # Initialize fake players if empty
-                if not fake_players:
-                    for _ in range(random.randint(5, 40)):
-                        player = generate_fake_player()
-                        fake_players[player["UniqueID"]] = player
-
-                # Update fake player positions
-                for unique_id, player in list(fake_players.items()):
-                    time_diff = 0.2  # Loop interval
-                    player = update_fake_player_position(player, time_diff)
-                    if unique_id in last_positions:
-                        last_pos = last_positions[unique_id]
-                        time_diff = current_time - last_pos["timestamp"]
-                        if time_diff > 0:
-                            speed = convert_xyz_speed_to_kmh(
-                                last_pos["X"], last_pos["Y"], last_pos["Z"],
-                                player["Location"]["X"],
-                                player["Location"]["Y"],
-                                player["Location"]["Z"],
-                                time_diff
-                            )
-                            player["SpeedKMH"] = speed
-                        else:
-                            player["SpeedKMH"] = 0.0
-                    else:
-                        player["SpeedKMH"] = 0.0
-                    processed_data.append(player)
-                    last_positions[unique_id] = {
-                        "X": player["Location"]["X"],
-                        "Y": player["Location"]["Y"],
-                        "Z": player["Location"]["Z"],
-                        "timestamp": current_time
-                    }
-
-            raw_player_data = {"status": "ok", "data": processed_data}
-
-        except Exception as e:
-            raw_player_data = {"status": f"fetch error: {e}"}
-        time.sleep(0.2)
+            await asyncio.sleep(0.2)
 
 def simplify_player_data(data: dict):
     simplified = []
@@ -310,17 +331,13 @@ def simplify_player_data(data: dict):
     return {"status": "ok", "players": simplified}
 
 @app.on_event("startup")
-def start_fetcher():
-    players_thread = threading.Thread(target=fetch_players_loop, daemon=True)
-    players_thread.start()
-
+async def start_fetcher():
+    # Start background loops as async tasks
+    asyncio.create_task(fetch_players_loop())
     if ALLOW_NPC_QUERY:
-        npcs_thread = threading.Thread(target=fetch_npcs_loop, daemon=True)
-        npcs_thread.start()
-
-    garages_thread = threading.Thread(target=fetch_garages_loop, daemon=True)
-    garages_thread.start()
-
+        asyncio.create_task(fetch_npcs_loop())
+    asyncio.create_task(fetch_garages_loop())
+    # Non-async thread for file-based player ranks
     ranks_thread = threading.Thread(target=fetch_player_ranks_loop, daemon=True)
     ranks_thread.start()
 
@@ -331,6 +348,28 @@ async def player_locations():
 @app.get("/garages")
 async def garages_location():
     return JSONResponse(content=garages_data)
+
+@app.post("/")
+async def handle_webhook(request: Request):
+    body = await request.body()
+    data = json.loads(body.decode('utf-8'))
+    for event in data:
+        hook_type = event.get("hook", "")
+        print(f"Received webhook of type: {hook_type}")
+
+        hook_data = event.get("data", {})
+        player_id = hook_data.get("PlayerId", "")
+
+        if hook_type == HOOK_ENTER_VEHICLE:
+            seat_type = hook_data.get("SeatType", 0)
+            if seat_type == 1:  # Driver seat
+                player_data = await get_player_data(player_id)
+                player_data_resp = player_data.get("data", [{}])[0]
+                vehicle_key = player_data_resp.get("VehicleKey", "")
+                if is_cop_car(vehicle_key) and player_ranks.get(player_id) not in ['police', 'admin']:
+                    await player_in_police_vehicle(player_id)
+    
+    return {"status": "ok"}
 
 if ALLOW_NPC_QUERY:
     @app.get("/npcs")
