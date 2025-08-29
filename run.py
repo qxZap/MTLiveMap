@@ -72,6 +72,9 @@ MAXIMUM_SPEEDING_FINE = 600
 
 LUA_API = "http://localhost:5001"
 
+IS_SERVER_ONLINE = False
+STARTUP_CREATED = False
+
 active_events: Dict[str, dict] = {}
 
 # Constants
@@ -79,18 +82,26 @@ HOOK_SERVER_CHANGE_EVENT_STATE = '/Script/MotorTown.MotorTownPlayerController:Se
 HOOK_SERVER_PASSED_RACE_SECTION = '/Script/MotorTown.MotorTownPlayerController:ServerPassedRaceSection'
 HOOK_ENTER_VEHICLE = '/Script/MotorTown.MotorTownPlayerController:ServerEnterVehicle'
 
-DEBUG_PLAYERS_FAKE = False  # Toggle to include fake players alongside real players
-
+DEBUG_PLAYERS_FAKE = False
+ASSETS_SPAWN_ENABLED = False
+DEALERS_SPAWN_ENABLED = True
 ALLOW_NPC_QUERY = False
 
 POLICE_FINE_COOLDOWN = 2.0  # Configurable cooldown in seconds to prevent duplicate fines
 SPEEDING_FINE_COOLDOWN = 10.0  # Configurable cooldown in seconds to prevent duplicate speeding fines
 SPEEDING_THRESHOLD = 300.0  # Minimum speed in km/h to trigger a fine
 
-player_ranks = {}
 PLAYER_RANKS_FILE = Path("players_ranks.json")
 ANNOUNCEMENTS_FILE = Path("announcements.json")
+MAP_MODIFICATIONS_FILE = Path("map_modifications.json")
+DEALERSHIP_MODIFICATIONS_FILE = Path("dearlerships.json")
 
+
+player_ranks = {}
+
+DEALERSHIPS_TAGS = []
+DEALERSHIP_MODIFICATIONS={}
+MAP_MODIFICATIONS={}
 raw_player_data = {"status": "initializing"}
 npc_data = {"status": "initializing"}
 garages_data = {"status": "initializing"}
@@ -177,7 +188,31 @@ def update_fake_player_position(player, time_diff):
     player["Location"]["Z"] = new_z
     return player
 
-def fetch_player_ranks_loop():
+async def fetch_server_health_check():
+    global IS_SERVER_ONLINE, STARTUP_CREATED
+    while True:
+        async with httpx.AsyncClient() as client:
+            try:
+                resp = await client.get(f"{LUA_API}/status", timeout=5)
+                if resp.status_code == 200 and resp.json().get("status","") == "ok":
+                    IS_SERVER_ONLINE = True
+                else:
+                    IS_SERVER_ONLINE = False
+                    STARTUP_CREATED = False
+            except Exception as e:
+                pass
+        
+        if IS_SERVER_ONLINE and not STARTUP_CREATED:
+            STARTUP_CREATED = True
+            if ASSETS_SPAWN_ENABLED:
+                asyncio.create_task(watch_map_modifications())
+            
+            if DEALERS_SPAWN_ENABLED:
+                asyncio.create_task(watch_dealers_modifications())
+
+        await asyncio.sleep(5)
+
+async def fetch_player_ranks_loop():
     global player_ranks
     while True:
         try:
@@ -187,10 +222,8 @@ def fetch_player_ranks_loop():
                     player_ranks = data
         except Exception as e:
             print(f"Error reading player_ranks.json: {e}")
-        time.sleep(20)
+        await asyncio.sleep(20)
 
-MAP_MODIFICATIONS_FILE = Path("map_modifications.json")
-MAP_MODIFICATIONS={}
 
 async def reload_models_from_file():
     global MAP_MODIFICATIONS
@@ -216,7 +249,17 @@ async def reload_models_from_file():
     await spawn_assets(assets_to_spawn)
     print(f"[Reloaded] Tags: {tags}, Spawned: {len(assets_to_spawn)}")
 
-# --- File Watcher Task ---
+async def reload_dealerships_from_file():
+    global DEALERSHIPS_TAGS, DEALERSHIP_MODIFICATIONS
+    await despawn_assets(DEALERSHIPS_TAGS)
+
+    tags = []
+
+    for dealer in DEALERSHIP_MODIFICATIONS:
+        new_tags = await spawn_dealers(DEALERSHIP_MODIFICATIONS[dealer])
+        tags+=new_tags
+    DEALERSHIPS_TAGS = tags
+
 async def watch_map_modifications():
     global MAP_MODIFICATIONS
     last_data = None
@@ -233,6 +276,24 @@ async def watch_map_modifications():
                         await reload_models_from_file()
         except Exception as e:
             print(f"Error reading {MAP_MODIFICATIONS_FILE}: {e}")
+
+        await asyncio.sleep(5)
+
+async def watch_dealers_modifications():
+    global DEALERSHIP_MODIFICATIONS
+    last_data = None
+
+    while True:
+        try:
+            if DEALERSHIP_MODIFICATIONS_FILE.exists():
+                with DEALERSHIP_MODIFICATIONS_FILE.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if data != last_data:
+                        last_data = data
+                        DEALERSHIP_MODIFICATIONS = data
+                        await reload_dealerships_from_file()
+        except Exception as e:
+            print(f"Error reading {DEALERSHIP_MODIFICATIONS_FILE}: {e}")
 
         await asyncio.sleep(5)
 
@@ -538,6 +599,8 @@ async def announce_loop():
 
 @app.on_event("startup")
 async def start_fetcher():
+    asyncio.create_task(fetch_server_health_check())
+
     # Start background loops as async tasks
     asyncio.create_task(fetch_players_loop())
     if ALLOW_NPC_QUERY:
@@ -547,11 +610,7 @@ async def start_fetcher():
 
     asyncio.create_task(announce_loop())
 
-    asyncio.create_task(watch_map_modifications())
-
-    # Non-async thread for file-based player ranks
-    ranks_thread = threading.Thread(target=fetch_player_ranks_loop, daemon=True)
-    ranks_thread.start()
+    asyncio.create_task(fetch_player_ranks_loop())
 
 
 @app.get("/playerlocations")
@@ -569,7 +628,7 @@ async def handle_webhook(request: Request):
     data = json.loads(body.decode('utf-8'))
     for event in data:
         hook_type = event.get("hook", "")
-        print(f"Received webhook of type: {hook_type}")
+        # print(f"Received webhook of type: {hook_type}")
 
         hook_data = event.get("data", {})
         player_id = hook_data.get("PlayerId", "")
@@ -627,9 +686,6 @@ if ALLOW_NPC_QUERY:
     async def npc_locations():
         return JSONResponse(content=npc_data)
 
-
-
-
 async def spawn_asset(asset_path, x, y, z, pitch=0, roll=0, yaw=0, tag="SomeIdentifiableTag"):
     async with httpx.AsyncClient() as client:
         payload = {
@@ -646,6 +702,42 @@ async def spawn_asset(asset_path, x, y, z, pitch=0, roll=0, yaw=0, tag="SomeIden
         except Exception as e:
             return {"status": f"request error: {e}"}
 
+def get_dealer_spawner_payload(x,y,z,pitch,roll,yaw, vehicle_key):
+    return {
+        "Location": {
+                "Y": y,
+                "Z": z,
+                "X": x
+        },
+        "Rotation": { "Pitch": pitch, "Roll": roll, "Yaw": yaw },
+        "VehicleClass": "",
+        "VehicleParam": {
+            "VehicleKey": vehicle_key
+        }
+    }
+
+async def spawn_dealer(x,y,z,pitch,roll,yaw, vehicle_key):
+    async with httpx.AsyncClient() as client:
+        payload = get_dealer_spawner_payload(x,y,z,pitch,roll,yaw, vehicle_key)
+        try:
+            resp = await client.post(f"{LUA_API}/dealers/spawn", json=payload, timeout=5)
+            await asyncio.sleep(1)
+            if resp.status_code == 201:
+                return resp.json()
+            return {}
+        except Exception as e:
+            return {}
+
+async def spawn_dealers(dealers):
+    tags = []
+    for dealer in dealers:
+        response_data = await spawn_dealer(dealer.get("X",0), dealer.get("Y",0), dealer.get("Z",0), dealer.get("Pitch",0), dealer.get("Roll",0), dealer.get("Yaw",0), dealer.get("VehicleKey",""))
+        if response_data:
+            new_tag = response_data.get("data",{}).get("tag")
+            if new_tag:
+                tags.append(new_tag)
+    
+    return tags
 
 def get_asset_object(asset_path, x, y, z, pitch=0, roll=0, yaw=0, tag="SomeIdentifiableTag"):
     return {
@@ -655,13 +747,12 @@ def get_asset_object(asset_path, x, y, z, pitch=0, roll=0, yaw=0, tag="SomeIdent
         "Tag": tag
     }
 
-
 async def spawn_assets(assets):
     async with httpx.AsyncClient() as client:
         payload = assets
         try:
             resp = await client.post(f"{LUA_API}/assets/spawn", json=payload, timeout=5)
-            if resp.status_code == 200:
+            if resp.status_code == 201:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             return {"status": f"error {resp.status_code}", "response": resp.text}
         except Exception as e:
@@ -673,32 +764,22 @@ async def despawn_asset(tag="SomeIdentifiableTag"):
         payload = {"Tag": tag}
         try:
             resp = await client.post(f"{LUA_API}/assets/despawn", json=payload, timeout=5)
-            if resp.status_code == 200:
+            if resp.status_code == 202:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             return {"status": f"error {resp.status_code}", "response": resp.text}
         except Exception as e:
             return {"status": f"request error: {e}"}
-
 
 async def despawn_assets(tags):
     async with httpx.AsyncClient() as client:
         payload = {"Tags": tags}  # fixed typo
         try:
             resp = await client.post(f"{LUA_API}/assets/despawn", json=payload, timeout=5)
-            if resp.status_code == 200:
+            if resp.status_code == 202:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             return {"status": f"error {resp.status_code}", "response": resp.text}
         except Exception as e:
             return {"status": f"request error: {e}"}
-
-@app.get("/reload_models")
-async def reload_models(password: str):
-    if password != "secret":
-        return {"status": "invalid password"}
-
-    await reload_models_from_file()
-    return {"status": "manual reload done"}
-
 
 if __name__ == "__main__":
     uvicorn.run("run:app", host="127.0.0.1", port=8000, reload=False)

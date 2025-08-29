@@ -24,3 +24,8 @@ big one:
 
 x2 patch
 /Game/Road/Overpass_05.Overpass_05
+
+
+
+normal garage:
+/Game/Objects/Interaction/PitGarage.PitGarage_C

@@ -1,0 +1,60 @@
+{
+    "vulcan": [
+        {
+            "X": -383767.52,
+            "Y": 99116.66,
+            "Z": -21950.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 160.0,
+            "VehicleKey": "Vulcan"
+        }
+    ],
+    "cops_gangjung": [
+        {
+            "X": -6730.0,
+            "Y": 143138.0,
+            "Z": -21050.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 174.0,
+            "VehicleKey": "Zydro_Police"
+        },
+        {
+            "X": -6660.0,
+            "Y": 143475.0,
+            "Z": -21050.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 174.0,
+            "VehicleKey": "Muhan_Police"
+        },
+        {
+            "X": -6627.0,
+            "Y": 143810.0,
+            "Z": -21050.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 174.0,
+            "VehicleKey": "Police_01"
+        },
+        {
+            "X": -6586.0,
+            "Y": 144130.0,
+            "Z": -21050.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 174.0,
+            "VehicleKey": "Elisa_Police"
+        },
+        {
+            "X": -6551.0,
+            "Y": 144500.0,
+            "Z": -21050.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 174.0,
+            "VehicleKey": "Nuke_Police"
+        }
+    ]
+}

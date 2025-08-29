@@ -132,6 +132,42 @@
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": 0.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -348000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -360000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -360000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -376000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
             }
         ]
     }
