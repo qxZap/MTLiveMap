@@ -626,7 +626,7 @@ async def handle_webhook(request: Request):
     global active_events
 
     client_host = request.client.host
-    if client_host != "127.0.0.1" and client_host != "localhost":
+    if client_host not in ["127.0.0.1", "0.0.0.0"] and client_host != "localhost":
         return {"status", "why try hack?"}
 
 
