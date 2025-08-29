@@ -1,23 +1,21 @@
-all_el = []
+import json
 
-start_x = -329000
-delta = -1000
+data = {}
 
-count = 40
+police_lines = []
+admin_lines = []
+with open("police.txt",'r') as f:
+    police_lines = f.readlines()
+with open("admins.txt",'r') as f:
+    admin_lines = f.readlines()
 
-el = {
-                "path": "/Game/Road/Road_Bare_01.Road_Bare_01",
-                "X": -340000.0,
-                "Y": 1377000.0,
-                "Z": -19169.0,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": 0.0
-            }
+for line in police_lines:
+    new_pd = line.replace('\n','')
+    data[new_pd] = 'police'
 
-for i in range(count):
-    new_el = el.copy()
-    new_el["X"] = start_x + i * delta
-    all_el.append(new_el)
 
-print(all_el)
+for line in admin_lines:
+    data[line.split('="')[1].split('"')[0]]="admin"
+
+with open('players_ranks.json', 'w+') as f:
+    f.write(json.dumps(data, indent=4))
