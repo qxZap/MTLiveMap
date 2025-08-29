@@ -624,11 +624,17 @@ async def garages_location():
 @app.post("/")
 async def handle_webhook(request: Request):
     global active_events
+
+    client_host = request.client.host
+    if client_host != "127.0.0.1" and client_host != "localhost":
+        return {"status", "why try hack?"}
+
+
     body = await request.body()
     data = json.loads(body.decode('utf-8'))
     for event in data:
         hook_type = event.get("hook", "")
-        # print(f"Received webhook of type: {hook_type}")
+        print(f"Received webhook of type: {hook_type}")
 
         hook_data = event.get("data", {})
         player_id = hook_data.get("PlayerId", "")
