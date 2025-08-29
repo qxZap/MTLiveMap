@@ -489,4 +489,4 @@ setInterval(updatePlayerPositions, 400);
 // setInterval(fetchAndUpdateNPCs, 5000);
 
 fetchAndUpdateGarages();
-setInterval(fetchAndUpdateGarages, 20000);
+setInterval(fetchAndUpdateGarages, 200000);
