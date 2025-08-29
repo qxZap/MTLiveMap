@@ -1,6 +1,6 @@
 [
     {
-        "message": "READ THE RULES: <img id=\"RoadSideService\"/> (Esc>Admin)\n<img id=\"Level_Police\"/> Police vehicles are for whitelisted BBPD only!\n<img id=\"Level_Truck\"/> Apply on discord: https://discord.gg/BigBelly",
+        "message": "<Event>READ THE RULES:</> <img id=\"RoadSideService\"/> <EffectGood>(Esc>Admin)</>\n<img id=\"Level_Police\"/> Police vehicles are for whitelisted BBPD only!\n<img id=\"Level_Truck\"/> Apply on discord: <Money>https://discord.gg/BigBelly</>",
         "interval": 600,
         "isPinned": true
     }
