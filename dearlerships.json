@@ -48,13 +48,51 @@
             "VehicleKey": "Elisa_Police"
         },
         {
-            "X": -6551.0,
-            "Y": 144500.0,
+            "X": -6571.0,
+            "Y": 144460.0,
             "Z": -21050.0,
             "Pitch": 0.0,
             "Roll": 0.0,
             "Yaw": 174.0,
             "VehicleKey": "Nuke_Police"
+        },
+        {
+            "X": -6544.16,
+            "Y": 144800.67,
+            "Z": -21050.86,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 174.0,
+            "VehicleKey": "PoliceInterceptor_01"
+        },
+        {
+            "X": -8182.0,
+            "Y": 143302.0,
+            "Z": -21060.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": -6.0,
+            "VehicleKey": "Gunthoo_Police"
+        }
+    ],
+    "trailers": [
+        {
+            "X": 167596.0,
+            "Y": 80315.0,
+            "Z": -21465.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 50.5,
+            "VehicleKey": "Trailer_30ft_Tanker_01"
+        },
+        {
+            "X": 167895.0,
+            "Y": 80060.0,
+            "Z": -21465.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 50.5,
+            "VehicleKey": "Trailer_Middle_Tanker_01"
         }
     ]
 }
