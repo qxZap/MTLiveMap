@@ -1,0 +1,138 @@
+{
+    "assets": {
+        "AraChanges": [
+            {
+                "path": "/Game/PolygonTown/Meshes/Buildings/SM_Bld_Church_01.SM_Bld_Church_01",
+                "X": 286397.0,
+                "Y": 1369677.0,
+                "Z": -21970.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "path": "/Game/PolygonFarm/Meshes/Buildings/SM_Bld_Farmhouse_01.SM_Bld_Farmhouse_01",
+                "X": 285938.0,
+                "Y": 1376011.0,
+                "Z": -21999.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -105.0
+            }
+        ],
+        "GwanjingCoalExtra": [
+            {
+                "path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large.Interaction_ParkingSpace_Large_C",
+                "X": 321201.0,
+                "Y": 747687.0,
+                "Z": 1501.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 200.0
+            }
+        ],
+        "DragStripTest": [
+            {
+                "path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small.Interaction_ParkingSpace_Small_C",
+                "X": -328500.0,
+                "Y": 1376500.0,
+                "Z": -19165.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0
+            },
+            {
+                "path": "/Game/Road/Road_Bare_01.Road_Bare_01",
+                "X": -329000,
+                "Y": 1377000.0,
+                "Z": -19169.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            }
+        ],
+        "ExtraStrip": [
+            {
+                "path": "/Game/Objects/Fuel/FuelPump_01A.FuelPump_01A_C",
+                "X": 442393.3,
+                "Z": -19411.86,
+                "Y": 1215832.8,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small.Interaction_ParkingSpace_Small_C",
+                "X": -300835.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0
+            },
+            {
+                "path": "/Game/Objects/Interaction/PitGarage.PitGarage_C",
+                "X": -300835.0,
+                "Y": 1367500.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -300000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -316000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -316000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -332000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -332000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0
+            },
+            {
+                "path": "/Game/Road/Overpass_03.Overpass_03",
+                "X": -348000.0,
+                "Y": 1367000.0,
+                "Z": -17900.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            }
+        ]
+    }
+}

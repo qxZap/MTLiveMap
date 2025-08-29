@@ -70,6 +70,8 @@ SPEED_ALLOW_ZONES = {
 
 MAXIMUM_SPEEDING_FINE = 600
 
+LUA_API = "http://localhost:5001"
+
 active_events: Dict[str, dict] = {}
 
 # Constants
@@ -187,6 +189,53 @@ def fetch_player_ranks_loop():
             print(f"Error reading player_ranks.json: {e}")
         time.sleep(20)
 
+MAP_MODIFICATIONS_FILE = Path("map_modifications.json")
+MAP_MODIFICATIONS={}
+
+async def reload_models_from_file():
+    global MAP_MODIFICATIONS
+
+    tags = []
+    assets_to_spawn = []
+
+    for asset_tag in MAP_MODIFICATIONS.get("assets", {}):
+        tags.append(asset_tag)
+        for asset_to_spawn in MAP_MODIFICATIONS.get("assets", {}).get(asset_tag, []):
+            assets_to_spawn.append(get_asset_object(
+                asset_to_spawn.get("path", ""),
+                asset_to_spawn.get("X", 0),
+                asset_to_spawn.get("Y", 0),
+                asset_to_spawn.get("Z", 0),
+                asset_to_spawn.get("Pitch", 0),
+                asset_to_spawn.get("Roll", 0),
+                asset_to_spawn.get("Yaw", 0),
+                asset_tag
+            ))
+
+    await despawn_assets(tags)
+    await spawn_assets(assets_to_spawn)
+    print(f"[Reloaded] Tags: {tags}, Spawned: {len(assets_to_spawn)}")
+
+# --- File Watcher Task ---
+async def watch_map_modifications():
+    global MAP_MODIFICATIONS
+    last_data = None
+
+    while True:
+        try:
+            if MAP_MODIFICATIONS_FILE.exists():
+                with MAP_MODIFICATIONS_FILE.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if data != last_data:
+                        last_data = data
+                        MAP_MODIFICATIONS = data
+                        # Fire async reload
+                        await reload_models_from_file()
+        except Exception as e:
+            print(f"Error reading {MAP_MODIFICATIONS_FILE}: {e}")
+
+        await asyncio.sleep(5)
+
 def convert_xyz_speed_to_kmh(x1, y1, z1, x2, y2, z2, time_diff_in_seconds):
     distance = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
     speed_in_units_per_second = distance / time_diff_in_seconds if time_diff_in_seconds > 0 else 0
@@ -207,7 +256,7 @@ def is_npc_driven(npc_data_item):
 async def eject_player(user_id: str):
     async with httpx.AsyncClient() as client:
         try:
-            resp = await client.post(f"http://localhost:5001/players/{user_id}/eject", timeout=5)
+            resp = await client.post(f"{LUA_API}/players/{user_id}/eject", timeout=5)
             if resp.status_code == 200:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             else:
@@ -218,7 +267,7 @@ async def eject_player(user_id: str):
 async def get_player_data(user_id: str):
     async with httpx.AsyncClient() as client:
         try:
-            resp = await client.get(f"http://localhost:5001/players/{user_id}", timeout=5)
+            resp = await client.get(f"{LUA_API}/players/{user_id}", timeout=5)
             if resp.status_code == 200:
                 return resp.json()
             else:
@@ -236,7 +285,7 @@ async def announce_player(user_id: str, message: str):
             "playerId": user_id
         }
         try:
-            resp = await client.post("http://localhost:5001/messages/popup", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/messages/popup", json=payload, timeout=5)
             if resp.status_code == 200:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             else:
@@ -252,7 +301,7 @@ async def money_player(user_id: str, amount: int, reason: str):
             "AllowNegative": False
         }
         try:
-            resp = await client.post(f"http://localhost:5001/players/{user_id}/money", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/players/{user_id}/money", json=payload, timeout=5)
             if resp.status_code == 200:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             else:
@@ -289,7 +338,7 @@ async def fetch_npcs_loop():
     async with httpx.AsyncClient() as client:
         while True:
             try:
-                resp = await client.get("http://localhost:5001/vehicles?isPlayerControlled=false&Net_CompanyGuid=00000000000000000000000000000000", timeout=50)
+                resp = await client.get(f"{LUA_API}/vehicles?isPlayerControlled=false&Net_CompanyGuid=00000000000000000000000000000000", timeout=50)
                 if resp.status_code == 200:
                     response_data = resp.json()
                     npc_data_list = response_data.get("data", [])
@@ -313,7 +362,7 @@ async def fetch_garages_loop():
     async with httpx.AsyncClient() as client:
         while True:
             try:
-                resp = await client.get("http://localhost:5001/garages", timeout=50)
+                resp = await client.get(f"{LUA_API}/garages", timeout=50)
                 if resp.status_code == 200:
                     response_data = resp.json()
                     garages = []
@@ -342,7 +391,7 @@ async def fetch_players_loop():
 
                 # Fetch real players
                 try:
-                    resp = await client.get("http://localhost:5001/players", timeout=2)
+                    resp = await client.get(f"{LUA_API}/players", timeout=2)
                     if resp.status_code == 200:
                         new_data = resp.json()
                         for p in new_data.get("data", []):
@@ -479,7 +528,7 @@ async def announce_loop():
                         "isPinned": is_pinned
                     }
                     try:
-                        await client.post("http://localhost:5001/messages/announce", json=payload, timeout=5)
+                        await client.post(f"{LUA_API}/messages/announce", json=payload, timeout=5)
                     except Exception as e:
                         print(f"Error sending announcement '{message}': {e}")
                     await asyncio.sleep(interval)
@@ -498,9 +547,12 @@ async def start_fetcher():
 
     asyncio.create_task(announce_loop())
 
+    asyncio.create_task(watch_map_modifications())
+
     # Non-async thread for file-based player ranks
     ranks_thread = threading.Thread(target=fetch_player_ranks_loop, daemon=True)
     ranks_thread.start()
+
 
 @app.get("/playerlocations")
 async def player_locations():
@@ -574,6 +626,79 @@ if ALLOW_NPC_QUERY:
     @app.get("/npcs")
     async def npc_locations():
         return JSONResponse(content=npc_data)
+
+
+
+
+async def spawn_asset(asset_path, x, y, z, pitch=0, roll=0, yaw=0, tag="SomeIdentifiableTag"):
+    async with httpx.AsyncClient() as client:
+        payload = {
+            "AssetPath": asset_path,
+            "Location": {"X": x, "Y": y, "Z": z},
+            "Rotation": {"Pitch": pitch, "Roll": roll, "Yaw": yaw},
+            "Tag": tag
+        }
+        try:
+            resp = await client.post(f"{LUA_API}/assets/spawn", json=payload, timeout=5)
+            if resp.status_code == 200:
+                return {"status": "ok", "response": resp.json() if resp.text else {}}
+            return {"status": f"error {resp.status_code}", "response": resp.text}
+        except Exception as e:
+            return {"status": f"request error: {e}"}
+
+
+def get_asset_object(asset_path, x, y, z, pitch=0, roll=0, yaw=0, tag="SomeIdentifiableTag"):
+    return {
+        "AssetPath": asset_path,
+        "Location": {"X": x, "Y": y, "Z": z},
+        "Rotation": {"Pitch": pitch, "Roll": roll, "Yaw": yaw},
+        "Tag": tag
+    }
+
+
+async def spawn_assets(assets):
+    async with httpx.AsyncClient() as client:
+        payload = assets
+        try:
+            resp = await client.post(f"{LUA_API}/assets/spawn", json=payload, timeout=5)
+            if resp.status_code == 200:
+                return {"status": "ok", "response": resp.json() if resp.text else {}}
+            return {"status": f"error {resp.status_code}", "response": resp.text}
+        except Exception as e:
+            return {"status": f"request error: {e}"}
+
+
+async def despawn_asset(tag="SomeIdentifiableTag"):
+    async with httpx.AsyncClient() as client:
+        payload = {"Tag": tag}
+        try:
+            resp = await client.post(f"{LUA_API}/assets/despawn", json=payload, timeout=5)
+            if resp.status_code == 200:
+                return {"status": "ok", "response": resp.json() if resp.text else {}}
+            return {"status": f"error {resp.status_code}", "response": resp.text}
+        except Exception as e:
+            return {"status": f"request error: {e}"}
+
+
+async def despawn_assets(tags):
+    async with httpx.AsyncClient() as client:
+        payload = {"Tags": tags}  # fixed typo
+        try:
+            resp = await client.post(f"{LUA_API}/assets/despawn", json=payload, timeout=5)
+            if resp.status_code == 200:
+                return {"status": "ok", "response": resp.json() if resp.text else {}}
+            return {"status": f"error {resp.status_code}", "response": resp.text}
+        except Exception as e:
+            return {"status": f"request error: {e}"}
+
+@app.get("/reload_models")
+async def reload_models(password: str):
+    if password != "secret":
+        return {"status": "invalid password"}
+
+    await reload_models_from_file()
+    return {"status": "manual reload done"}
+
 
 if __name__ == "__main__":
     uvicorn.run("run:app", host="127.0.0.1", port=8000, reload=False)
