@@ -82,6 +82,8 @@ HOOK_SERVER_CHANGE_EVENT_STATE = '/Script/MotorTown.MotorTownPlayerController:Se
 HOOK_SERVER_PASSED_RACE_SECTION = '/Script/MotorTown.MotorTownPlayerController:ServerPassedRaceSection'
 HOOK_ENTER_VEHICLE = '/Script/MotorTown.MotorTownPlayerController:ServerEnterVehicle'
 
+SPEED_CAMERAS_ON = False
+
 DEBUG_PLAYERS_FAKE = False
 ASSETS_SPAWN_ENABLED = False
 DEALERS_SPAWN_ENABLED = True
@@ -95,11 +97,21 @@ PLAYER_RANKS_FILE = Path("players_ranks.json")
 ANNOUNCEMENTS_FILE = Path("announcements.json")
 MAP_MODIFICATIONS_FILE = Path("map_modifications.json")
 DEALERSHIP_MODIFICATIONS_FILE = Path("dearlerships.json")
+DEALERSHIP_TAGS_FILE = Path("dealership_tags_DONT_EDIT.json")
 
+def load_dealership_tags():
+
+    if DEALERSHIP_TAGS_FILE.exists():
+        with DEALERSHIP_TAGS_FILE.open("r") as f:
+            loaded_tags = json.load(f)
+            return loaded_tags
+    else:
+        return []
+
+
+DEALERSHIPS_TAGS = load_dealership_tags()
 
 player_ranks = {}
-
-DEALERSHIPS_TAGS = []
 DEALERSHIP_MODIFICATIONS={}
 MAP_MODIFICATIONS={}
 raw_player_data = {"status": "initializing"}
@@ -126,6 +138,10 @@ FAKE_NAMES = [
 EVENT_READY = 3
 EVENT_FINISH = 2
 EVENT_START = 1
+
+def save_dealership_tags():
+    with DEALERSHIP_TAGS_FILE.open("w") as f:
+        json.dump(DEALERSHIPS_TAGS, f)
 
 def extract_ep_number(s):
     match = re.search(r'EP(\d+)EP', s)
@@ -259,6 +275,7 @@ async def reload_dealerships_from_file():
         new_tags = await spawn_dealers(DEALERSHIP_MODIFICATIONS[dealer])
         tags+=new_tags
     DEALERSHIPS_TAGS = tags
+    save_dealership_tags()
 
 async def watch_map_modifications():
     global MAP_MODIFICATIONS
@@ -490,20 +507,21 @@ async def fetch_players_loop():
                             prev_pos = last_positions.get(unique_id, {})
                             vehicle_key = p.get("VehicleKey", "")
                             
-                            if vehicle_key!="None":
-                                if (
-                                    speed > SPEEDING_THRESHOLD
-                                    and player_ranks.get(unique_id) != 'admin'
-                                    and vehicle_key!="None"
-                                    and not is_cop_car(vehicle_key)
-                                    and speed < MAXIMUM_SPEEDING_FINE
-                                    and not in_speed_allow_zone(pos.get("X", 0), pos.get("Y", 0))
-                                    and not is_near_garage(pos.get("X", 0), pos.get("Y", 0))
-                                    and not is_near_garage(prev_pos.get("X", 0), prev_pos.get("Y", 0))
-                                ):
-                                    if unique_id not in last_speeding_fines or current_time - last_speeding_fines[unique_id] > SPEEDING_FINE_COOLDOWN:
-                                        last_speeding_fines[unique_id] = current_time
-                                        await speeding_player(unique_id, speed)
+                            if SPEED_CAMERAS_ON:
+                                if vehicle_key!="None":
+                                    if (
+                                        speed > SPEEDING_THRESHOLD
+                                        and player_ranks.get(unique_id) != 'admin'
+                                        and vehicle_key!="None"
+                                        and not is_cop_car(vehicle_key)
+                                        and speed < MAXIMUM_SPEEDING_FINE
+                                        and not in_speed_allow_zone(pos.get("X", 0), pos.get("Y", 0))
+                                        and not is_near_garage(pos.get("X", 0), pos.get("Y", 0))
+                                        and not is_near_garage(prev_pos.get("X", 0), prev_pos.get("Y", 0))
+                                    ):
+                                        if unique_id not in last_speeding_fines or current_time - last_speeding_fines[unique_id] > SPEEDING_FINE_COOLDOWN:
+                                            last_speeding_fines[unique_id] = current_time
+                                            await speeding_player(unique_id, speed)
 
                         raw_player_data = {"status": "ok", "data": processed_data}
                     else:
@@ -788,4 +806,4 @@ async def despawn_assets(tags):
             return {"status": f"request error: {e}"}
 
 if __name__ == "__main__":
-    uvicorn.run("run:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run("run:app", host="0.0.0.0", port=8001, reload=False)
