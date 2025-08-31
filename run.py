@@ -1,4 +1,5 @@
 import json
+import base64
 import asyncio
 from pathlib import Path
 from fastapi import FastAPI, Request
@@ -67,6 +68,9 @@ SPEED_ALLOW_ZONES = {
     }
 }
 
+PLAYER_VEHICLE_INTERVAL = 0.2
+FETCH_PLAYER_ON = True
+FETCH_VEHICLE_ON = True
 
 MAXIMUM_SPEEDING_FINE = 600
 
@@ -111,14 +115,23 @@ def load_dealership_tags():
 
 DEALERSHIPS_TAGS = load_dealership_tags()
 
+
+def getAuthHeader(username: str = "myuser", password: str = "mypassword") -> dict:
+    token = f"{username}:{password}"
+    encoded = base64.b64encode(token.encode("utf-8")).decode("utf-8")
+    return {"Authorization": f"Basic {encoded}"}
+
+AUTH_HEADER = getAuthHeader()
+
 player_ranks = {}
 DEALERSHIP_MODIFICATIONS={}
 MAP_MODIFICATIONS={}
+vehicles_data = []
 raw_player_data = {"status": "initializing"}
 npc_data = {"status": "initializing"}
 garages_data = {"status": "initializing"}
 last_positions = {}
-fake_players = {}  # Store persistent fake player data
+fake_players = {}  # Store persistent fake player dataw
 last_police_fines = {}  # unique_id: last_fine_time to prevent duplicate fines
 last_speeding_fines = {}  # unique_id: last_fine_time to prevent duplicate speeding fines
 
@@ -334,7 +347,7 @@ def is_npc_driven(npc_data_item):
 async def eject_player(user_id: str):
     async with httpx.AsyncClient() as client:
         try:
-            resp = await client.post(f"{LUA_API}/players/{user_id}/eject", timeout=5)
+            resp = await client.post(f"{LUA_API}/players/{user_id}/eject", headers=AUTH_HEADER, timeout=5)
             if resp.status_code == 200:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             else:
@@ -363,7 +376,7 @@ async def announce_player(user_id: str, message: str):
             "playerId": user_id
         }
         try:
-            resp = await client.post(f"{LUA_API}/messages/popup", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/messages/popup", json=payload, headers=AUTH_HEADER, timeout=5)
             if resp.status_code == 200:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             else:
@@ -379,7 +392,7 @@ async def money_player(user_id: str, amount: int, reason: str):
             "AllowNegative": False
         }
         try:
-            resp = await client.post(f"{LUA_API}/players/{user_id}/money", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/players/{user_id}/money", json=payload, headers=AUTH_HEADER, timeout=5)
             if resp.status_code == 200:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             else:
@@ -459,10 +472,85 @@ async def fetch_garages_loop():
                 garages_data = {"status": f"fetch error: {e}"}
             await asyncio.sleep(20)
 
-async def fetch_players_loop():
-    global raw_player_data, last_positions, fake_players
+async def isPlayerDrivingCopCar(player, player_id):
+    global raw_player_data, vehicles_data, player_ranks
+
+    if is_cop_car(player.get("VehicleKey", "")) and player_ranks.get(player_id) not in ['police', 'admin']:
+        return True
+    return False
+
+
+async def hasVehicleTag(vehicle,searched_tag):
+    GameplayTagContainer = vehicle.get('GameplayTagContainer',{})
+    for tag_key in GameplayTagContainer:
+        for tag in GameplayTagContainer.get(tag_key,[]):
+            tag_name = tag.get('TagName',"")
+            if tag_name == searched_tag:
+                return True
+    return False
+
+async def isVehicleWreck(vehicle):
+    check = await hasVehicleTag(vehicle,'Vehicle.DisableRoadsideServiceGarage')
+    return check
+
+async def isVehiclePoliceCar(vehicle):
+    check = await hasVehicleTag(vehicle,'Vehicle.Police')
+    return check
+
+async def isPlayerAllowedtoDriveCopCar(player_id):
+    global player_ranks
+    return player_ranks.get(player_id) in ['police', 'admin']
+        
+async def getPlayerDataFromName(name):
+    global raw_player_data
+    
+    for player in raw_player_data.get('data'):
+        if player.get("Name") == name:
+            return player
+
+async def getPlayerIDFromName(name):
+    player = await getPlayerDataFromName()
+    return player.get('UniqueID')
+
+
+async def fetch_vehicles_loop():
+    global raw_player_data,vehicles_data, FETCH_VEHICLE_ON
     async with httpx.AsyncClient() as client:
-        while True:
+        if FETCH_VEHICLE_ON:
+            resp = await client.get(f"{LUA_API}/vehicles?isPlayerControlled=true", timeout=2)
+            new_vehicles_data = []
+
+            for vehicle in resp.json().get('data',[]):
+                new_vehicle = {
+                    "Net_CompanyGuid" : vehicle.get("Net_CompanyGuid",""),
+                    "Net_LastMovementOwnerPCName" : vehicle.get("Net_LastMovementOwnerPCName",""),
+                    "Location" : vehicle.get('VehicleReplicatedMovement',{}).get('Location',{}),
+                    "GameplayTagContainer" : vehicle.get('GameplayTagContainer',{})
+                }
+
+                isWreck = await isVehicleWreck(vehicle)
+                isCopCar = await isVehiclePoliceCar(vehicle)
+
+                if not isWreck and isCopCar:
+                    player_data = await getPlayerDataFromName(vehicle.get("Net_LastMovementOwnerPCName",""))
+                    vehicle_key = player_data.get("VehicleKey","")
+                    UniqueID = player_data.get("UniqueID")
+                    isAllowedtoDriveCopCar = await isPlayerAllowedtoDriveCopCar(UniqueID)
+
+                    if is_cop_car(vehicle_key) and not isAllowedtoDriveCopCar:
+                        await player_in_police_vehicle(UniqueID)
+
+
+                new_vehicles_data.append(new_vehicle)
+
+            vehicles_data = new_vehicles_data
+            
+            
+
+async def fetch_players_loop():
+    global raw_player_data, last_positions, fake_players, player_ranks, FETCH_PLAYER_ON
+    async with httpx.AsyncClient() as client:
+        if FETCH_PLAYER_ON:
             try:
                 current_time = time.time()
                 processed_data = []
@@ -497,9 +585,6 @@ async def fetch_players_loop():
                                 "Z": p.get("Location", {}).get("Z"),
                                 "timestamp": current_time
                             }
-
-                            if is_cop_car(p.get("VehicleKey", "")) and player_ranks.get(unique_id) not in ['police', 'admin']:
-                                await player_in_police_vehicle(unique_id)
 
                             # Check for speeding
                             speed = p["SpeedKMH"]
@@ -567,7 +652,6 @@ async def fetch_players_loop():
 
             except Exception as e:
                 raw_player_data = {"status": f"fetch error: {e}"}
-            await asyncio.sleep(0.2)
 
 def simplify_player_data(data: dict):
     simplified = []
@@ -607,7 +691,7 @@ async def announce_loop():
                         "isPinned": is_pinned
                     }
                     try:
-                        await client.post(f"{LUA_API}/messages/announce", json=payload, timeout=5)
+                        await client.post(f"{LUA_API}/messages/announce", json=payload, headers=AUTH_HEADER, timeout=5)
                     except Exception as e:
                         print(f"Error sending announcement '{message}': {e}")
                     await asyncio.sleep(interval)
@@ -615,12 +699,25 @@ async def announce_loop():
                 print(f"Unexpected error in announce_loop: {e}")
             await asyncio.sleep(10)  # Check file every 10 seconds
 
+
+async def fetch_player_vehicles():
+    while True:
+        try:
+            await fetch_players_loop()
+
+            await fetch_vehicles_loop()
+        except Exception as e:
+            print(f"Unexpected error in fetch loop: {e}")
+
+        await asyncio.sleep(PLAYER_VEHICLE_INTERVAL)
+
 @app.on_event("startup")
 async def start_fetcher():
     asyncio.create_task(fetch_server_health_check())
 
     # Start background loops as async tasks
-    asyncio.create_task(fetch_players_loop())
+    asyncio.create_task(fetch_player_vehicles())
+
     if ALLOW_NPC_QUERY:
         asyncio.create_task(fetch_npcs_loop())
 
@@ -634,6 +731,10 @@ async def start_fetcher():
 @app.get("/playerlocations")
 async def player_locations():
     return JSONResponse(content=simplify_player_data(raw_player_data))
+
+@app.get("/vehicles")
+async def vehicles():
+    return JSONResponse(content=vehicles_data)
 
 @app.get("/garages")
 async def garages_location():
@@ -719,7 +820,7 @@ async def spawn_asset(asset_path, x, y, z, pitch=0, roll=0, yaw=0, tag="SomeIden
             "Tag": tag
         }
         try:
-            resp = await client.post(f"{LUA_API}/assets/spawn", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/assets/spawn", json=payload, headers=AUTH_HEADER, timeout=5)
             if resp.status_code == 200:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             return {"status": f"error {resp.status_code}", "response": resp.text}
@@ -744,7 +845,7 @@ async def spawn_dealer(x,y,z,pitch,roll,yaw, vehicle_key):
     async with httpx.AsyncClient() as client:
         payload = get_dealer_spawner_payload(x,y,z,pitch,roll,yaw, vehicle_key)
         try:
-            resp = await client.post(f"{LUA_API}/dealers/spawn", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/dealers/spawn", json=payload, headers=AUTH_HEADER, timeout=5)
             await asyncio.sleep(1)
             if resp.status_code == 201:
                 return resp.json()
@@ -775,7 +876,7 @@ async def spawn_assets(assets):
     async with httpx.AsyncClient() as client:
         payload = assets
         try:
-            resp = await client.post(f"{LUA_API}/assets/spawn", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/assets/spawn", json=payload, headers=AUTH_HEADER, timeout=5)
             if resp.status_code == 201:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             return {"status": f"error {resp.status_code}", "response": resp.text}
@@ -787,7 +888,7 @@ async def despawn_asset(tag="SomeIdentifiableTag"):
     async with httpx.AsyncClient() as client:
         payload = {"Tag": tag}
         try:
-            resp = await client.post(f"{LUA_API}/assets/despawn", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/assets/despawn", json=payload, headers=AUTH_HEADER, timeout=5)
             if resp.status_code == 202:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             return {"status": f"error {resp.status_code}", "response": resp.text}
@@ -798,7 +899,7 @@ async def despawn_assets(tags):
     async with httpx.AsyncClient() as client:
         payload = {"Tags": tags}  # fixed typo
         try:
-            resp = await client.post(f"{LUA_API}/assets/despawn", json=payload, timeout=5)
+            resp = await client.post(f"{LUA_API}/assets/despawn", json=payload, headers=AUTH_HEADER, timeout=5)
             if resp.status_code == 202:
                 return {"status": "ok", "response": resp.json() if resp.text else {}}
             return {"status": f"error {resp.status_code}", "response": resp.text}
