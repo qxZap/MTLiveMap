@@ -90,7 +90,7 @@ SPEED_CAMERAS_ON = False
 
 DEBUG_PLAYERS_FAKE = False
 ASSETS_SPAWN_ENABLED = False
-DEALERS_SPAWN_ENABLED = False
+DEALERS_SPAWN_ENABLED = True
 ALLOW_NPC_QUERY = False
 
 POLICE_FINE_COOLDOWN = 2.0  # Configurable cooldown in seconds to prevent duplicate fines
