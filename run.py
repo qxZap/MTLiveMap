@@ -101,7 +101,7 @@ FILE_CHANGES_FREQUENCY = 20
 PLAYER_RANKS_FILE = Path("players_ranks.json")
 ANNOUNCEMENTS_FILE = Path("announcements.json")
 MAP_MODIFICATIONS_FILE = Path("map_modifications.json")
-DEALERSHIP_MODIFICATIONS_FILE = Path("dearlerships.json")
+DEALERSHIP_MODIFICATIONS_FILE = Path("dealership.json")
 COMMANDS_FILE = Path("commands.json")
 DEALERSHIP_TAGS_FILE = Path("dealership_tags_DONT_EDIT.json")
 
