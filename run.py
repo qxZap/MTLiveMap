@@ -1,4 +1,6 @@
 import json
+import os
+import datetime
 import base64
 import asyncio
 from pathlib import Path
@@ -154,6 +156,14 @@ FAKE_NAMES = [
 EVENT_READY = 3
 EVENT_FINISH = 2
 EVENT_START = 1
+
+async def shutdown_at(target_hour=5, target_minute=0):
+    while True:
+        now = datetime.datetime.now()
+        if now.hour == target_hour and now.minute == target_minute:
+            print("Shutting down FastAPI server at scheduled time...")
+            os._exit(0)
+        await asyncio.sleep(30)
 
 def save_dealership_tags():
     with DEALERSHIP_TAGS_FILE.open("w") as f:
@@ -958,4 +968,9 @@ async def despawn_assets(tags):
             return {"status": f"request error: {e}"}
 
 if __name__ == "__main__":
-    uvicorn.run("run:app", host="0.0.0.0", port=8001, reload=False)
+    loop = asyncio.get_event_loop()
+    loop.create_task(shutdown_at(5, 00))
+    
+    config = uvicorn.Config("run:app", host="0.0.0.0", port=8001, reload=False, loop="asyncio")
+    server = uvicorn.Server(config)
+    loop.run_until_complete(server.serve())
