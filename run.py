@@ -84,23 +84,25 @@ active_events: Dict[str, dict] = {}
 # Constants
 HOOK_SERVER_CHANGE_EVENT_STATE = '/Script/MotorTown.MotorTownPlayerController:ServerChangeEventState'
 HOOK_SERVER_PASSED_RACE_SECTION = '/Script/MotorTown.MotorTownPlayerController:ServerPassedRaceSection'
-HOOK_ENTER_VEHICLE = '/Script/MotorTown.MotorTownPlayerController:ServerEnterVehicle'
+HOOK_PLAYER_SEND_CHAT = '/Script/MotorTown.MotorTownPlayerController:ServerSendChat'
 
 SPEED_CAMERAS_ON = False
 
 DEBUG_PLAYERS_FAKE = False
 ASSETS_SPAWN_ENABLED = False
-DEALERS_SPAWN_ENABLED = True
+DEALERS_SPAWN_ENABLED = False
 ALLOW_NPC_QUERY = False
 
 POLICE_FINE_COOLDOWN = 2.0  # Configurable cooldown in seconds to prevent duplicate fines
 SPEEDING_FINE_COOLDOWN = 10.0  # Configurable cooldown in seconds to prevent duplicate speeding fines
 SPEEDING_THRESHOLD = 300.0  # Minimum speed in km/h to trigger a fine
+FILE_CHANGES_FREQUENCY = 20
 
 PLAYER_RANKS_FILE = Path("players_ranks.json")
 ANNOUNCEMENTS_FILE = Path("announcements.json")
 MAP_MODIFICATIONS_FILE = Path("map_modifications.json")
 DEALERSHIP_MODIFICATIONS_FILE = Path("dearlerships.json")
+COMMANDS_FILE = Path("commands.json")
 DEALERSHIP_TAGS_FILE = Path("dealership_tags_DONT_EDIT.json")
 
 def load_dealership_tags():
@@ -124,6 +126,7 @@ def getAuthHeader(username: str = "myuser", password: str = "mypassword") -> dic
 AUTH_HEADER = getAuthHeader()
 
 player_ranks = {}
+COMMANDS = {}
 DEALERSHIP_MODIFICATIONS={}
 MAP_MODIFICATIONS={}
 vehicles_data = []
@@ -251,7 +254,7 @@ async def fetch_player_ranks_loop():
                     player_ranks = data
         except Exception as e:
             print(f"Error reading player_ranks.json: {e}")
-        await asyncio.sleep(20)
+        await asyncio.sleep(FILE_CHANGES_FREQUENCY)
 
 
 async def reload_models_from_file():
@@ -307,7 +310,25 @@ async def watch_map_modifications():
         except Exception as e:
             print(f"Error reading {MAP_MODIFICATIONS_FILE}: {e}")
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(FILE_CHANGES_FREQUENCY)
+
+async def watch_commands_modifications():
+    global COMMANDS
+    last_data = None
+
+    while True:
+        try:
+            if COMMANDS_FILE.exists():
+                with COMMANDS_FILE.open("r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    if data != last_data:
+                        last_data = data
+                        COMMANDS = data
+                        await reload_dealerships_from_file()
+        except Exception as e:
+            print(f"Error reading {COMMANDS_FILE}: {e}")
+
+        await asyncio.sleep(FILE_CHANGES_FREQUENCY)
 
 async def watch_dealers_modifications():
     global DEALERSHIP_MODIFICATIONS
@@ -325,7 +346,7 @@ async def watch_dealers_modifications():
         except Exception as e:
             print(f"Error reading {DEALERSHIP_MODIFICATIONS_FILE}: {e}")
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(FILE_CHANGES_FREQUENCY)
 
 def convert_xyz_speed_to_kmh(x1, y1, z1, x2, y2, z2, time_diff_in_seconds):
     distance = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
@@ -470,7 +491,7 @@ async def fetch_garages_loop():
                     garages_data = {"status": f"error {resp.status_code}"}
             except Exception as e:
                 garages_data = {"status": f"fetch error: {e}"}
-            await asyncio.sleep(20)
+            await asyncio.sleep(FILE_CHANGES_FREQUENCY)
 
 async def isPlayerDrivingCopCar(player, player_id):
     global raw_player_data, vehicles_data, player_ranks
@@ -721,6 +742,8 @@ async def start_fetcher():
     if ALLOW_NPC_QUERY:
         asyncio.create_task(fetch_npcs_loop())
 
+    asyncio.create_task(watch_commands_modifications())
+
     asyncio.create_task(fetch_garages_loop())
 
     asyncio.create_task(announce_loop())
@@ -742,7 +765,7 @@ async def garages_location():
 
 @app.post("/")
 async def handle_webhook(request: Request):
-    global active_events
+    global active_events, COMMANDS, player_ranks
 
     client_host = request.client.host
     if client_host not in ["127.0.0.1", "0.0.0.0"] and client_host != "localhost":
@@ -753,13 +776,41 @@ async def handle_webhook(request: Request):
     data = json.loads(body.decode('utf-8'))
     for event in data:
         hook_type = event.get("hook", "")
-        print(f"Received webhook of type: {hook_type}")
+        # print(f"Received webhook of type: {hook_type}")
 
         hook_data = event.get("data", {})
         player_id = hook_data.get("PlayerId", "")
 
-        # if hook_type == '/Script/MotorTown.MotorTownPlayerController:ServerSendChat':
-        #     print(hook_data)
+        if hook_type == HOOK_PLAYER_SEND_CHAT:
+            Message = hook_data.get('Message')
+            UniqueID = hook_data.get('Sender')
+            Category = hook_data.get('Category')
+
+            # 3 is event
+            # 2 is company
+            # 1 must be whisper
+            # 0 is normal
+            if Category == 0:
+                if Message and UniqueID:
+                    if Message.startswith('/'):
+                        clean_message = Message.strip()[1:]
+                        if clean_message in COMMANDS:
+                            command_data = COMMANDS[clean_message]
+                            # check raink of player
+                            command_rank = command_data.get('rank')
+                            command_message = command_data.get('message')
+
+                            if command_rank:
+                                player_rank = player_ranks.get(UniqueID,'player')
+                                if player_rank in ['admin', 'police'] and command_rank == 'police':
+                                    asyncio.create_task(announce_player(UniqueID, command_message))
+                                elif player_rank == 'admin' and command_rank == 'admin':
+                                    asyncio.create_task(announce_player(UniqueID, command_message))
+                                else:
+                                    asyncio.create_task(announce_player(UniqueID, "<img id=\"Dump\"/> You are not allowed to run this command\n\n Contact admins for support"))
+                            else:
+                                asyncio.create_task(announce_player(UniqueID, command_message))
+
 
         if hook_type == HOOK_SERVER_CHANGE_EVENT_STATE:
             event_data = hook_data.get("Event", {})
