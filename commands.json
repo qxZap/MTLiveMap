@@ -3,7 +3,7 @@
         "message" : "<Title> Help Menu</>\n\nHere you can find the useful commands that you can use in the server:\n\n/rules \nTo display the rules of the server\n\n/bbpd \nTo pull up the details for the police handbook\n\n/discord \nTo get a link to our discord\n\n/features \nTo get a list of the features that the server provides"
     },
     "rules" : {
-        "message" : "<Title> RULES</>\n(Full detail can be found in Discord & the Website): \n-----------\n1. No winch towing, messing with winches, or winching other players cars for no reason. & ensure cargo is strapped. \n2. Police vehicles are whitelisted for BBPD members only, apply via the discord! \n3. No cheating or exploits are allowed. \n4. Driving Standards: Obide by speed restrictions through towns/populated areas and avoid unnecesary crashes. \n5. Respect Players, Staff & the Server. \n6. You can only have 7 spawned in vehicles at once to alow for road trains, despawn idle and unused vehicles/ trailers. \n7. Replenish stock you take and if overloading, inform PD so they can help with road closures/ diversions. \n8. Rented land must have a minimum of a parking bay so people can spawn vehicles. \n9. No baiting police for a chase. \n10. No offensive vehicle liveries or any deemed hatefull or innapropriate. \n-----------"
+        "message" : "<Title> RULES</>\n(Full detail can be found in Discord & the Website): \n-----------\n Check our rules at <Money>https://motortown-bbt.com/#rules</>"
     },
     "discord" : {
         "message" : "<Title> Discord</>\n\nJoin our discord: <Money>https://discord.gg/BigBelly</>\n\nYou can find there exciting news about the server and the community along\n\nWe organize very often server events, you can check them on discord to know when they happen"
