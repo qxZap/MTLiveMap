@@ -449,7 +449,7 @@ def main():
             "bNotAlwaysLoadedForEditorGame": True,
             "bIsAsset": False,
             "GeneratePublicHash": False,
-            "SerializationBeforeSerializationDependencies": [],
+            "SerializationBeforeSerializationDependencies": [comp_num],
             "CreateBeforeSerializationDependencies": [comp_num],
             "SerializationBeforeCreateDependencies": [
                 sma_class,
@@ -492,7 +492,7 @@ def main():
             "bNotAlwaysLoadedForEditorGame": True,
             "bIsAsset": False,
             "GeneratePublicHash": False,
-            "SerializationBeforeSerializationDependencies": [],
+            "SerializationBeforeSerializationDependencies": [mesh_imp, actor_num],
             "CreateBeforeSerializationDependencies": [mesh_imp],
             "SerializationBeforeCreateDependencies": [smc_class, smc0_template],
             "CreateBeforeCreateDependencies": [actor_num],
