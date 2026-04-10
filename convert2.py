@@ -16,7 +16,8 @@ Dealership modifications format:
     "dealerships": {
         "group_name": [
             {
-                "vehicle_path": "/Game/Cars/Models/EnfoGT/EnfoGT",
+                "vehicle_path": "/Game/Cars/Models/Trailer_Cotra/Cotra_20_3L",
+                "vehicle_key": "Cotra_20_3L",
                 "X": 37982.8, "Y": -162517.7, "Z": -21926.5,
                 "Pitch": 0, "Roll": 0, "Yaw": -79.0
             }
@@ -24,8 +25,15 @@ Dealership modifications format:
     }
 }
 
-If "vehicle_path" is omitted but "VehicleKey" is present, the path is derived as:
-    /Game/Cars/Models/{VehicleKey}/{VehicleKey}
+Fields:
+    "vehicle_path" (required) - full game package path to the vehicle blueprint
+    "vehicle_key"  (recommended) - the vehicle identifier, used for class name ({key}_C)
+                                   falls back to last segment of vehicle_path if omitted
+
+Examples:
+    path: "/Game/Cars/Models/Trailer_Cotra/Cotra_20_3L"  key: "Cotra_20_3L"  -> Cotra_20_3L_C
+    path: "/Game/Cars/Models/Crany/Crany"                key: "Crany"         -> Crany_C
+    path: "/Game/Cars/Models/Bike/Gunthoo/Gunthoo"       key: "Gunthoo"       -> Gunthoo_C
 """
 
 import json
@@ -168,19 +176,21 @@ def build_rootscene_data(x, y, z, pitch, yaw, roll):
 
 def resolve_vehicle_path(entry):
     """
-    Get the full game path for the vehicle blueprint.
-    Supports either explicit 'vehicle_path' or derives from 'VehicleKey'.
-    Returns (package_path, class_name).
+    Get the full game path and vehicle key for a spawn entry.
+    Returns (package_path, class_name, vehicle_key).
+
+    Required fields:
+        "vehicle_path" - full game path, e.g. "/Game/Cars/Models/Trailer_Cotra/Cotra_20_3L"
+        "vehicle_key"  - the vehicle identifier, e.g. "Cotra_20_3L"
+
+    The class name is vehicle_key + "_C".
     """
-    if "vehicle_path" in entry:
-        pkg = entry["vehicle_path"]
-        base_name = pkg.rsplit("/", 1)[-1]
-        return pkg, f"{base_name}_C"
-    elif "VehicleKey" in entry:
-        key = entry["VehicleKey"]
-        return f"/Game/Cars/Models/{key}/{key}", f"{key}_C"
-    else:
-        raise ValueError(f"Entry missing both 'vehicle_path' and 'VehicleKey': {entry}")
+    if "vehicle_path" not in entry:
+        raise ValueError(f"Entry missing 'vehicle_path': {entry}")
+    pkg = entry["vehicle_path"]
+    # vehicle_key: explicit field, or fall back to last path segment
+    veh_key = entry.get("vehicle_key", pkg.rsplit("/", 1)[-1])
+    return pkg, f"{veh_key}_C", veh_key
 
 
 # ---------------------------------------------------------------------------
@@ -314,7 +324,7 @@ def main():
     vehicle_import_cache = {}
 
     for entry in all_spawns:
-        pkg_path, class_name = resolve_vehicle_path(entry)
+        pkg_path, class_name, _ = resolve_vehicle_path(entry)
         if pkg_path not in vehicle_import_cache:
             ensure_fname(name_map, pkg_path)
             ensure_fname(name_map, class_name)
@@ -332,7 +342,7 @@ def main():
     new_actor_nums = []
 
     for i, entry in enumerate(all_spawns):
-        pkg_path, class_name = resolve_vehicle_path(entry)
+        pkg_path, class_name, veh_key = resolve_vehicle_path(entry)
         veh_class_imp = vehicle_import_cache[pkg_path]
 
         x = float(entry.get("X", 0))
@@ -341,8 +351,6 @@ def main():
         pitch = float(entry.get("Pitch", 0))
         yaw = float(entry.get("Yaw", 0))
         roll = float(entry.get("Roll", 0))
-
-        veh_key = entry.get("VehicleKey", class_name.replace("_C", ""))
         actor_name = f"MTDealerVehicleSpawnPoint_MOD_{i}"
 
         # 1-based export numbers for the new pair
