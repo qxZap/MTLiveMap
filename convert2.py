@@ -236,13 +236,20 @@ def resolve_mesh_path(entry):
     Returns (package_path, export_name).
 
     Required:
-        "asset_path" - full game package path, e.g. "/Game/Models/.../SM_Veh_ContainerShip_01"
-        "asset_key"  - (recommended) the export name in that package, e.g. "SM_Veh_ContainerShip_01"
+        "asset_path" - full game package path. Accepts either form:
+                         "/Game/Models/.../SM_Foo"
+                         "/Game/Models/.../SM_Foo.SM_Foo"  (UE reference format)
+        "asset_key"  - (recommended) the export name in that package
                        falls back to last segment of asset_path if omitted
     """
     if "asset_path" not in entry:
         raise ValueError(f"Entry missing 'asset_path': {entry}")
     package_path = entry["asset_path"]
+    # Strip "<package>.<object>" suffix if present (UE asset reference format)
+    last_slash = package_path.rfind("/")
+    dot_pos = package_path.find(".", last_slash)
+    if dot_pos != -1:
+        package_path = package_path[:dot_pos]
     export_name = entry.get("asset_key", package_path.rsplit("/", 1)[-1])
     return package_path, export_name
 
