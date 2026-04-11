@@ -182,45 +182,38 @@ def build_dealer_rootscene_data(x, y, z, pitch, yaw, roll):
 # Then skip to prop 62,63 (actor label extras area)
 SMA_ACTOR_HEADER = bytes.fromhex("00023c03")
 
-# StaticMeshComponent0 header: 04022a026e05 (6 bytes)
-# Frags: [skip=4, vals=2] [skip=42, vals=2] [skip=110, vals=3, LAST]
-# Props: StaticMesh(4), CachedMaxDrawDistance(5), RelativeLocation(48),
-#        RelativeRotation(49), tail(160,161,162)
-SMC_HEADER = bytes.fromhex("04022a026e05")
+# SMC header (RawExport): [4,5] [42,43] [49,50] [161,162,163]  (96 bytes)
+SMC_HEADER = struct.pack('<HHHH', 0x0204, 0x0224, 0x0205, 0x056E)
 
 
 def build_sma_actor_data(comp_ref, label):
     """Build raw binary for a StaticMeshActor export."""
     data = bytearray()
     data += SMA_ACTOR_HEADER
-    data += struct.pack("<i", comp_ref)    # StaticMeshComponent ref
-    data += struct.pack("<i", comp_ref)    # RootComponent ref
-    data += b"\x00\x00\x00\x00"           # padding
+    data += struct.pack("<i", comp_ref)
+    data += struct.pack("<i", comp_ref)
+    data += b"\x00\x00\x00\x00"
     data += make_actor_extras(label)
     return base64.b64encode(bytes(data)).decode("ascii")
 
 
-def build_smc_data(mesh_imp_ref, x, y, z, pitch, yaw, roll, cached_draw_dist=40000.0):
+def build_smc_data(mesh_imp_ref, x, y, z, pitch, yaw, roll, cached_draw_dist=100000.0):
     """
-    Build raw binary for a StaticMeshComponent0 export.
-
-    Layout (82 bytes, header 04022a026e05):
-      [0:6]   Header
-      [6:10]  StaticMesh import ref (int32)
-      [10:14] CachedMaxDrawDistance (float32)
-      [14:22] 8 bytes zero (property 5 remainder / alignment)
-      [22:46] RelativeLocation (3 x float64)
-      [46:70] RelativeRotation (3 x float64)
-      [70:82] Tail: int32(0), int32(1), int32(0)
+    Build raw binary for StaticMeshComponent0 (96 bytes, RawExport).
+    Cloned from verified working export 57720 (ContainerShip).
+    Scale not supported in RawExport — use default (1,1,1).
     """
     data = bytearray()
     data += SMC_HEADER
     data += struct.pack("<i", mesh_imp_ref)
+    data += struct.pack("<i", 2)                       # Mobility = Movable
+    data += struct.pack("<i", 0)                       # OverrideMaterials (empty)
+    data += struct.pack("<i", 0)                       # padding
     data += struct.pack("<f", cached_draw_dist)
-    data += b"\x00" * 8
     data += struct.pack("<ddd", x, y, z)
     data += struct.pack("<ddd", pitch, yaw, roll)
-    data += struct.pack("<iii", 0, 1, 0)
+    data += b"\x00" * 12                               # tail props
+    data += struct.pack("<ii", 1, 0)                   # component footer
     return base64.b64encode(bytes(data)).decode("ascii")
 
 
@@ -499,7 +492,7 @@ def main():
             actor_num = len(exports) + 1
             comp_num = len(exports) + 2
 
-            # Actor
+            # Actor (RawExport)
             exports.append(make_raw_export(
                 build_sma_actor_data(comp_num, export_name),
                 f"StaticMeshActor_MOD_{i}", level_num, sma_class, default_sma,
@@ -507,7 +500,7 @@ def main():
                 sbcd=[sma_class, default_sma, smc0_template],
                 cbcd=[level_num],
             ))
-            # Component
+            # Component (RawExport)
             exports.append(make_raw_export(
                 build_smc_data(mesh_imp, x, y, z, pitch, yaw, roll),
                 "StaticMeshComponent0", actor_num, smc_class, smc0_template,

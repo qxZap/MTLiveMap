@@ -16,8 +16,8 @@
     "static_meshes": {
         "container_ship": [
             {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Vehicles/SM_Veh_ContainerShip_01",
-                "asset_key": "SM_Veh_ContainerShip_01",
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Buildings/SM_Bld_RepairShop_Large_01",
+                "asset_key": "SM_Bld_RepairShop_Large_01",
                 "X": -150890.14,
                 "Y": 159909.38,
                 "Z": -21759.39,
