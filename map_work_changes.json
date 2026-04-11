@@ -14,16 +14,336 @@
         ]
     },
     "static_meshes": {
-        "container_ship": [
+        "imported": [
             {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Buildings/SM_Bld_RepairShop_Large_01",
-                "asset_key": "SM_Bld_RepairShop_Large_01",
-                "X": -150890.14,
-                "Y": 159909.38,
-                "Z": -21759.39,
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -23880.35,
                 "Pitch": 0.0,
                 "Roll": 0.0,
-                "Yaw": 0.0
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -23880.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -24460.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -24460.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Vehicles/SM_Veh_ContainerShip_01",
+                "asset_key": "SM_Veh_ContainerShip_01",
+                "X": -40810.51433154187,
+                "Y": -194166.2043451111,
+                "Z": -22450.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789944
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -38763.263136120106,
+                "Y": -193453.41928435,
+                "Z": -21480.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -23300.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -22140.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -38421.24299787628,
+                "Y": -192513.72666171446,
+                "Z": -21480.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -21560.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -21560.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -37821.518392655096,
+                "Y": -193789.80126685803,
+                "Z": -21479.85,
+                "Pitch": 4.768946458182223e-07,
+                "Roll": 9.99999992253635,
+                "Yaw": 159.99999884467005
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -22140.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -38156.69812813405,
+                "Y": -194710.70003704086,
+                "Z": -21652.85,
+                "Pitch": 7.951386703658792e-16,
+                "Roll": 9.999999999999996,
+                "Yaw": 159.9999991549274
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -23300.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -22720.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -22720.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -38081.61700060016,
+                "Y": -191580.61188743738,
+                "Z": -21479.85,
+                "Pitch": 3.975693351829396e-16,
+                "Roll": 9.99999992253633,
+                "Yaw": -19.999999845072626
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -37749.85746650365,
+                "Y": -190669.1100434809,
+                "Z": -21650.35,
+                "Pitch": 3.975693351829396e-16,
+                "Roll": 9.999999999999995,
+                "Yaw": -19.999999845072626
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -37421.51813378958,
+                "Y": -189767.00512575076,
+                "Z": -21819.85,
+                "Pitch": 3.975693351829396e-16,
+                "Roll": 9.999999999999995,
+                "Yaw": -19.999999845072626
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -23880.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -23880.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -24460.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -24460.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -23300.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -22140.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -21560.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -21560.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -22140.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -23300.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -22720.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -22720.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_Ramp_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_Ramp_01",
+                "X": -37110.86,
+                "Y": -188920.17,
+                "Z": -22010.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
             }
         ]
     }
