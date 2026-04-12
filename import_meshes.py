@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 import_meshes.py - Imports static meshes from static_meshes.json into
-map_work_changes.json, applying a hardcoded offset to each entry.
-Skips any mesh with asset_key == "SM_SkySphere".
+map_work_changes.json["static_meshes"]["imported"], applying offsets.
+Skips SM_SkySphere. Copies missing assets into the mod pak directory.
 
 Usage:
     python import_meshes.py
@@ -10,6 +10,14 @@ Usage:
 
 import json
 import os
+import shutil
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+GAME_CONTENT = r"D:\MT\Output\Exports\MotorTown\Content"
+COOKED_CONTENT = r"C:\Users\Milea\Documents\Unreal Projects\MTMapAddon\Saved\Cooked\Windows\MTMapAddon\Content"
+MOD_CONTENT = r"MapChangeTest_P\MotorTown\Content"
 
 # ---------------------------------------------------------------------------
 # Offsets applied to every imported mesh (edit these as needed)
@@ -18,7 +26,6 @@ OFFSET_X = -39800.86
 OFFSET_Y = -195000.17
 OFFSET_Z = -22450.35
 
-
 # OFFSET_X = 242898.812
 # OFFSET_Y = -177002.594
 # OFFSET_Z = -22079.715
@@ -26,15 +33,6 @@ OFFSET_Z = -22450.35
 # OFFSET_Y = 0
 # OFFSET_Z = 0
 
-# x
-# : 
-# 242898.812
-# y
-# : 
-# -177002.594
-# z
-# : 
-# -22079.715
 OFFSET_PITCH = 0.0
 OFFSET_ROLL = 0.0
 OFFSET_YAW = 0.0
@@ -47,6 +45,60 @@ SKIP_KEYS = {"SM_SkySphere"}
 
 SRC = "static_meshes.json"
 DST = "map_work_changes.json"
+
+
+def game_path_to_disk(asset_path):
+    """
+    Convert a UE game path to a relative disk path under Content/.
+    e.g. "/Game/Models/Foo/Bar" -> "Models/Foo/Bar"
+         "/Engine/Foo/Bar"      -> None (engine asset, skip)
+    """
+    # Strip .ExportName suffix if present
+    dot = asset_path.rfind("/")
+    dot_pos = asset_path.find(".", dot)
+    if dot_pos != -1:
+        asset_path = asset_path[:dot_pos]
+
+    # /Game/ maps to MotorTown/Content/ on disk
+    if asset_path.startswith("/Game/"):
+        return asset_path[len("/Game/"):]
+    return None
+
+
+def copy_asset_to_mod(relative_path, script_dir):
+    """
+    If the asset doesn't exist in extracted game files, copy it from
+    cooked content (or game content) into the mod pak directory.
+    Copies .uasset, .uexp, .ubulk — skips silently if any don't exist.
+    """
+    game_file = os.path.join(GAME_CONTENT, relative_path + ".uasset")
+    mod_target = os.path.join(script_dir, MOD_CONTENT, relative_path)
+
+    if os.path.exists(game_file):
+        return  # exists in game, no need to copy
+
+    # Try cooked content as source
+    cooked_file = os.path.join(COOKED_CONTENT, relative_path + ".uasset")
+    if not os.path.exists(cooked_file):
+        print(f"  Warning: asset not found in game or cooked: {relative_path}")
+        return
+
+    mod_dir = os.path.dirname(mod_target)
+    os.makedirs(mod_dir, exist_ok=True)
+
+    copied = []
+    for ext in [".uasset", ".uexp", ".ubulk"]:
+        src = os.path.join(COOKED_CONTENT, relative_path + ext)
+        dst = mod_target + ext
+        try:
+            if os.path.exists(src):
+                shutil.copy2(src, dst)
+                copied.append(ext)
+        except Exception:
+            pass
+
+    if copied:
+        print(f"  Copied {relative_path} ({', '.join(copied)})")
 
 
 def main():
@@ -69,9 +121,16 @@ def main():
             if entry.get("asset_key") in SKIP_KEYS:
                 skipped += 1
                 continue
+
+            # Copy missing assets to mod
+            raw_path = entry.get("asset_path", "")
+            rel_path = game_path_to_disk(raw_path)
+            if rel_path:
+                copy_asset_to_mod(rel_path, script_dir)
+
             new_entry = {
-                "asset_path": entry["asset_path"],
-                "asset_key": entry["asset_key"],
+                "asset_path": raw_path,
+                "asset_key": entry.get("asset_key", ""),
                 "X": float(entry.get("X", 0)) + OFFSET_X,
                 "Y": float(entry.get("Y", 0)) + OFFSET_Y,
                 "Z": float(entry.get("Z", 0)) + OFFSET_Z,
@@ -81,15 +140,15 @@ def main():
             }
             imported.append(new_entry)
 
+    # Always clear and set — never append
     dst.setdefault("static_meshes", {})[TARGET_GROUP] = imported
 
     with open(dst_path, "w", encoding="utf-8") as f:
         json.dump(dst, f, indent=4, ensure_ascii=False)
 
     print(f"Imported {len(imported)} meshes, skipped {skipped}")
-    print(f"Offsets: X={OFFSET_X}, Y={OFFSET_Y}, Z={OFFSET_Z}, "
-          f"Pitch={OFFSET_PITCH}, Roll={OFFSET_ROLL}, Yaw={OFFSET_YAW}")
-    print(f"Target group: static_meshes.{TARGET_GROUP} in {DST}")
+    print(f"Offsets: X={OFFSET_X}, Y={OFFSET_Y}, Z={OFFSET_Z}")
+    print(f"Target: static_meshes.{TARGET_GROUP} (cleared and set)")
 
 
 if __name__ == "__main__":
