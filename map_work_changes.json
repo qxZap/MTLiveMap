@@ -14,63 +14,53 @@
         ]
     },
     "static_meshes": {
-        "imported": [
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -38296.56094377358,
-                "Y": -192697.45032754098,
-                "Z": -23880.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37544.80684566514,
-                "Y": -192971.06643813604,
-                "Z": -23880.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -38296.56094377358,
-                "Y": -192697.45032754098,
-                "Z": -24460.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37544.80684566514,
-                "Y": -192971.06643813604,
-                "Z": -24460.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
+        "jeju_us_imports_dc1": [
             {
                 "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Vehicles/SM_Veh_ContainerShip_01",
                 "asset_key": "SM_Veh_ContainerShip_01",
-                "X": -40810.51433154187,
+                "X": -42140.51433154187,
                 "Y": -194166.2043451111,
-                "Z": -22450.35,
+                "Z": -22490.35,
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": -109.99999914789944
             },
             {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
-                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
-                "X": -38763.263136120106,
-                "Y": -193453.41928435,
-                "Z": -21480.35,
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Vehicles/SM_Veh_ContainerShip_01_Prop_01",
+                "asset_key": "SM_Veh_ContainerShip_01_Prop_01",
+                "X": -46450.86,
+                "Y": -191910.17,
+                "Z": -23120.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775424
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Vehicles/SM_Veh_ContainerShip_01_Prop_01",
+                "asset_key": "SM_Veh_ContainerShip_01_Prop_01",
+                "X": -46890.86,
+                "Y": -193110.17,
+                "Z": -23120.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -23880.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -23880.35,
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": -19.999999845072747
@@ -91,6 +81,1436 @@
                 "X": -37544.80684566514,
                 "Y": -192971.06643813604,
                 "Z": -22140.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -24460.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -22720.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -23300.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -24460.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -22140.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -23300.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -22140.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -23300.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -22140.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -24460.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -22720.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -23880.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -22720.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -24460.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37544.80684566514,
+                "Y": -192971.06643813604,
+                "Z": -22720.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -23880.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -42850.86,
+                "Y": -194810.17,
+                "Z": -20830.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999900000002
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01",
+                "asset_key": "SM_Prop_Container_Large_Doors_01",
+                "X": -42260.86,
+                "Y": -194860.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999930282691
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -42630.86,
+                "Y": -194880.17,
+                "Z": -20830.35,
+                "Pitch": 9.47879159886693e-23,
+                "Roll": -179.999999,
+                "Yaw": -110.000001
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_01",
+                "asset_key": "SM_Prop_Container_Large_Stack_01",
+                "X": -42360.86,
+                "Y": -195420.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_06",
+                "asset_key": "SM_Prop_Container_Large_Stack_06",
+                "X": -40410.86,
+                "Y": -194630.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -43490.86,
+                "Y": -194570.17,
+                "Z": -20600.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999900000002
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_01",
+                "asset_key": "SM_Prop_Container_Large_Stack_01",
+                "X": -44940.86,
+                "Y": -194520.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -42030.86,
+                "Y": -194940.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999930282695
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -43261.309144,
+                "Y": -194651.404042,
+                "Z": -20610.349969,
+                "Pitch": 9.47879159886693e-23,
+                "Roll": -179.999999,
+                "Yaw": -110.000001
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -39490.86,
+                "Y": -195040.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Barrier_Curb_Bend_03",
+                "asset_key": "SM_Prop_Barrier_Curb_Bend_03",
+                "X": -39030.86,
+                "Y": -196310.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -59.999999535217846
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_Ramp_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_Ramp_01",
+                "X": -39460.86,
+                "Y": -195350.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -39490.86,
+                "Y": -195020.17,
+                "Z": -21590.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999900000002
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Barrier_Curb_Bend_03",
+                "asset_key": "SM_Prop_Barrier_Curb_Bend_03",
+                "X": -39750.86,
+                "Y": -196340.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999961268158
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -38156.69812813405,
+                "Y": -194710.70003704086,
+                "Z": -21652.85,
+                "Pitch": 7.951386703658792e-16,
+                "Roll": 9.999999999999996,
+                "Yaw": 159.9999991549274
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01",
+                "asset_key": "SM_Prop_Container_Large_Doors_01",
+                "X": -40710.86,
+                "Y": -194120.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -44170.86,
+                "Y": -193750.17,
+                "Z": -21620.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999900000002
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01",
+                "asset_key": "SM_Prop_Container_Large_Doors_01",
+                "X": -39740.86,
+                "Y": -194420.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 59.99999953521797
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01",
+                "asset_key": "SM_Prop_Container_Large_Doors_01",
+                "X": -44580.86,
+                "Y": -194190.17,
+                "Z": -20820.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Vehicles/SM_Veh_ContainerShip_01_Door_01",
+                "asset_key": "SM_Veh_ContainerShip_01_Door_01",
+                "X": -47380.86,
+                "Y": -192780.17,
+                "Z": -20700.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_Doors_01",
+                "asset_key": "SM_Prop_Container_Small_Doors_01",
+                "X": -40090.86,
+                "Y": -194770.17,
+                "Z": -21590.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999900000002
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Stack_11",
+                "asset_key": "SM_Prop_Container_Stack_11",
+                "X": -42140.86,
+                "Y": -193290.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01",
+                "asset_key": "SM_Prop_Container_Large_Doors_01",
+                "X": -41200.86,
+                "Y": -194550.17,
+                "Z": -21590.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Barrier_Curb_Straight_02",
+                "asset_key": "SM_Prop_Barrier_Curb_Straight_02",
+                "X": -41560.86,
+                "Y": -194580.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Vehicles/SM_Veh_ContainerShip_01_Console_01",
+                "asset_key": "SM_Veh_ContainerShip_01_Console_01",
+                "X": -46760.86,
+                "Y": -192560.17,
+                "Z": -20820.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Doors_01",
+                "asset_key": "SM_Prop_Container_Doors_01",
+                "X": -44430.86,
+                "Y": -192860.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 149.99999838029072
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41200.86,
+                "Y": -194210.17,
+                "Z": -20790.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -44720.86,
+                "Y": -194010.17,
+                "Z": -21600.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_04",
+                "asset_key": "SM_Prop_Container_Large_Stack_04",
+                "X": -40390.86,
+                "Y": -194140.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41130.86,
+                "Y": -194070.17,
+                "Z": -20790.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Vehicles/SM_Veh_ContainerShip_01_Door_01",
+                "asset_key": "SM_Veh_ContainerShip_01_Door_01",
+                "X": -47270.86,
+                "Y": -192360.17,
+                "Z": -20680.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_05",
+                "asset_key": "SM_Prop_Container_Large_Stack_05",
+                "X": -45660.86,
+                "Y": -193290.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41030.86,
+                "Y": -193340.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 19.999999077463652
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_05",
+                "asset_key": "SM_Prop_Container_Large_Stack_05",
+                "X": -39590.86,
+                "Y": -194360.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775423
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/CarNice",
+                "asset_key": "CarNice",
+                "X": -40880.86,
+                "Y": -194060.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -41200.86,
+                "Y": -194670.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 19.99999984507266
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -44510.860009491014,
+                "Y": -192320.16999659297,
+                "Z": -20860.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.00000030282712
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/CarNice",
+                "asset_key": "CarNice",
+                "X": -40170.86,
+                "Y": -194310.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -40790.86,
+                "Y": -193420.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -10.000000767609038
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_02",
+                "asset_key": "SM_Prop_Container_02",
+                "X": -45120.86,
+                "Y": -193440.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_Doors_01",
+                "asset_key": "SM_Prop_Container_Small_Doors_01",
+                "X": -43390.86,
+                "Y": -192590.17,
+                "Z": -21590.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41960.86,
+                "Y": -193300.17,
+                "Z": -20860.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41240.86,
+                "Y": -194360.17,
+                "Z": -20790.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Barrier_Curb_Straight_02",
+                "asset_key": "SM_Prop_Barrier_Curb_Straight_02",
+                "X": -41460.86,
+                "Y": -194600.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45520.86,
+                "Y": -193200.17,
+                "Z": -21093.35,
+                "Pitch": -3.975693351829396e-16,
+                "Roll": -4.0,
+                "Yaw": 69.999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45620.86,
+                "Y": -193480.17,
+                "Z": -21093.35,
+                "Pitch": -3.975693351829396e-16,
+                "Roll": -4.0,
+                "Yaw": 69.999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -44500.86,
+                "Y": -194080.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -43905.846607,
+                "Y": -194423.870652,
+                "Z": -20380.349938,
+                "Pitch": 9.47879159886693e-23,
+                "Roll": -179.999999,
+                "Yaw": -110.000001
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -44690.86,
+                "Y": -193820.17,
+                "Z": -20550.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -44827.09732899123,
+                "Y": -192775.54365107027,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -42030.86,
+                "Y": -193060.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Doors_01",
+                "asset_key": "SM_Prop_Container_Doors_01",
+                "X": -41430.86,
+                "Y": -194630.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -4.577544245876197e-07
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_Doors_01",
+                "asset_key": "SM_Prop_Container_Small_Doors_01",
+                "X": -40090.86,
+                "Y": -194810.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Stack_11",
+                "asset_key": "SM_Prop_Container_Stack_11",
+                "X": -42370.86,
+                "Y": -193870.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -43941.309143664526,
+                "Y": -193831.40404151662,
+                "Z": -21630.349969336727,
+                "Pitch": -4.768941153088235e-07,
+                "Roll": -179.999998689743,
+                "Yaw": -110.00000069014493
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Doors_02",
+                "asset_key": "SM_Prop_Container_Doors_02",
+                "X": -45840.86,
+                "Y": -193150.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Stack_07",
+                "asset_key": "SM_Prop_Container_Stack_07",
+                "X": -45750.86,
+                "Y": -191840.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 160.00000154927352
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41250.86,
+                "Y": -193300.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 29.999999309854587
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -44790.86,
+                "Y": -194040.17,
+                "Z": -20550.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -45680.86,
+                "Y": -192420.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -42350.86,
+                "Y": -193160.17,
+                "Z": -20860.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Speaker_Workshop_01",
+                "asset_key": "SM_Prop_Speaker_Workshop_01",
+                "X": -40050.86,
+                "Y": -194610.17,
+                "Z": -21390.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 129.99999899297225
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -44860.86,
+                "Y": -194270.17,
+                "Z": -20550.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.00000030282712
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_01",
+                "asset_key": "SM_Prop_Container_Large_Stack_01",
+                "X": -43960.86,
+                "Y": -193350.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -44120.86,
+                "Y": -194340.17,
+                "Z": -20470.35,
+                "Pitch": -7.951386703658792e-16,
+                "Roll": -12.0,
+                "Yaw": -109.999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/TruckNice",
+                "asset_key": "TruckNice",
+                "X": -40380.86,
+                "Y": -194320.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -99.99999922536331
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_02",
+                "asset_key": "SM_Prop_Container_02",
+                "X": -44900.86,
+                "Y": -193630.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -39830.86,
+                "Y": -194420.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -42890.86,
+                "Y": -192780.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Metal",
+                "asset_key": "SM_Prop_Ramp_Metal",
+                "X": -44870.860007300784,
+                "Y": -192410.17000535392,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 70.00000269717279
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_01",
+                "asset_key": "SM_Prop_Container_Large_Stack_01",
+                "X": -42800.86,
+                "Y": -192540.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -43310.86,
+                "Y": -194060.17,
+                "Z": -21850.35,
+                "Pitch": -4.768941153088235e-07,
+                "Roll": -179.999998689743,
+                "Yaw": -110.00000069014493
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -44585.84660747093,
+                "Y": -193603.87065183278,
+                "Z": -21400.34993818674,
+                "Pitch": -4.768941153088235e-07,
+                "Roll": -179.999998689743,
+                "Yaw": -110.00000069014493
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02",
+                "asset_key": "SM_Prop_Crate_02",
+                "X": -45060.86,
+                "Y": -193400.17,
+                "Z": -21590.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41070.86,
+                "Y": -193890.17,
+                "Z": -20790.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41290.86,
+                "Y": -194530.17,
+                "Z": -20790.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45210.86,
+                "Y": -193470.17,
+                "Z": -21140.35,
+                "Pitch": -7.951386703658792e-16,
+                "Roll": -9.999999999999998,
+                "Yaw": 69.99999899999997
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -43740.86,
+                "Y": -192480.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -46120.86,
+                "Y": -193170.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_Doors_01",
+                "asset_key": "SM_Prop_Container_Small_Doors_01",
+                "X": -45540.86,
+                "Y": -192190.17,
+                "Z": -21590.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -44650.86,
+                "Y": -192710.17,
+                "Z": -20860.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.00000030282712
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45470.86,
+                "Y": -193060.17,
+                "Z": -21093.35,
+                "Pitch": -3.975693351829396e-16,
+                "Roll": -4.0,
+                "Yaw": 69.999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -44800.86,
+                "Y": -193520.17,
+                "Z": -21400.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999900000002
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/CarNice",
+                "asset_key": "CarNice",
+                "X": -39670.86,
+                "Y": -194570.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Speaker_Workshop_01",
+                "asset_key": "SM_Prop_Speaker_Workshop_01",
+                "X": -40760.86,
+                "Y": -194330.17,
+                "Z": -21390.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -169.9999986831175
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01",
+                "asset_key": "SM_Prop_Container_Large_Doors_01",
+                "X": -41720.86,
+                "Y": -194560.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_01",
+                "asset_key": "SM_Prop_Container_Large_Stack_01",
+                "X": -40230.86,
+                "Y": -193460.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41040.86,
+                "Y": -193690.17,
+                "Z": -20790.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999869014529
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -44880.86,
+                "Y": -193940.17,
+                "Z": -21150.35,
+                "Pitch": 90.0,
+                "Roll": -156.42366577992993,
+                "Yaw": -176.42366562500266
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41530.86,
+                "Y": -193140.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -60.00000030282705
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -41570.86,
+                "Y": -193810.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999690145387
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/CarNice",
+                "asset_key": "CarNice",
+                "X": -41000.86,
+                "Y": -193820.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -43330.86,
+                "Y": -192620.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -41750.86,
+                "Y": -194280.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45990.86,
+                "Y": -192840.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_02",
+                "asset_key": "SM_Prop_Container_02",
+                "X": -44630.86,
+                "Y": -193660.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_Doors_01",
+                "asset_key": "SM_Prop_Container_Small_Doors_01",
+                "X": -44810.86,
+                "Y": -192760.17,
+                "Z": -21590.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01_Door_02",
+                "asset_key": "SM_Prop_Container_Large_Doors_01_Door_02",
+                "X": -45320.86,
+                "Y": -193240.17,
+                "Z": -21340.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41950.86,
+                "Y": -194440.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -50.000000457754425
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45160.86,
+                "Y": -193330.17,
+                "Z": -21140.35,
+                "Pitch": -7.951386703658792e-16,
+                "Roll": -9.999999999999998,
+                "Yaw": 69.99999899999997
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Barrier_Curb_Straight_02",
+                "asset_key": "SM_Prop_Barrier_Curb_Straight_02",
+                "X": -41370.86,
+                "Y": -194640.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Mesh_01",
+                "asset_key": "SM_Prop_Ramp_Mesh_01",
+                "X": -43530.86,
+                "Y": -193990.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -41830.86,
+                "Y": -194640.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -50.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Stack_12",
+                "asset_key": "SM_Prop_Container_Stack_12",
+                "X": -42440.86,
+                "Y": -194310.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45110.86,
+                "Y": -193190.17,
+                "Z": -21140.35,
+                "Pitch": 2.3854160110976376e-15,
+                "Roll": -9.999999922536286,
+                "Yaw": 69.99999945775411
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01",
+                "asset_key": "SM_Prop_Container_Large_Doors_01",
+                "X": -41660.86,
+                "Y": -194040.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_05",
+                "asset_key": "SM_Prop_Container_Large_Stack_05",
+                "X": -41030.86,
+                "Y": -193840.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Doors_01",
+                "asset_key": "SM_Prop_Container_Doors_01",
+                "X": -41590.86,
+                "Y": -194390.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Doors_01",
+                "asset_key": "SM_Prop_Container_Doors_01",
+                "X": -44200.86,
+                "Y": -192780.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45570.86,
+                "Y": -193340.17,
+                "Z": -21093.35,
+                "Pitch": -3.975693351829396e-16,
+                "Roll": -4.0,
+                "Yaw": 69.999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Stack_06",
+                "asset_key": "SM_Prop_Container_Large_Stack_06",
+                "X": -40390.86,
+                "Y": -193820.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -44700.86,
+                "Y": -194040.17,
+                "Z": -21340.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01_Door_02",
+                "asset_key": "SM_Prop_Container_Large_Doors_01_Door_02",
+                "X": -45380.86,
+                "Y": -193440.17,
+                "Z": -21340.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 130.0000017816645
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -45550.86,
+                "Y": -192210.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02",
+                "asset_key": "SM_Prop_Crate_02",
+                "X": -45240.86,
+                "Y": -193400.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Barrier_Curb_Straight_02",
+                "asset_key": "SM_Prop_Barrier_Curb_Straight_02",
+                "X": -41280.86,
+                "Y": -194680.17,
+                "Z": -20810.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_Doors_01",
+                "asset_key": "SM_Prop_Container_Large_Doors_01",
+                "X": -44800.86,
+                "Y": -194060.17,
+                "Z": -20820.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -45260.86,
+                "Y": -193610.17,
+                "Z": -21140.35,
+                "Pitch": -7.951386703658792e-16,
+                "Roll": -9.999999999999998,
+                "Yaw": 69.99999899999997
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -44740.86,
+                "Y": -194010.17,
+                "Z": -21080.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -20.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Small_01",
+                "asset_key": "SM_Prop_Container_Small_01",
+                "X": -43330.86,
+                "Y": -192650.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Crate_02_Top",
+                "asset_key": "SM_Prop_Crate_02_Top",
+                "X": -46070.86,
+                "Y": -192990.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999899999999
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Ramp_Metal",
+                "asset_key": "SM_Prop_Ramp_Metal",
+                "X": -42260.86,
+                "Y": -193520.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 160.00000154927352
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -45070.86,
+                "Y": -192450.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -39.99999954224564
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -44400.86,
+                "Y": -192600.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999930282702
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -37749.85746650365,
+                "Y": -190669.1100434809,
+                "Z": -21650.35,
+                "Pitch": 3.975693351829396e-16,
+                "Roll": 9.999999999999995,
+                "Yaw": -19.999999845072626
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_TyreRack_Tyres_02",
+                "asset_key": "SM_Prop_TyreRack_Tyres_02",
+                "X": -39220.86,
+                "Y": -194210.17,
+                "Z": -21250.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -38763.263136120106,
+                "Y": -193453.41928435,
+                "Z": -21480.35,
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": -19.999999845072747
@@ -116,76 +1536,6 @@
                 "Yaw": -19.999999845072747
             },
             {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -38296.56094377358,
-                "Y": -192697.45032754098,
-                "Z": -21560.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
-                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
-                "X": -37821.518392655096,
-                "Y": -193789.80126685803,
-                "Z": -21479.85,
-                "Pitch": 4.768946458182223e-07,
-                "Roll": 9.99999992253635,
-                "Yaw": 159.99999884467005
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -38296.56094377358,
-                "Y": -192697.45032754098,
-                "Z": -22140.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
-                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
-                "X": -38156.69812813405,
-                "Y": -194710.70003704086,
-                "Z": -21652.85,
-                "Pitch": 7.951386703658792e-16,
-                "Roll": 9.999999999999996,
-                "Yaw": 159.9999991549274
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37544.80684566514,
-                "Y": -192971.06643813604,
-                "Z": -23300.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -38296.56094377358,
-                "Y": -192697.45032754098,
-                "Z": -22720.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37544.80684566514,
-                "Y": -192971.06643813604,
-                "Z": -22720.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
                 "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
                 "asset_key": "SM_Env_Port_Drydock_Bridge_01",
                 "X": -38081.61700060016,
@@ -196,14 +1546,24 @@
                 "Yaw": -19.999999845072626
             },
             {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
-                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
-                "X": -37749.85746650365,
-                "Y": -190669.1100434809,
-                "Z": -21650.35,
-                "Pitch": 3.975693351829396e-16,
-                "Roll": 9.999999999999995,
-                "Yaw": -19.999999845072626
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -38296.56094377358,
+                "Y": -192697.45032754098,
+                "Z": -21560.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_TyreRack_Tyres_01",
+                "asset_key": "SM_Prop_TyreRack_Tyres_01",
+                "X": -39230.86,
+                "Y": -194210.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
             },
             {
                 "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
@@ -216,124 +1576,14 @@
                 "Yaw": -19.999999845072626
             },
             {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37940.86,
-                "Y": -191720.17,
-                "Z": -23880.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37189.10590189156,
-                "Y": -191993.78611059507,
-                "Z": -23880.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37940.86,
-                "Y": -191720.17,
-                "Z": -24460.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37189.10590189156,
-                "Y": -191993.78611059507,
-                "Z": -24460.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37940.86,
-                "Y": -191720.17,
-                "Z": -23300.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37189.10590189156,
-                "Y": -191993.78611059507,
-                "Z": -22140.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37189.10590189156,
-                "Y": -191993.78611059507,
-                "Z": -21560.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37940.86,
-                "Y": -191720.17,
-                "Z": -21560.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37940.86,
-                "Y": -191720.17,
-                "Z": -22140.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37189.10590189156,
-                "Y": -191993.78611059507,
-                "Z": -23300.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37940.86,
-                "Y": -191720.17,
-                "Z": -22720.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
-            },
-            {
-                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
-                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
-                "X": -37189.10590189156,
-                "Y": -191993.78611059507,
-                "Z": -22720.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": -19.999999845072747
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_01",
+                "asset_key": "SM_Env_Port_Drydock_Bridge_01",
+                "X": -37821.518392655096,
+                "Y": -193789.80126685803,
+                "Z": -21479.85,
+                "Pitch": 4.768946458182223e-07,
+                "Roll": 9.99999992253635,
+                "Yaw": 159.99999884467005
             },
             {
                 "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Bridge_Ramp_01",
@@ -344,6 +1594,146 @@
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37189.10590189156,
+                "Y": -191993.78611059507,
+                "Z": -21560.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_Container_Large_01",
+                "asset_key": "SM_Prop_Container_Large_01",
+                "X": -39590.86,
+                "Y": -194400.17,
+                "Z": -21070.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -89.99999930282696
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_TyreRack_01",
+                "asset_key": "SM_Prop_TyreRack_01",
+                "X": -39230.86,
+                "Y": -194210.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Props/SM_Prop_TyreRack_Tyres_01",
+                "asset_key": "SM_Prop_TyreRack_Tyres_01",
+                "X": -39230.86,
+                "Y": -194210.17,
+                "Z": -21180.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Meshes/Environment/SM_Env_Port_Drydock_Small_Corner_01",
+                "asset_key": "SM_Env_Port_Drydock_Small_Corner_01",
+                "X": -37940.86,
+                "Y": -191720.17,
+                "Z": -21560.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072747
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/BikeNice",
+                "asset_key": "BikeNice",
+                "X": -42310.86,
+                "Y": -194980.17,
+                "Z": -21060.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 69.99999945775427
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/TruckNice",
+                "asset_key": "TruckNice",
+                "X": -41670.86,
+                "Y": -193610.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -109.99999914789966
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/CarNice",
+                "asset_key": "CarNice",
+                "X": -42720.86,
+                "Y": -193010.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -179.99999860565384
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/BikeNice",
+                "asset_key": "BikeNice",
+                "X": -43690.86,
+                "Y": -192520.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -160.00000154927358
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/CarNice",
+                "asset_key": "CarNice",
+                "X": -42850.86,
+                "Y": -193350.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -179.9999986056538
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/BikeNice",
+                "asset_key": "BikeNice",
+                "X": -44510.86,
+                "Y": -192900.17,
+                "Z": -21850.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 129.999998992972
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/BikeNice",
+                "asset_key": "BikeNice",
+                "X": -45580.86,
+                "Y": -193290.17,
+                "Z": -21330.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -59.99999953521767
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/TruckNice",
+                "asset_key": "TruckNice",
+                "X": -44970.86,
+                "Y": -194010.17,
+                "Z": -20290.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -19.999999845072693
+            },
+            {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/BikeNice",
+                "asset_key": "BikeNice",
+                "X": -39800.86,
+                "Y": -194500.17,
+                "Z": -20800.35,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 59.99999953521798
             }
         ]
     }

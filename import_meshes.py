@@ -22,6 +22,8 @@ MOD_CONTENT = r"MapChangeTest_P\MotorTown\Content"
 # ---------------------------------------------------------------------------
 # Offsets applied to every imported mesh (edit these as needed)
 # ---------------------------------------------------------------------------
+
+# Jeju imports
 OFFSET_X = -39800.86
 OFFSET_Y = -195000.17
 OFFSET_Z = -22450.35
