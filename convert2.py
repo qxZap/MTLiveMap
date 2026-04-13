@@ -182,8 +182,12 @@ def build_dealer_rootscene_data(x, y, z, pitch, yaw, roll):
 # Then skip to prop 62,63 (actor label extras area)
 SMA_ACTOR_HEADER = bytes.fromhex("00023c03")
 
-# SMC header (RawExport): [4,5] [42,43] [49,50] [161,162,163]  (96 bytes)
+# SMC headers (RawExport)
+# No scale: [4,5] [42,43] [49,50] [161,162,163]     tail num=3 (96 bytes)
 SMC_HEADER = struct.pack('<HHHH', 0x0204, 0x0224, 0x0205, 0x056E)
+# With scale: [4,5] [42,43] [49,50] [161,162,163,164] tail num=4 (116 bytes)
+# Cloned from working export 57200 (SM_Bld_Trim_Ceiling_01 with scale 2,1,1)
+SMC_HEADER_SCALE = struct.pack('<HHHH', 0x0204, 0x0224, 0x0205, 0x076E)
 
 
 def build_sma_actor_data(comp_ref, label):
@@ -197,23 +201,31 @@ def build_sma_actor_data(comp_ref, label):
     return base64.b64encode(bytes(data)).decode("ascii")
 
 
-def build_smc_data(mesh_imp_ref, x, y, z, pitch, yaw, roll, cached_draw_dist=100000.0):
+def build_smc_data(mesh_imp_ref, x, y, z, pitch, yaw, roll,
+                   sx=1.0, sy=1.0, sz=1.0, cached_draw_dist=100000.0):
     """
-    Build raw binary for StaticMeshComponent0 (96 bytes, RawExport).
-    Cloned from verified working export 57720 (ContainerShip).
-    Scale not supported in RawExport — use default (1,1,1).
+    Build raw binary for StaticMeshComponent0 (RawExport).
+    No scale: 96 bytes (tail num=3).  With scale: 116 bytes (tail num=4).
+    Scale header cloned from existing working export 57200.
     """
+    has_scale = not (sx == 1.0 and sy == 1.0 and sz == 1.0)
     data = bytearray()
-    data += SMC_HEADER
+    data += SMC_HEADER_SCALE if has_scale else SMC_HEADER
+    # Props [4,5]
     data += struct.pack("<i", mesh_imp_ref)
     data += struct.pack("<i", 2)                       # Mobility = Movable
+    # Props [42,43]
     data += struct.pack("<i", 0)                       # OverrideMaterials (empty)
     data += struct.pack("<i", 0)                       # padding
     data += struct.pack("<f", cached_draw_dist)
+    # Props [49,50]
     data += struct.pack("<ddd", x, y, z)
     data += struct.pack("<ddd", pitch, yaw, roll)
-    data += b"\x00" * 12                               # tail props
-    data += struct.pack("<ii", 1, 0)                   # component footer
+    # Tail frag: scale (if present) + zeros + footer
+    if has_scale:
+        data += struct.pack("<ddd", sx, sy, sz)        # first tail prop = scale
+    data += b"\x00" * 12                               # tail zeros
+    data += struct.pack("<ii", 1, 0)                   # footer
     return base64.b64encode(bytes(data)).decode("ascii")
 
 
@@ -495,6 +507,9 @@ def main():
             mesh_imp = mesh_cache[pkg_path]
             x, y, z = float(entry.get("X", 0)), float(entry.get("Y", 0)), float(entry.get("Z", 0))
             pitch, yaw, roll = float(entry.get("Pitch", 0)), float(entry.get("Yaw", 0)), float(entry.get("Roll", 0))
+            sx = float(entry.get("ScaleX", 1.0))
+            sy = float(entry.get("ScaleY", 1.0))
+            sz = float(entry.get("ScaleZ", 1.0))
 
             actor_num = len(exports) + 1
             comp_num = len(exports) + 2
@@ -509,7 +524,7 @@ def main():
             ))
             # Component (RawExport)
             exports.append(make_raw_export(
-                build_smc_data(mesh_imp, x, y, z, pitch, yaw, roll),
+                build_smc_data(mesh_imp, x, y, z, pitch, yaw, roll, sx, sy, sz),
                 "StaticMeshComponent0", actor_num, smc_class, smc0_template,
                 object_flags="RF_Transactional, RF_DefaultSubObject",
                 is_inherited=True,
