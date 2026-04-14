@@ -28,6 +28,11 @@ OFFSET_X = -39800.86
 OFFSET_Y = -195000.17
 OFFSET_Z = -22450.35
 
+# New map
+OFFSET_X = -39800.0
+OFFSET_Y = -195000.0
+OFFSET_Z = -24450.0
+
 # OFFSET_X = 242898.812
 # OFFSET_Y = -177002.594
 # OFFSET_Z = -22079.715
@@ -42,8 +47,12 @@ OFFSET_YAW = 0.0
 # Which group inside map_work_changes.json["static_meshes"] to write to
 TARGET_GROUP = "imported"
 
-# Mesh names to skip (by asset_key)
-SKIP_KEYS = {"SM_SkySphere"}
+# Mesh names to skip entirely (by asset_key)
+SKIP_KEYS = {"SM_SkySphere", "Parking1"}
+
+# Meshes that become blueprint actors instead of static meshes
+# Disabled — parking BP actors have hardcoded cross-refs in binary that can't be patched
+PARKING_KEYS = set()
 
 SRC = "static_meshes.json"
 DST = "map_work_changes.json"
@@ -114,7 +123,9 @@ def main():
         dst = json.load(f)
 
     imported = []
+    parking = []
     skipped = 0
+    copied_paths = set()
 
     for group_name, items in src.get("static_meshes", {}).items():
         if not isinstance(items, list):
@@ -124,36 +135,44 @@ def main():
                 skipped += 1
                 continue
 
-            # Copy missing assets to mod
+            # Copy missing assets to mod (once per unique path)
             raw_path = entry.get("asset_path", "")
             rel_path = game_path_to_disk(raw_path)
-            if rel_path:
+            if rel_path and rel_path not in copied_paths:
                 copy_asset_to_mod(rel_path, script_dir)
+                copied_paths.add(rel_path)
 
-            new_entry = {
-                "asset_path": raw_path,
-                "asset_key": entry.get("asset_key", ""),
-                "X": float(entry.get("X", 0)) + OFFSET_X,
-                "Y": float(entry.get("Y", 0)) + OFFSET_Y,
-                "Z": float(entry.get("Z", 0)) + OFFSET_Z,
-                "Pitch": float(entry.get("Pitch", 0)) + OFFSET_PITCH,
-                "Roll": float(entry.get("Roll", 0)) + OFFSET_ROLL,
-                "Yaw": float(entry.get("Yaw", 0)) + OFFSET_YAW,
-                "ScaleX": float(entry.get("ScaleX", 1.0)),
-                "ScaleY": float(entry.get("ScaleY", 1.0)),
-                "ScaleZ": float(entry.get("ScaleZ", 1.0)),
+            base_entry = {
+                "X": round(float(entry.get("X", 0)) + OFFSET_X, 4),
+                "Y": round(float(entry.get("Y", 0)) + OFFSET_Y, 4),
+                "Z": round(float(entry.get("Z", 0)) + OFFSET_Z, 4),
+                "Pitch": round(float(entry.get("Pitch", 0)) + OFFSET_PITCH, 4),
+                "Roll": round(float(entry.get("Roll", 0)) + OFFSET_ROLL, 4),
+                "Yaw": round(float(entry.get("Yaw", 0)) + OFFSET_YAW, 4),
             }
-            imported.append(new_entry)
+
+            if entry.get("asset_key") in PARKING_KEYS:
+                base_entry["blueprint_path"] = "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large"
+                base_entry["blueprint_class"] = "Interaction_ParkingSpace_Large_C"
+                parking.append(base_entry)
+            else:
+                base_entry["asset_path"] = raw_path
+                base_entry["asset_key"] = entry.get("asset_key", "")
+                base_entry["ScaleX"] = float(entry.get("ScaleX", 1.0))
+                base_entry["ScaleY"] = float(entry.get("ScaleY", 1.0))
+                base_entry["ScaleZ"] = float(entry.get("ScaleZ", 1.0))
+                imported.append(base_entry)
 
     # Always clear and set — never append
     dst.setdefault("static_meshes", {})[TARGET_GROUP] = imported
+    dst.setdefault("blueprint_actors", {})[TARGET_GROUP] = parking
 
     with open(dst_path, "w", encoding="utf-8") as f:
         json.dump(dst, f, indent=4, ensure_ascii=False)
 
-    print(f"Imported {len(imported)} meshes, skipped {skipped}")
+    print(f"Imported {len(imported)} meshes + {len(parking)} parking lots, skipped {skipped}")
     print(f"Offsets: X={OFFSET_X}, Y={OFFSET_Y}, Z={OFFSET_Z}")
-    print(f"Target: static_meshes.{TARGET_GROUP} (cleared and set)")
+    print(f"Target: {TARGET_GROUP} (cleared and set)")
 
 
 if __name__ == "__main__":

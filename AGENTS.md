@@ -520,28 +520,34 @@ Input: `map_modifications.json` with `assets` groups containing mesh paths + tra
 
 ### convert2.py
 
-Injects **MTDealerVehicleSpawnPoint** actors into the main Jeju_World map (RawExport format). Creates actor + RootScene export pairs with raw binary data matching existing export patterns.
+Injects actors into the main Jeju_World map (RawExport format). Supports:
+- **MTDealerVehicleSpawnPoint** — vehicle dealership spawners
+- **StaticMeshActor** — static mesh props with optional scale
+- **Blueprint actors** — generic BP actor spawning (e.g. parking spots)
 
-Input: `dealership_modifications.json` with `dealerships` groups:
+Also auto-copies missing mesh assets from cooked content to the mod pak.
+
+Input: `map_work_changes.json`:
 
 ```json
 {
-    "dealerships": {
-        "group_name": [
-            {
-                "vehicle_path": "/Game/Cars/Models/Trailer_Cotra/Cotra_20_3L",
-                "vehicle_key": "Cotra_20_3L",
-                "X": -165201.42, "Y": 151690.49, "Z": -20906.85,
-                "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0
-            }
-        ]
-    }
+    "dealerships": { ... },
+    "static_meshes": { ... },
+    "blueprint_actors": { ... }
 }
 ```
 
-Fields:
-- `vehicle_path` (required) - full game package path to the vehicle blueprint
-- `vehicle_key` (recommended) - the vehicle identifier, used for class name (`{key}_C`) and actor label. Falls back to last segment of `vehicle_path` if omitted.
+### import_meshes.py
+
+Imports meshes from `static_meshes.json` (exported by `ue.py`) into `map_work_changes.json`. Applies coordinate offsets. Converts `Parking1` meshes to `blueprint_actors` entries. Copies missing assets from cooked content to mod pak. Rounds coordinates to avoid float precision artifacts.
+
+### ue.py
+
+Runs inside Unreal Editor. Exports all StaticMeshActors and foliage instances (from HISM components) to `static_meshes.json` with full transforms including scale.
+
+### build_and_deploy.bat
+
+Full pipeline: convert2.py → UAssetGUI fromjson → wait for .umap → modp.bat (pack + deploy).
 
 ---
 
@@ -588,3 +594,31 @@ Sub-level partition files (like `BPITA48KRY74AFBRZBJY6ENBZ.json`) have `LevelExp
 ### 10. Vehicle Paths Are Fully Variable
 
 Folder name != asset name. Multiple assets per folder. Sub-paths exist. Always use the explicit `vehicle_path` field with the full `/Game/Cars/Models/...` path rather than assuming any naming convention.
+
+### 11. NormalExport in RawExport .umap = Crash or Memory Leak
+
+UAssetAPI cannot serialize NormalExport properties into unversioned binary for the main .umap. It works in standalone .uasset files (like actorTemplate.json, Goliath4_Actor.json) but NOT when injected into the all-RawExport Jeju_World.umap. Always use RawExport with manually constructed binary.
+
+### 12. Scale Uses Tail Fragment num=4 Instead of num=3
+
+The SMC no-scale header ends with `0x056E` (tail frag num=3). With scale: `0x076E` (num=4). Scale data (3 doubles) goes as the first element of the tail frag, before the tail zeros. Total: 120 bytes vs 96 bytes. The tail skip stays at 110 because the cursor position before the tail hasn't changed.
+
+### 13. Blueprint Actors Have Embedded Cross-References
+
+Blueprint actor components (like ChildActor, InteractionCube) contain hardcoded export indices inside their binary Data blobs pointing to sibling components. Cloning these binaries without patching EVERY internal ref causes access violations. The parking system (ParkingSpace_Middle_01_C, Interaction_PublicParkingSpac_C) is particularly complex with 5+ interconnected components.
+
+### 14. ChildActor CBSD Must Reference Parent Actor, Not Siblings
+
+ChildActorComponent's CBSD should point to the parent actor export, not to sibling components like Root. Pointing to a sibling creates a circular dependency → EXCEPTION_STACK_OVERFLOW.
+
+### 15. Game Updates Invalidate Extracted JSON
+
+When the game updates, the .umap binary changes. The extracted `Jeju_Worldaa.json` must be re-extracted from the updated game files. Using stale JSON with updated .ubulk/.uexp files causes crashes.
+
+### 16. Float Precision in Python JSON
+
+Python float addition creates artifacts like `-91700.17000000001`. Use `round(value, 4)` when writing coordinates to JSON to keep them clean.
+
+### 17. Asset Path Dot Suffix Must Be Stripped
+
+UE asset references use `Package/Path.ExportName` format. The `.ExportName` suffix must be stripped in `resolve_mesh_path()` to get the package path. Otherwise UAssetAPI creates phantom imports with the wrong path.
