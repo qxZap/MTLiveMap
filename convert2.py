@@ -494,6 +494,80 @@ def main():
                 depends_map.extend([[], []])
 
     # ======================================================================
+    # BLUEPRINT ACTORS (parking lots, interactions, etc.)
+    # ======================================================================
+    bp_entries = gather_list(mods, "blueprint_actors")
+    if bp_entries:
+        for n in ("SceneComponent", "RootComponent", "Root",
+                  "RelativeLocation", "RelativeRotation", "BlueprintActor_MOD"):
+            ensure_fname(name_map, n)
+
+        bp_scene_class = find_or_add_import(
+            imports, name_map, "SceneComponent", engine_pkg,
+            "/Script/CoreUObject", "Class"
+        )
+
+        bp_cache = {}
+        for entry in bp_entries:
+            bp_path = entry["blueprint_path"]
+            bp_class = entry["blueprint_class"]
+            root_name = entry.get("root_name", "Root")
+            if bp_path not in bp_cache:
+                ensure_fname(name_map, bp_path)
+                ensure_fname(name_map, bp_class)
+                ensure_fname(name_map, f"Default__{bp_class}")
+                ensure_fname(name_map, root_name)
+                bp_pkg = find_or_add_import(imports, name_map, bp_path, 0,
+                                            "/Script/CoreUObject", "Package")
+                bp_cls = find_or_add_import(imports, name_map, bp_class, bp_pkg,
+                                            "/Script/Engine", "BlueprintGeneratedClass")
+                bp_default = find_or_add_import(imports, name_map,
+                                                f"Default__{bp_class}", bp_pkg,
+                                                bp_path, bp_class)
+                bp_root = find_or_add_import(imports, name_map, root_name, bp_default,
+                                             "/Script/Engine", "SceneComponent")
+                bp_cache[bp_path] = (bp_cls, bp_default, bp_root, root_name)
+
+        print(f"Injecting {len(bp_entries)} blueprint actors ...")
+        for i, entry in enumerate(bp_entries):
+            bp_cls, bp_default, bp_root, root_name = bp_cache[entry["blueprint_path"]]
+            x, y, z = float(entry.get("X", 0)), float(entry.get("Y", 0)), float(entry.get("Z", 0))
+            pitch, yaw, roll = float(entry.get("Pitch", 0)), float(entry.get("Yaw", 0)), float(entry.get("Roll", 0))
+
+            actor_num = len(exports) + 1
+            comp_num = len(exports) + 2
+
+            # Actor — no class-specific properties, just extras
+            actor_data = bytearray()
+            actor_data += make_actor_extras(f"BlueprintActor_{i}")
+
+            exports.append(make_raw_export(
+                base64.b64encode(bytes(actor_data)).decode("ascii"),
+                f"BlueprintActor_MOD_{i}", level_num, bp_cls, bp_default,
+                cbsd=[comp_num],
+                sbcd=[bp_cls, bp_default, bp_root],
+                cbcd=[level_num],
+            ))
+            # Root component
+            comp_data = bytearray()
+            comp_data += DEALER_ROOTSCENE_HEADER
+            comp_data += struct.pack("<ddd", x, y, z)
+            comp_data += struct.pack("<ddd", pitch, yaw, roll)
+            comp_data += b"\x00" * 8
+
+            exports.append(make_raw_export(
+                base64.b64encode(bytes(comp_data)).decode("ascii"),
+                root_name, actor_num, bp_scene_class, bp_root,
+                object_flags="RF_Transactional, RF_DefaultSubObject",
+                is_inherited=True,
+                sbcd=[bp_scene_class, bp_root],
+                cbcd=[actor_num],
+            ))
+            all_new_actor_nums.append(actor_num)
+            if depends_map is not None:
+                depends_map.extend([[], []])
+
+    # ======================================================================
     # STATIC MESHES
     # ======================================================================
     mesh_entries = gather_list(mods, "static_meshes")

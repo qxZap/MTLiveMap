@@ -139,6 +139,9 @@ def main():
                 "Pitch": float(entry.get("Pitch", 0)) + OFFSET_PITCH,
                 "Roll": float(entry.get("Roll", 0)) + OFFSET_ROLL,
                 "Yaw": float(entry.get("Yaw", 0)) + OFFSET_YAW,
+                "ScaleX": float(entry.get("ScaleX", 1.0)),
+                "ScaleY": float(entry.get("ScaleY", 1.0)),
+                "ScaleZ": float(entry.get("ScaleZ", 1.0)),
             }
             imported.append(new_entry)
 
