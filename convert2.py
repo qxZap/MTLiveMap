@@ -494,72 +494,8 @@ def main():
                 depends_map.extend([[], []])
 
     # ======================================================================
-    # BLUEPRINT ACTORS (parking spots etc.)
+    # BLUEPRINT ACTORS — handled by convert_sublevel.py (separate sub-level)
     # ======================================================================
-    # Simple: just actor + RootScene. No child components.
-    # The blueprint class spawns its own components at runtime.
-    # Uses the dealership pattern: actor with RootScene for location.
-    bp_entries = gather_list(mods, "blueprint_actors")
-    if bp_entries:
-        bp_scene_class = find_or_add_import(
-            imports, name_map, "SceneComponent", engine_pkg,
-            "/Script/CoreUObject", "Class"
-        )
-
-        bp_cache = {}
-        for entry in bp_entries:
-            bp_path = entry["blueprint_path"]
-            bp_class = entry["blueprint_class"]
-            if bp_path not in bp_cache:
-                for n in (bp_path, bp_class, f"Default__{bp_class}",
-                          "Root", "BlueprintActor_MOD"):
-                    ensure_fname(name_map, n)
-
-                bp_pkg = find_or_add_import(imports, name_map, bp_path, 0,
-                                            "/Script/CoreUObject", "Package")
-                bp_cls = find_or_add_import(imports, name_map, bp_class, bp_pkg,
-                                            "/Script/Engine", "BlueprintGeneratedClass")
-                bp_default = find_or_add_import(imports, name_map,
-                                                f"Default__{bp_class}", bp_pkg,
-                                                bp_path, bp_class)
-                bp_root = find_or_add_import(imports, name_map, "Root", bp_default,
-                                             "/Script/Engine", "SceneComponent")
-                bp_cache[bp_path] = (bp_cls, bp_default, bp_root)
-
-        print(f"Injecting {len(bp_entries)} blueprint actors ...")
-        for i, entry in enumerate(bp_entries):
-            bp_cls, bp_default, bp_root = bp_cache[entry["blueprint_path"]]
-            x = float(entry.get("X", 0))
-            y = float(entry.get("Y", 0))
-            z = float(entry.get("Z", 0))
-            pitch = float(entry.get("Pitch", 0))
-            yaw = float(entry.get("Yaw", 0))
-            roll = float(entry.get("Roll", 0))
-
-            actor_num = len(exports) + 1
-            comp_num = len(exports) + 2
-
-            # Actor — minimal: just extras, no properties
-            actor_blob = make_actor_extras(f"BlueprintActor_{i}")
-            exports.append(make_raw_export(
-                base64.b64encode(actor_blob).decode("ascii"),
-                f"BlueprintActor_MOD_{i}", level_num, bp_cls, bp_default,
-                cbsd=[comp_num],
-                sbcd=[bp_cls, bp_default, bp_root],
-                cbcd=[level_num],
-            ))
-            # Root component — location/rotation only
-            exports.append(make_raw_export(
-                build_dealer_rootscene_data(x, y, z, pitch, yaw, roll),
-                "Root", actor_num, bp_scene_class, bp_root,
-                object_flags="RF_Transactional, RF_DefaultSubObject",
-                is_inherited=True,
-                sbcd=[bp_scene_class, bp_root],
-                cbcd=[actor_num],
-            ))
-            all_new_actor_nums.append(actor_num)
-            if depends_map is not None:
-                depends_map.extend([[], []])
 
     # ======================================================================
     # STATIC MESHES

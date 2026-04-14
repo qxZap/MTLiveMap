@@ -51,7 +51,7 @@ TARGET_GROUP = "imported"
 SKIP_KEYS = {"SM_SkySphere"}
 
 # Meshes that become blueprint actors instead of static meshes
-PARKING_KEYS = set()  # disabled until BP actor injection is solved
+PARKING_KEYS = set()  # parking BP actors not supported yet
 
 SRC = "static_meshes.json"
 DST = "map_work_changes.json"
