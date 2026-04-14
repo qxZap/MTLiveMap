@@ -48,7 +48,7 @@ OFFSET_YAW = 0.0
 TARGET_GROUP = "imported"
 
 # Mesh names to skip entirely (by asset_key)
-SKIP_KEYS = {"SM_SkySphere"}
+SKIP_KEYS = {"SM_SkySphere", "Parking1"}
 
 # Meshes that become blueprint actors instead of static meshes
 PARKING_KEYS = set()  # parking BP actors not supported yet
