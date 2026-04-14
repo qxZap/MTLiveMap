@@ -42,11 +42,47 @@ import uuid
 import struct
 import base64
 import os
+import shutil
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Asset file paths (for copying missing mesh assets into the mod pak)
+# ---------------------------------------------------------------------------
+GAME_CONTENT = r"D:\MT\Output\Exports\MotorTown\Content"
+COOKED_CONTENT = r"C:\Users\Milea\Documents\Unreal Projects\MTMapAddon\Saved\Cooked\Windows\MTMapAddon\Content"
+MOD_CONTENT = r"MapChangeTest_P\MotorTown\Content"
+
+
+def _copy_mesh_asset(game_path, script_dir):
+    """Copy mesh .uasset/.uexp/.ubulk to mod pak if not in game files."""
+    if not game_path.startswith("/Game/"):
+        return
+    rel = game_path[len("/Game/"):]
+    game_file = os.path.join(GAME_CONTENT, rel + ".uasset")
+    if os.path.exists(game_file):
+        return  # already in game, no copy needed
+    cooked_file = os.path.join(COOKED_CONTENT, rel + ".uasset")
+    if not os.path.exists(cooked_file):
+        return
+    mod_target = os.path.join(script_dir, MOD_CONTENT, rel)
+    os.makedirs(os.path.dirname(mod_target), exist_ok=True)
+    copied = []
+    for ext in [".uasset", ".uexp", ".ubulk"]:
+        src = os.path.join(COOKED_CONTENT, rel + ext)
+        dst = mod_target + ext
+        try:
+            if os.path.exists(src):
+                shutil.copy2(src, dst)
+                copied.append(ext)
+        except Exception:
+            pass
+    if copied:
+        print(f"  Copied {rel} ({', '.join(copied)})")
 
 
 def ensure_name(name_map, name):
@@ -488,7 +524,7 @@ def main():
             "/Script/Engine", "StaticMeshComponent"
         )
 
-        # Mesh import cache
+        # Mesh import cache + copy missing assets to mod pak
         mesh_cache = {}
         for entry in mesh_entries:
             pkg_path, export_name = resolve_mesh_path(entry)
@@ -500,6 +536,8 @@ def main():
                 mesh_imp = find_or_add_import(imports, name_map, export_name, mesh_pkg,
                                               "/Script/Engine", "StaticMesh")
                 mesh_cache[pkg_path] = mesh_imp
+                # Copy asset files to mod if not in game
+                _copy_mesh_asset(pkg_path, script_dir)
 
         print(f"Injecting {len(mesh_entries)} static mesh actors ...")
         for i, entry in enumerate(mesh_entries):
