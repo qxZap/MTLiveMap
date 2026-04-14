@@ -496,31 +496,23 @@ def main():
     # ======================================================================
     # BLUEPRINT ACTORS (parking spots etc.)
     # ======================================================================
-    # Clones the existing Interaction_PublicParkingSpac_C actor chain.
-    # Same base class as Interaction_ParkingSpace_Large_C, same header.
-    # 6 exports: Actor + MTInteractable + InteractionCube + Box + Root + ChildActor
+    # Simple: just actor + RootScene. No child components.
+    # The blueprint class spawns its own components at runtime.
+    # Uses the dealership pattern: actor with RootScene for location.
     bp_entries = gather_list(mods, "blueprint_actors")
     if bp_entries:
-        # Use Interaction_ParkingSpace_Large_C (from blueprint_path in entry)
-        # but clone the binary format from Interaction_PublicParkingSpac_C (same structure)
+        bp_scene_class = find_or_add_import(
+            imports, name_map, "SceneComponent", engine_pkg,
+            "/Script/CoreUObject", "Class"
+        )
 
-        # Source actor to clone binary from: export 22236
-        src_actor = exports[22235]
-        src_children = {}
-        for ref in src_actor['CreateBeforeSerializationDependencies']:
-            if ref > 0:
-                child = exports[ref - 1]
-                src_children[child['ObjectName']] = (ref, child)
-
-        # Ensure names + create imports for target class
         bp_cache = {}
         for entry in bp_entries:
             bp_path = entry["blueprint_path"]
             bp_class = entry["blueprint_class"]
             if bp_path not in bp_cache:
                 for n in (bp_path, bp_class, f"Default__{bp_class}",
-                          "Root", "Box", "MTInteractable", "InteractionCube",
-                          "ChildActor", "BlueprintActor_MOD"):
+                          "Root", "BlueprintActor_MOD"):
                     ensure_fname(name_map, n)
 
                 bp_pkg = find_or_add_import(imports, name_map, bp_path, 0,
@@ -530,18 +522,13 @@ def main():
                 bp_default = find_or_add_import(imports, name_map,
                                                 f"Default__{bp_class}", bp_pkg,
                                                 bp_path, bp_class)
-                # Root scene template under Default__
-                bp_root_tmpl = find_or_add_import(imports, name_map, "Root", bp_default,
-                                                  "/Script/Engine", "SceneComponent")
-                # Box template under Default__
-                bp_box_tmpl = find_or_add_import(imports, name_map, "Box", bp_default,
-                                                 "/Script/Engine", "BoxComponent")
-                bp_cache[bp_path] = (bp_cls, bp_default, bp_root_tmpl, bp_box_tmpl)
+                bp_root = find_or_add_import(imports, name_map, "Root", bp_default,
+                                             "/Script/Engine", "SceneComponent")
+                bp_cache[bp_path] = (bp_cls, bp_default, bp_root)
 
         print(f"Injecting {len(bp_entries)} blueprint actors ...")
         for i, entry in enumerate(bp_entries):
-            bp_path = entry["blueprint_path"]
-            bp_cls, bp_default, bp_root_tmpl, bp_box_tmpl = bp_cache[bp_path]
+            bp_cls, bp_default, bp_root = bp_cache[entry["blueprint_path"]]
             x = float(entry.get("X", 0))
             y = float(entry.get("Y", 0))
             z = float(entry.get("Z", 0))
@@ -549,111 +536,30 @@ def main():
             yaw = float(entry.get("Yaw", 0))
             roll = float(entry.get("Roll", 0))
 
-            # New export numbers
             actor_num = len(exports) + 1
-            interactable_num = len(exports) + 2
-            cube_num = len(exports) + 3
-            box_num = len(exports) + 4
-            root_num = len(exports) + 5
-            childactor_num = len(exports) + 6
+            comp_num = len(exports) + 2
 
-            # --- Actor: clone binary from existing, patch refs ---
-            a_raw = bytearray(base64.b64decode(src_actor['Data']))
-            # Header 0006450201020f020203 (10 bytes)
-            # Props [0,1,2,3] at offsets 10,14,18,22 = component refs
-            struct.pack_into("<i", a_raw, 10, interactable_num)  # MTInteractable
-            struct.pack_into("<i", a_raw, 14, cube_num)          # InteractionCube
-            struct.pack_into("<i", a_raw, 18, box_num)           # Box
-            struct.pack_into("<i", a_raw, 22, root_num)          # Root
-            # Props [73,74]: at offsets 26,30
-            struct.pack_into("<i", a_raw, 26, childactor_num)
-            struct.pack_into("<i", a_raw, 30, 1)
-            # Prop [76]: at offset 34
-            struct.pack_into("<i", a_raw, 34, childactor_num)
-            # Props [93,94] at 38,42: body setup refs, zero them
-            struct.pack_into("<i", a_raw, 38, 0)
-            struct.pack_into("<i", a_raw, 42, 0)
-            # Discard old extras, write new
-            a_raw = a_raw[:46]
-            # Props [97,98]
-            a_raw += struct.pack("<ii", 0, 0)
-            a_raw += make_actor_extras(f"BlueprintActor_{i}")
-
+            # Actor — minimal: just extras, no properties
+            actor_blob = make_actor_extras(f"BlueprintActor_{i}")
             exports.append(make_raw_export(
-                base64.b64encode(bytes(a_raw)).decode("ascii"),
+                base64.b64encode(actor_blob).decode("ascii"),
                 f"BlueprintActor_MOD_{i}", level_num, bp_cls, bp_default,
-                cbsd=[interactable_num, cube_num, box_num, root_num, childactor_num],
-                sbcd=[bp_cls, bp_default, bp_box_tmpl, bp_root_tmpl],
+                cbsd=[comp_num],
+                sbcd=[bp_cls, bp_default, bp_root],
                 cbcd=[level_num],
             ))
-
-            # --- Clone child components from source, just update CBSD/OuterIndex ---
-            _, src_mt = src_children["MTInteractable"]
+            # Root component — location/rotation only
             exports.append(make_raw_export(
-                src_mt['Data'] if isinstance(src_mt['Data'], str) else base64.b64encode(src_mt['Data']).decode("ascii"),
-                "MTInteractable", actor_num,
-                src_mt['ClassIndex'], src_mt['TemplateIndex'],
-                cbsd=[box_num],
-                sbcd=src_mt['SerializationBeforeCreateDependencies'],
-                cbcd=[actor_num],
-            ))
-
-            _, src_cube = src_children["InteractionCube"]
-            exports.append(make_raw_export(
-                src_cube['Data'] if isinstance(src_cube['Data'], str) else "",
-                "InteractionCube", actor_num,
-                src_cube['ClassIndex'], src_cube['TemplateIndex'],
-                cbsd=[box_num],
-                sbcd=src_cube['SerializationBeforeCreateDependencies'],
-                cbcd=[actor_num],
-            ))
-
-            _, src_box = src_children["Box"]
-            exports.append(make_raw_export(
-                src_box['Data'] if isinstance(src_box['Data'], str) else "",
-                "Box", actor_num,
-                src_box['ClassIndex'], src_box['TemplateIndex'],
-                object_flags="RF_DefaultSubObject",
+                build_dealer_rootscene_data(x, y, z, pitch, yaw, roll),
+                "Root", actor_num, bp_scene_class, bp_root,
+                object_flags="RF_Transactional, RF_DefaultSubObject",
                 is_inherited=True,
-                cbsd=[root_num],
-                sbcd=src_box['SerializationBeforeCreateDependencies'],
+                sbcd=[bp_scene_class, bp_root],
                 cbcd=[actor_num],
             ))
-
-            # --- Root: patch location/rotation ---
-            _, src_root = src_children["Root"]
-            # Root is 14 bytes (tiny). Use dealer rootscene format for full location.
-            root_data = bytearray()
-            root_data += DEALER_ROOTSCENE_HEADER
-            root_data += struct.pack("<ddd", x, y, z)
-            root_data += struct.pack("<ddd", pitch, yaw, roll)
-            root_data += b"\x00" * 8
-
-            exports.append(make_raw_export(
-                base64.b64encode(bytes(root_data)).decode("ascii"),
-                "Root", actor_num,
-                src_root['ClassIndex'], bp_root_tmpl,
-                object_flags="RF_DefaultSubObject",
-                is_inherited=True,
-                cbsd=[childactor_num],
-                sbcd=src_root['SerializationBeforeCreateDependencies'],
-                cbcd=[actor_num],
-            ))
-
-            # --- ChildActor ---
-            _, src_ca = src_children["ChildActor"]
-            exports.append(make_raw_export(
-                src_ca['Data'] if isinstance(src_ca['Data'], str) else "",
-                "ChildActor", actor_num,
-                src_ca['ClassIndex'], src_ca['TemplateIndex'],
-                cbsd=[actor_num],
-                sbcd=src_ca['SerializationBeforeCreateDependencies'],
-                cbcd=[actor_num],
-            ))
-
             all_new_actor_nums.append(actor_num)
             if depends_map is not None:
-                depends_map.extend([[], [], [], [], [], []])
+                depends_map.extend([[], []])
 
     # ======================================================================
     # STATIC MESHES

@@ -48,11 +48,10 @@ OFFSET_YAW = 0.0
 TARGET_GROUP = "imported"
 
 # Mesh names to skip entirely (by asset_key)
-SKIP_KEYS = {"SM_SkySphere", "Parking1"}
+SKIP_KEYS = {"SM_SkySphere"}
 
 # Meshes that become blueprint actors instead of static meshes
-# Disabled — parking BP actors have hardcoded cross-refs in binary that can't be patched
-PARKING_KEYS = set()
+PARKING_KEYS = set()  # disabled until BP actor injection is solved
 
 SRC = "static_meshes.json"
 DST = "map_work_changes.json"
@@ -152,8 +151,8 @@ def main():
             }
 
             if entry.get("asset_key") in PARKING_KEYS:
-                base_entry["blueprint_path"] = "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large"
-                base_entry["blueprint_class"] = "Interaction_ParkingSpace_Large_C"
+                base_entry["blueprint_path"] = "/Game/Objects/ParkingSpace/Interaction_PublicParkingSpac"
+                base_entry["blueprint_class"] = "Interaction_PublicParkingSpac_C"
                 parking.append(base_entry)
             else:
                 base_entry["asset_path"] = raw_path
