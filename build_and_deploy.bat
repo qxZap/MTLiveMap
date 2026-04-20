@@ -36,6 +36,9 @@ if "!AFTER!"=="!BEFORE!" (
 )
 echo   .umap modified: !AFTER!
 
+REM BP actors are spawned at runtime via RE-UE4SS + MotorTownMods HTTP API.
+REM Run `python spawn_bp_actors.py` after joining the game.
+
 echo [4/4] Running modp.bat MapChangeTest_P...
 call modp.bat MapChangeTest_P
 if errorlevel 1 (

@@ -494,8 +494,349 @@ def main():
                 depends_map.extend([[], []])
 
     # ======================================================================
-    # BLUEPRINT ACTORS — handled by convert_sublevel.py (separate sub-level)
+    # BLUEPRINT ACTORS (parking etc.) — emit as NormalExport
     # ======================================================================
+    # UAssetGUI fromjson with MotorTown718P1 mappings serializes NormalExport
+    # entries correctly into unversioned binary, even alongside RawExport.
+    # Structure validated by build_parking_blob.py round-trip.
+    # Blueprint actors are injected at the WorldPartition cell level by
+    # MTBPInjector (see fulltest.bat step [4b/5]). convert2 must not touch them
+    # here — NormalExport BP actors in the main Jeju_World.umap crash the engine.
+    bp_entries = []
+    parking_blob_path = os.path.join(script_dir, "parking_blob.json")
+    USE_NORMAL_EXPORT = False
+    if bp_entries and USE_NORMAL_EXPORT:
+        # Skip the old blob-based RawExport injection; do NormalExport instead
+        bp_path = bp_entries[0]["blueprint_path"]
+        bp_class = bp_entries[0]["blueprint_class"]
+
+        for n in (bp_path, bp_class, f"Default__{bp_class}", "Root", "Box",
+                  "MTInteractable", "MTInteractable_GEN_VARIABLE",
+                  "InteractionCube", "InteractionCube_GEN_VARIABLE",
+                  "BoxComponent", "MTInteractableComponent", "StaticMeshComponent",
+                  "SceneComponent", "RelativeLocation", "RelativeRotation",
+                  "RootComponent", "AttachParent", "ParkingLot_MOD",
+                  "/Script/MotorTown"):
+            ensure_fname(name_map, n)
+
+        bp_pkg_imp = find_or_add_import(imports, name_map, bp_path, 0,
+                                        "/Script/CoreUObject", "Package")
+        bp_cls_imp = find_or_add_import(imports, name_map, bp_class, bp_pkg_imp,
+                                        "/Script/Engine", "BlueprintGeneratedClass")
+        bp_default_imp = find_or_add_import(imports, name_map, f"Default__{bp_class}",
+                                            bp_pkg_imp, bp_path, bp_class)
+        bp_root_imp = find_or_add_import(imports, name_map, "Root", bp_default_imp,
+                                         "/Script/Engine", "SceneComponent")
+        bp_box_imp = find_or_add_import(imports, name_map, "Box", bp_default_imp,
+                                        "/Script/Engine", "BoxComponent")
+        bp_mt_imp = find_or_add_import(imports, name_map, "MTInteractable_GEN_VARIABLE",
+                                       bp_default_imp, "/Script/MotorTown",
+                                       "MTInteractableComponent")
+        bp_cube_imp = find_or_add_import(imports, name_map, "InteractionCube_GEN_VARIABLE",
+                                         bp_default_imp, "/Script/Engine",
+                                         "StaticMeshComponent")
+        scene_class_imp = find_or_add_import(imports, name_map, "SceneComponent", engine_pkg,
+                                             "/Script/CoreUObject", "Class")
+        box_class_imp = find_or_add_import(imports, name_map, "BoxComponent", engine_pkg,
+                                           "/Script/CoreUObject", "Class")
+        motortown_pkg_imp = find_or_add_import(imports, name_map, "/Script/MotorTown", 0,
+                                               "/Script/CoreUObject", "Package")
+        mt_class_imp = find_or_add_import(imports, name_map, "MTInteractableComponent",
+                                          motortown_pkg_imp, "/Script/CoreUObject", "Class")
+        smc_class_imp = find_or_add_import(imports, name_map, "StaticMeshComponent", engine_pkg,
+                                           "/Script/CoreUObject", "Class")
+
+        component_extras = base64.b64encode(struct.pack("<IIII", 0, 0, 1, 0)).decode("ascii")
+
+        def make_actor_extras_b64(label):
+            lb = label.encode("utf-8") + b"\x00"
+            d = struct.pack("<I", 1) + struct.pack("<I", len(lb)) + lb
+            d += uuid.uuid4().bytes + b"\x00" * 16
+            return base64.b64encode(d).decode("ascii")
+
+        def _obj_p(name, value):
+            return {
+                "$type": "UAssetAPI.PropertyTypes.Objects.ObjectPropertyData, UAssetAPI",
+                "Name": name, "ArrayIndex": 0, "IsZero": False,
+                "PropertyTagFlags": "None", "PropertyTypeName": None,
+                "PropertyTagExtensions": "NoExtension", "Value": value,
+            }
+
+        def _vec_p(name, x, y, z):
+            return {
+                "$type": "UAssetAPI.PropertyTypes.Structs.StructPropertyData, UAssetAPI",
+                "StructType": "Vector", "SerializeNone": True,
+                "StructGUID": "{00000000-0000-0000-0000-000000000000}",
+                "SerializationControl": "NoExtension", "Operation": "None",
+                "Name": name, "ArrayIndex": 0, "IsZero": False,
+                "PropertyTagFlags": "None", "PropertyTypeName": None,
+                "PropertyTagExtensions": "NoExtension",
+                "Value": [{
+                    "$type": "UAssetAPI.PropertyTypes.Structs.VectorPropertyData, UAssetAPI",
+                    "Name": name, "ArrayIndex": 0, "IsZero": False,
+                    "PropertyTagFlags": "None", "PropertyTypeName": None,
+                    "PropertyTagExtensions": "NoExtension",
+                    "Value": {"$type": "UAssetAPI.UnrealTypes.FVector, UAssetAPI",
+                              "X": x, "Y": y, "Z": z},
+                }],
+            }
+
+        def _rot_p(name, p, y, r):
+            fmt = lambda v: "+0" if v == 0.0 else v
+            return {
+                "$type": "UAssetAPI.PropertyTypes.Structs.StructPropertyData, UAssetAPI",
+                "StructType": "Rotator", "SerializeNone": True,
+                "StructGUID": "{00000000-0000-0000-0000-000000000000}",
+                "SerializationControl": "NoExtension", "Operation": "None",
+                "Name": name, "ArrayIndex": 0, "IsZero": False,
+                "PropertyTagFlags": "None", "PropertyTypeName": None,
+                "PropertyTagExtensions": "NoExtension",
+                "Value": [{
+                    "$type": "UAssetAPI.PropertyTypes.Structs.RotatorPropertyData, UAssetAPI",
+                    "Name": name, "ArrayIndex": 0, "IsZero": False,
+                    "PropertyTagFlags": "None", "PropertyTypeName": None,
+                    "PropertyTagExtensions": "NoExtension",
+                    "Value": {"$type": "UAssetAPI.UnrealTypes.FRotator, UAssetAPI",
+                              "Pitch": fmt(p), "Yaw": fmt(y), "Roll": fmt(r)},
+                }],
+            }
+
+        def make_ne(data_props, name, outer, ci, ti, flags, is_inh,
+                    sbsd, cbsd, sbcd, cbcd, extras):
+            return {
+                "$type": "UAssetAPI.ExportTypes.NormalExport, UAssetAPI",
+                "Data": data_props, "ObjectGuid": None,
+                "SerializationControl": "NoExtension", "Operation": "None",
+                "HasLeadingFourNullBytes": False,
+                "ObjectName": name, "OuterIndex": outer, "ClassIndex": ci,
+                "SuperIndex": 0, "TemplateIndex": ti, "ObjectFlags": flags,
+                "SerialSize": 0, "SerialOffset": 0,
+                "ScriptSerializationStartOffset": 0, "ScriptSerializationEndOffset": 0,
+                "bForcedExport": False, "bNotForClient": False, "bNotForServer": False,
+                "PackageGuid": "{00000000-0000-0000-0000-000000000000}",
+                "IsInheritedInstance": is_inh, "PackageFlags": "PKG_None",
+                "bNotAlwaysLoadedForEditorGame": True, "bIsAsset": False,
+                "GeneratePublicHash": False,
+                "SerializationBeforeSerializationDependencies": sbsd or [],
+                "CreateBeforeSerializationDependencies": cbsd or [],
+                "SerializationBeforeCreateDependencies": sbcd or [],
+                "CreateBeforeCreateDependencies": cbcd or [],
+                "Extras": extras,
+            }
+
+        print(f"Injecting {len(bp_entries)} parking actors (NormalExport) ...")
+        for i, entry in enumerate(bp_entries):
+            x = float(entry.get("X", 0))
+            y = float(entry.get("Y", 0))
+            z = float(entry.get("Z", 0))
+            pitch = float(entry.get("Pitch", 0))
+            yaw = float(entry.get("Yaw", 0))
+            roll = float(entry.get("Roll", 0))
+
+            actor_num = len(exports) + 1
+            root_num = actor_num + 1
+            box_num = actor_num + 2
+            mt_num = actor_num + 3
+            cube_num = actor_num + 4
+
+            # Actor
+            exports.append(make_ne(
+                [_obj_p("BoxComponent", box_num),
+                 _obj_p("MTInteractable", mt_num),
+                 _obj_p("InteractionCube", cube_num),
+                 _obj_p("RootComponent", root_num)],
+                f"ParkingLot_MOD_{i}", level_num, bp_cls_imp, bp_default_imp,
+                "RF_Transactional", False, [],
+                [root_num, box_num, mt_num, cube_num],
+                [bp_cls_imp, bp_default_imp, bp_root_imp, bp_box_imp, bp_mt_imp, bp_cube_imp],
+                [level_num], make_actor_extras_b64(f"ParkingLot_{i}"),
+            ))
+            # Root
+            exports.append(make_ne(
+                [_vec_p("RelativeLocation", x, y, z),
+                 _rot_p("RelativeRotation", pitch, yaw, roll)],
+                "Root", actor_num, scene_class_imp, bp_root_imp,
+                "RF_Transactional, RF_DefaultSubObject", True, [],
+                [], [scene_class_imp, bp_root_imp], [actor_num], component_extras,
+            ))
+            # Box
+            exports.append(make_ne(
+                [_obj_p("AttachParent", root_num)],
+                "Box", actor_num, box_class_imp, bp_box_imp,
+                "RF_Transactional, RF_DefaultSubObject", True, [],
+                [root_num], [box_class_imp, bp_box_imp], [actor_num], component_extras,
+            ))
+            # MTInteractable
+            exports.append(make_ne(
+                [_obj_p("AttachParent", root_num)],
+                "MTInteractable", actor_num, mt_class_imp, bp_mt_imp,
+                "RF_Transactional, RF_DefaultSubObject", True, [],
+                [root_num], [mt_class_imp, bp_mt_imp], [actor_num], component_extras,
+            ))
+            # InteractionCube
+            exports.append(make_ne(
+                [_obj_p("AttachParent", root_num)],
+                "InteractionCube", actor_num, smc_class_imp, bp_cube_imp,
+                "RF_Transactional, RF_DefaultSubObject", True, [],
+                [root_num], [smc_class_imp, bp_cube_imp], [actor_num], component_extras,
+            ))
+            all_new_actor_nums.append(actor_num)
+            if depends_map is not None:
+                depends_map.extend([[], [], [], [], []])
+    elif bp_entries and os.path.exists(parking_blob_path):
+        with open(parking_blob_path, "r", encoding="utf-8") as f:
+            blob = json.load(f)
+
+        # Resolve imports: the blob references imports by index in its OWN imports array.
+        # We need to create/find matching imports in Jeju_World and build an index map.
+        blob_imports = blob["imports"]
+        blob_to_jeju = {}  # blob import index (negative) -> jeju import index (negative)
+
+        def resolve_blob_import(blob_idx):
+            """Recursively resolve a blob import to a Jeju import."""
+            if blob_idx >= 0:
+                return blob_idx
+            if blob_idx in blob_to_jeju:
+                return blob_to_jeju[blob_idx]
+            imp = blob_imports[abs(blob_idx) - 1]
+            outer_jeju = resolve_blob_import(imp["OuterIndex"]) if imp["OuterIndex"] < 0 else 0
+            ensure_fname(name_map, imp["ObjectName"])
+            ensure_fname(name_map, imp["ClassPackage"])
+            ensure_fname(name_map, imp["ClassName"])
+            jeju_idx = find_or_add_import(
+                imports, name_map,
+                imp["ObjectName"], outer_jeju,
+                imp["ClassPackage"], imp["ClassName"]
+            )
+            blob_to_jeju[blob_idx] = jeju_idx
+            return jeju_idx
+
+        for n in ("ParkingLot_MOD", "Root", "Box", "MTInteractable", "InteractionCube",
+                  "RelativeLocation", "RelativeRotation", "RootComponent",
+                  "BoxComponent", "AttachParent"):
+            ensure_fname(name_map, n)
+
+        # Resolve blob imports and cache component info
+        def resolve_component(c):
+            return {
+                "data": base64.b64decode(c["data_b64"]),
+                "class_index": resolve_blob_import(c["class_index"]),
+                "template_index": resolve_blob_import(c["template_index"]),
+                "object_flags": c["object_flags"],
+                "is_inherited": c["is_inherited"],
+                "sbcd": [resolve_blob_import(i) for i in c["sbcd"]],
+            }
+
+        actor_info = resolve_component(blob["actor"])
+        root_info = resolve_component(blob["root"])
+        box_info = resolve_component(blob["box"])
+        mt_info = resolve_component(blob["mt_interactable"])
+        cube_info = resolve_component(blob["interaction_cube"])
+
+        loc_off = blob["root"]["loc_offset"]
+        rot_off = blob["root"]["rot_offset"]
+
+        print(f"Injecting {len(bp_entries)} parking actors (via blob, full chain) ...")
+        for i, entry in enumerate(bp_entries):
+            x = float(entry.get("X", 0))
+            y = float(entry.get("Y", 0))
+            z = float(entry.get("Z", 0))
+            pitch = float(entry.get("Pitch", 0))
+            yaw = float(entry.get("Yaw", 0))
+            roll = float(entry.get("Roll", 0))
+
+            actor_num = len(exports) + 1
+            root_num = actor_num + 1
+            box_num = actor_num + 2
+            mt_num = actor_num + 3
+            cube_num = actor_num + 4
+
+            # ----- Actor: patch component refs in Data and fresh GUID -----
+            # Actor props (from build_parking_blob): Box, MTInteractable, InteractionCube, RootComponent
+            # Those are 4 int32 refs starting at offset 0 in actor binary
+            a_data = bytearray(actor_info["data"])
+            struct.pack_into("<i", a_data, 0, box_num)
+            struct.pack_into("<i", a_data, 4, mt_num)
+            struct.pack_into("<i", a_data, 8, cube_num)
+            struct.pack_into("<i", a_data, 12, root_num)
+            # Fresh GUID in extras
+            # Extras layout starts at offset 16: count(4) + strlen(4) + label + guid(16) + pad
+            strlen = struct.unpack_from("<I", a_data, 24)[0]
+            guid_offset = 28 + strlen
+            if guid_offset + 16 <= len(a_data):
+                a_data[guid_offset:guid_offset + 16] = uuid.uuid4().bytes
+
+            exports.append(make_raw_export(
+                base64.b64encode(bytes(a_data)).decode("ascii"),
+                f"ParkingLot_MOD_{i}", level_num,
+                actor_info["class_index"], actor_info["template_index"],
+                object_flags=actor_info["object_flags"],
+                cbsd=[root_num, box_num, mt_num, cube_num],
+                sbcd=actor_info["sbcd"],
+                cbcd=[level_num],
+            ))
+
+            # ----- Root: patch location/rotation -----
+            r_data = bytearray(root_info["data"])
+            struct.pack_into("<ddd", r_data, loc_off, x, y, z)
+            struct.pack_into("<ddd", r_data, rot_off, pitch, yaw, roll)
+            exports.append(make_raw_export(
+                base64.b64encode(bytes(r_data)).decode("ascii"),
+                "Root", actor_num,
+                root_info["class_index"], root_info["template_index"],
+                object_flags=root_info["object_flags"],
+                is_inherited=root_info["is_inherited"],
+                sbcd=root_info["sbcd"],
+                cbcd=[actor_num],
+            ))
+
+            # ----- Box: patch AttachParent to Root -----
+            # Blob had Box with AttachParent pointing to blob-root export num.
+            # We need to patch it to our new root_num. The first int32 in Box should be AttachParent.
+            b_data = bytearray(box_info["data"])
+            struct.pack_into("<i", b_data, 0, root_num)
+            exports.append(make_raw_export(
+                base64.b64encode(bytes(b_data)).decode("ascii"),
+                "Box", actor_num,
+                box_info["class_index"], box_info["template_index"],
+                object_flags=box_info["object_flags"],
+                is_inherited=box_info["is_inherited"],
+                cbsd=[root_num],
+                sbcd=box_info["sbcd"],
+                cbcd=[actor_num],
+            ))
+
+            # ----- MTInteractable -----
+            m_data = bytearray(mt_info["data"])
+            struct.pack_into("<i", m_data, 0, root_num)
+            exports.append(make_raw_export(
+                base64.b64encode(bytes(m_data)).decode("ascii"),
+                "MTInteractable", actor_num,
+                mt_info["class_index"], mt_info["template_index"],
+                object_flags=mt_info["object_flags"],
+                is_inherited=mt_info["is_inherited"],
+                cbsd=[root_num],
+                sbcd=mt_info["sbcd"],
+                cbcd=[actor_num],
+            ))
+
+            # ----- InteractionCube -----
+            c_data = bytearray(cube_info["data"])
+            struct.pack_into("<i", c_data, 0, root_num)
+            exports.append(make_raw_export(
+                base64.b64encode(bytes(c_data)).decode("ascii"),
+                "InteractionCube", actor_num,
+                cube_info["class_index"], cube_info["template_index"],
+                object_flags=cube_info["object_flags"],
+                is_inherited=cube_info["is_inherited"],
+                cbsd=[root_num],
+                sbcd=cube_info["sbcd"],
+                cbcd=[actor_num],
+            ))
+
+            all_new_actor_nums.append(actor_num)
+            if depends_map is not None:
+                depends_map.extend([[], [], [], [], []])
 
     # ======================================================================
     # STATIC MESHES

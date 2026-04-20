@@ -24,14 +24,20 @@ MOD_CONTENT = r"MapChangeTest_P\MotorTown\Content"
 # ---------------------------------------------------------------------------
 
 # Jeju imports
-OFFSET_X = -39800.86
-OFFSET_Y = -195000.17
-OFFSET_Z = -22450.35
+# OFFSET_X = -39800.86
+# OFFSET_Y = -195000.17
+# OFFSET_Z = -22450.35
 
 # New map
 OFFSET_X = -39800.0
 OFFSET_Y = -195000.0
 OFFSET_Z = -24450.0
+
+# Paddy Track
+# OFFSET_X = -39800.0
+# OFFSET_Y = -195000.0
+# OFFSET_Z = -24450.0
+
 
 # OFFSET_X = 242898.812
 # OFFSET_Y = -177002.594
@@ -51,7 +57,7 @@ TARGET_GROUP = "imported"
 SKIP_KEYS = {"SM_SkySphere", "Parking1"}
 
 # Meshes that become blueprint actors instead of static meshes
-PARKING_KEYS = set()  # parking BP actors not supported yet
+PARKING_KEYS = {"Parking1"}
 
 SRC = "static_meshes.json"
 DST = "map_work_changes.json"
@@ -107,8 +113,10 @@ def copy_asset_to_mod(relative_path, script_dir):
         except Exception:
             pass
 
-    if copied:
-        print(f"  Copied {relative_path} ({', '.join(copied)})")
+    # Silenced: per-asset copy log is noisy; summary is printed at end.
+    # if copied:
+    #     print(f"  Copied {relative_path} ({', '.join(copied)})")
+    pass
 
 
 def main():
@@ -130,7 +138,8 @@ def main():
         if not isinstance(items, list):
             continue
         for entry in items:
-            if entry.get("asset_key") in SKIP_KEYS:
+            # SKIP_KEYS: completely ignore (unless also in PARKING_KEYS)
+            if entry.get("asset_key") in SKIP_KEYS and entry.get("asset_key") not in PARKING_KEYS:
                 skipped += 1
                 continue
 
@@ -151,8 +160,8 @@ def main():
             }
 
             if entry.get("asset_key") in PARKING_KEYS:
-                base_entry["blueprint_path"] = "/Game/Objects/ParkingSpace/Interaction_PublicParkingSpac"
-                base_entry["blueprint_class"] = "Interaction_PublicParkingSpac_C"
+                base_entry["blueprint_path"] = "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large"
+                base_entry["blueprint_class"] = "Interaction_ParkingSpace_Large_C"
                 parking.append(base_entry)
             else:
                 base_entry["asset_path"] = raw_path
