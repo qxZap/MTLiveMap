@@ -769,15 +769,18 @@ internal static class Program
             int srcActorNum = srcIdx + 1;
             var srcActor = src.Exports[srcIdx];
 
-            // BFS: full transitive closure of exports that must come along.
-            // Start with the actor, expand by (a) direct children (OuterIndex==x)
-            // and (b) internal ObjectProperty / Array / Struct refs in Data.
-            // Needed for BP wrappers with a ChildActorComponent whose inner
-            // actor sits OUTSIDE the actor's OuterIndex subtree.
+            // BFS: transitive closure of exports the clone brings along.
+            // (a) direct children via OuterIndex, always.
+            // (b) ObjectProperty refs into the source package — skipped when
+            //     RECURSE_REFS is false; in that case the cloned ref becomes
+            //     null (FPackageIndex 0) and UE respawns ChildActor targets
+            //     from the class archetype at runtime.
+            bool recurseRefs = !("1" == Environment.GetEnvironmentVariable("CLONE_NO_RECURSE_REFS"));
             var cloneSet = new List<int> { srcIdx };
             var seen = new HashSet<int> { srcIdx };
             void AddRefsFromProp(PropertyData p)
             {
+                if (!recurseRefs) return;
                 if (p is ObjectPropertyData op && op.Value != null)
                 {
                     int idxRef = op.Value.Index;
@@ -953,6 +956,10 @@ internal static class Program
                 var exp = dst.Exports[dstIdx];
                 if (exp is NormalExport ncn)
                 {
+                    // Inherited DefaultSubObjects (Box on a BP actor, Root etc.)
+                    // use 4-byte extras — their source's Extras is already safe.
+                    if (exp.IsInheritedInstance) continue;
+
                     string className = exp.ClassIndex.IsImport() ? exp.ClassIndex.ToImport(dst).ObjectName.ToString() : "";
                     bool isPrimitive = className.Contains("MeshComponent") || className == "BoxComponent"
                                        || className == "StaticMeshComponent" || className == "SkeletalMeshComponent"
