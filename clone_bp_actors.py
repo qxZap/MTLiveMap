@@ -215,8 +215,14 @@ def main():
                 "source_actor": tpl["source_actor"],
                 "x": e["X"], "y": e["Y"], "z": e["Z"],
             }
-            if tpl.get("preload_bp"):
-                spec["preload_bp"] = str(tpl["preload_bp"])
+            pb = tpl.get("preload_bp")
+            if pb:
+                # Accept either a single path or a list of paths. The batch
+                # command picks up multiple via semicolon-separated string.
+                if isinstance(pb, (list, tuple)):
+                    spec["preload_bp"] = ";".join(str(x) for x in pb)
+                else:
+                    spec["preload_bp"] = str(pb)
             if is_created:
                 if slot >= MAX_SLOTS_PER_CREATED_CELL:
                     print(f"     [warn] skipping entry, slots exhausted in {cell}", file=sys.stderr)

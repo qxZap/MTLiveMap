@@ -713,12 +713,16 @@ internal static class Program
         var specArr = JArray.Parse(File.ReadAllText(specPath));
 
         // Pre-load all BP .uasset files once into the shared mappings so
-        // schema lookups succeed during cloning.
+        // schema lookups succeed during cloning. preload_bp may be a single
+        // path or semicolon-separated list (used when BP wrappers spawn
+        // inner BPs via ChildActorComponents, both schemas must be loaded).
         var preloads = new HashSet<string>();
         foreach (var s in specArr)
         {
             var p = (string?)s["preload_bp"];
-            if (!string.IsNullOrEmpty(p)) preloads.Add(p);
+            if (string.IsNullOrEmpty(p)) continue;
+            foreach (var path in p.Split(';'))
+                if (!string.IsNullOrWhiteSpace(path)) preloads.Add(path);
         }
         foreach (var p in preloads)
         {
@@ -765,12 +769,55 @@ internal static class Program
             int srcActorNum = srcIdx + 1;
             var srcActor = src.Exports[srcIdx];
 
-            var srcChildren = new List<int>();
-            for (int i = 0; i < src.Exports.Count; i++)
-                if (src.Exports[i].OuterIndex.Index == srcActorNum) srcChildren.Add(i);
+            // BFS: full transitive closure of exports that must come along.
+            // Start with the actor, expand by (a) direct children (OuterIndex==x)
+            // and (b) internal ObjectProperty / Array / Struct refs in Data.
+            // Needed for BP wrappers with a ChildActorComponent whose inner
+            // actor sits OUTSIDE the actor's OuterIndex subtree.
+            var cloneSet = new List<int> { srcIdx };
+            var seen = new HashSet<int> { srcIdx };
+            void AddRefsFromProp(PropertyData p)
+            {
+                if (p is ObjectPropertyData op && op.Value != null)
+                {
+                    int idxRef = op.Value.Index;
+                    if (idxRef > 0 && idxRef - 1 < src.Exports.Count && !seen.Contains(idxRef - 1))
+                    {
+                        var tgt = src.Exports[idxRef - 1];
+                        // Never recurse into the Level itself or package-level stuff
+                        if (tgt is LevelExport) return;
+                        seen.Add(idxRef - 1);
+                        cloneSet.Add(idxRef - 1);
+                    }
+                }
+                else if (p is ArrayPropertyData ap && ap.Value != null)
+                    foreach (var inner in ap.Value) AddRefsFromProp(inner);
+                else if (p is StructPropertyData sp2 && sp2.Value != null)
+                    foreach (var inner in sp2.Value) AddRefsFromProp(inner);
+            }
+            for (int qi = 0; qi < cloneSet.Count; qi++)
+            {
+                int srcExpZero = cloneSet[qi];
+                // (a) direct children
+                int srcExpOne = srcExpZero + 1;
+                for (int i = 0; i < src.Exports.Count; i++)
+                {
+                    if (src.Exports[i].OuterIndex.Index == srcExpOne && !seen.Contains(i))
+                    { seen.Add(i); cloneSet.Add(i); }
+                }
+                // (b) Property refs in Data (NormalExport only)
+                if (src.Exports[srcExpZero] is NormalExport nexp)
+                    foreach (var p in nexp.Data) AddRefsFromProp(p);
+            }
 
             int newActorNum = dst.Exports.Count + 1;
-            int[] newChildNums = srcChildren.Select((_, k) => newActorNum + 1 + k).ToArray();
+            // Assign new indices in cloneSet order. cloneSet[0] = actor.
+            var idxMap = new Dictionary<int, int>();  // 1-based src -> 1-based dst
+            for (int k = 0; k < cloneSet.Count; k++)
+                idxMap[cloneSet[k] + 1] = newActorNum + k;
+            // Legacy aliases used below
+            var srcChildren = cloneSet.Skip(1).ToList();
+            int[] newChildNums = Enumerable.Range(1, cloneSet.Count - 1).Select(k => newActorNum + k).ToArray();
 
             var importRemap = new Dictionary<int, int>();
             int RemapImport(int srcImportIdx1Based)
@@ -804,9 +851,7 @@ internal static class Program
                 if (i == 0) return 0;
                 if (i > 0)
                 {
-                    if (i == srcActorNum) return newActorNum;
-                    int pos = srcChildren.IndexOf(i - 1);
-                    if (pos >= 0) return newChildNums[pos];
+                    if (idxMap.TryGetValue(i, out var mapped)) return mapped;
                     if (i - 1 < src.Exports.Count && src.Exports[i - 1] is LevelExport) return dstLevelNum;
                     return 0;
                 }
@@ -863,24 +908,36 @@ internal static class Program
                     foreach (var inner in sp2.Value) RemapPropRefs(inner);
             }
 
-            var newActor = DeepClone(srcActor);
-            newActor.OuterIndex = new FPackageIndex(dstLevelNum);
-            string label = (string?)s["label"] ?? $"{srcActor.ObjectName}_MOD";
-            int suffix = 0; string finalLabel = label;
-            while (dst.Exports.Any(e => e.ObjectName.ToString() == finalLabel))
-                finalLabel = $"{label}_{++suffix}";
-            newActor.ObjectName = FName.FromString(dst, finalLabel);
-            EnsureName(dst, finalLabel);
-            dst.Exports.Add(newActor);
-            foreach (var ci in srcChildren)
+            // Clone every export in the closure. DeepClone preserves OuterIndex
+            // via RemapIdx (which looks at idxMap); this works naturally for
+            // both direct children (OuterIndex == srcActorNum -> newActorNum)
+            // AND transitively-discovered refs whose Outer is PersistentLevel
+            // or another cloned export.
+            Export? newActor = null;
+            for (int k = 0; k < cloneSet.Count; k++)
             {
-                var clonedChild = DeepClone(src.Exports[ci]);
-                clonedChild.OuterIndex = new FPackageIndex(newActorNum);
-                dst.Exports.Add(clonedChild);
+                var cloned = DeepClone(src.Exports[cloneSet[k]]);
+                if (k == 0)
+                {
+                    cloned.OuterIndex = new FPackageIndex(dstLevelNum);
+                    newActor = cloned;
+                    string label = (string?)s["label"] ?? $"{srcActor.ObjectName}_MOD";
+                    int suffix = 0; string finalLabel = label;
+                    while (dst.Exports.Any(e => e.ObjectName.ToString() == finalLabel))
+                        finalLabel = $"{label}_{++suffix}";
+                    cloned.ObjectName = FName.FromString(dst, finalLabel);
+                    EnsureName(dst, finalLabel);
+                }
+                dst.Exports.Add(cloned);
             }
-            if (newActor is NormalExport naeN) foreach (var p in naeN.Data) RemapPropRefs(p);
-            foreach (var n in newChildNums)
-                if (dst.Exports[n - 1] is NormalExport nc) foreach (var p in nc.Data) RemapPropRefs(p);
+            // Remap prop refs on every newly-added export (they still hold
+            // source-side FPackageIndex values until now).
+            for (int k = 0; k < cloneSet.Count; k++)
+            {
+                int dstIdx = idxMap[cloneSet[k] + 1] - 1;
+                if (dst.Exports[dstIdx] is NormalExport nc)
+                    foreach (var p in nc.Data) RemapPropRefs(p);
+            }
 
             // Set location on root child (Scene or Root)
             foreach (var n in newChildNums)

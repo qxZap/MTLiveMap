@@ -53,14 +53,25 @@ REGISTRY: dict[str, dict] = {
         "bp_class":     "ParkingSpace_Middle_01_C",
         "source_umap":  JEJU_MAIN,
         "source_actor": "ParkingSpace_Middle_01_C_116",
-        "preload_bp":   GAME_CONTENT / "Objects/ParkingSpace/ParkingSpace_Middle_01.uasset",
+        # Both the wrapper and the inner ChildActor-spawned Interaction BP
+        # need schemas available so UAssetAPI parses them as NormalExport
+        # (otherwise the inner spawned actor is a RawExport whose embedded
+        # FPackageIndex values point into the source cell and we can't
+        # remap them, causing crashes).
+        "preload_bp":   [
+            GAME_CONTENT / "Objects/ParkingSpace/ParkingSpace_Middle_01.uasset",
+            GAME_CONTENT / "Objects/ParkingSpace/Interaction_PublicParkingSpac.uasset",
+        ],
     },
     "ParkingSmall": {
         "bp_path":      "/Game/Objects/ParkingSpace/ParkingSpace_Small_02",
         "bp_class":     "ParkingSpace_Small_02_C",
         "source_umap":  CELLS_DIR / "1KW42BDFT73JWB9PXN8CUSUXV.umap",
         "source_actor": "PublicParkingSpace_Small15_UAID_2CF05D790A1C63D301_1789842301",
-        "preload_bp":   None,
+        "preload_bp":   [
+            GAME_CONTENT / "Objects/ParkingSpace/ParkingSpace_Small_02.uasset",
+            GAME_CONTENT / "Objects/ParkingSpace/Interaction_PublicParkingSpac.uasset",
+        ],
     },
 }
 
