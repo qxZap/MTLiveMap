@@ -14,6 +14,7 @@ Add a new BP class by extending BP_TEMPLATES: point to a vanilla cell
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -29,7 +30,7 @@ INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
 # entries in-place so the PersistentLevel body stays the exact same size
 # the engine expects for 4 actors. Using a 3-actor template would require
 # growing the metadata sections, which UAssetAPI doesn't handle.
-TEMPLATE_CELL = "04QX4ZMDLBZ1XADCR4XOK2A7M"
+TEMPLATE_CELL = "0V18V8JBXKXUL8YILWZKCSMB4"
 
 
 def resolve_cell(x: float, y: float) -> str | None:
@@ -137,6 +138,13 @@ def main():
     slot_counter: dict[str, int] = {}
     MAX_SLOTS_PER_CREATED_CELL = 4  # matches TEMPLATE_CELL's Actors.Count
 
+    # DEBUG: set MAX_BP=1 to clone only the first entry — helps isolate
+    # whether a single BP clone in a new cell is already crashing.
+    _max = int(os.environ.get("MAX_BP", "999999"))
+    if _max < len(entries):
+        print(f"  [debug] MAX_BP={_max} — limiting from {len(entries)} entries")
+        entries = entries[:_max]
+
     for i, e in enumerate(entries):
         bp_class = e.get("blueprint_class")
         tpl_entry = template_for_class(bp_class)
@@ -177,7 +185,6 @@ def main():
         # Debug toggle: set SKIP_BP_CLONE=1 env to register the cell only (no
         # BP actor content inside it). Useful to test whether the cell
         # registration itself is valid.
-        import os
         if os.environ.get("SKIP_BP_CLONE") == "1":
             print(f"  [{i}] SKIP_BP_CLONE=1 — cell registered, actor clone skipped")
             continue
