@@ -53,22 +53,18 @@ OFFSET_YAW = 0.0
 # Which group inside map_work_changes.json["static_meshes"] to write to
 TARGET_GROUP = "imported"
 
-# Mesh names to skip entirely (by asset_key)
-SKIP_KEYS = {"SM_SkySphere", "Parking1", "Garage1"}
+from bp_registry import REGISTRY as _BP_REGISTRY, asset_keys as _bp_asset_keys
 
-# Map an asset_key to a blueprint class — these entries become
-# blueprint_actors entries cloned via MTBPInjector (clone_bp_actors.py).
+# Meshes intentionally excluded (never placed as static meshes or BP actors)
+SKIP_KEYS = {"SM_SkySphere"}
+
+# Placeholder asset_keys (from bp_registry) become blueprint_actors entries
+# instead of static meshes. Registry keys are the single source of truth.
 BP_CLASS_FROM_KEY = {
-    "Parking1": {
-        "blueprint_path":  "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large",
-        "blueprint_class": "Interaction_ParkingSpace_Large_C",
-    },
-    "Garage1": {
-        "blueprint_path":  "/Game/Blueprints/Interaction/GarageActorBP",
-        "blueprint_class": "GarageActorBP_C",
-    },
+    key: {"blueprint_path": entry["bp_path"], "blueprint_class": entry["bp_class"]}
+    for key, entry in _BP_REGISTRY.items()
 }
-PARKING_KEYS = set(BP_CLASS_FROM_KEY.keys())
+PARKING_KEYS = _bp_asset_keys()
 
 SRC = "static_meshes.json"
 DST = "map_work_changes.json"

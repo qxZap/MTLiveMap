@@ -20,28 +20,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+from bp_registry import REGISTRY, CELLS_DIR, JEJU_MAIN, template_for_class
+
 MAPPINGS = r"D:\MT\MotorTown718P1.usmap"
-GAME_CONTENT = r"D:\MT\Output\Exports\MotorTown\Content"
-CELLS_DIR = Path(GAME_CONTENT) / "Maps" / "Jeju" / "Jeju_World" / "_Generated_"
-JEJU_MAIN = Path(GAME_CONTENT) / "Maps" / "Jeju" / "Jeju_World.umap"
 INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
 # Fallback template cell (small L-1 MainGrid cell with minimal content) used
 # when we have to create a new WP cell for far coords.
 TEMPLATE_CELL = "0W5HFJERQNYIKT4TIFEZBU4PD"
-
-# BP class -> (source .umap, source actor name, optional .uasset to preload for schema)
-BP_TEMPLATES = {
-    "Interaction_ParkingSpace_Large_C": (
-        CELLS_DIR / "0MYO9WO9JBZ10BIDLXVFRXAOG.umap",
-        "ParkingSpace_Large_01_UAID_2CF05D790A1CFFDB01_1915517403",
-        Path(GAME_CONTENT) / "Objects" / "ParkingSpace" / "Interaction_ParkingSpace_Large.uasset",
-    ),
-    "GarageActorBP_C": (
-        JEJU_MAIN,
-        "GarageActor2",
-        None,
-    ),
-}
 
 
 def resolve_cell(x: float, y: float) -> str | None:
@@ -146,9 +131,9 @@ def main():
 
     for i, e in enumerate(entries):
         bp_class = e.get("blueprint_class")
-        tpl = BP_TEMPLATES.get(bp_class)
-        if not tpl:
-            print(f"  [{i}] skipped — no template for {bp_class}")
+        tpl_entry = template_for_class(bp_class)
+        if not tpl_entry:
+            print(f"  [{i}] skipped — no registry entry for {bp_class}")
             continue
 
         cell = resolve_cell(e["X"], e["Y"])
@@ -181,20 +166,19 @@ def main():
                     shutil.copy2(src, dst)
             seeded.add(cell)
 
-        src_cell, src_actor, preload = tpl
         cmd = [
             str(INJECTOR), "clone-cross-cell",
             "--mappings", MAPPINGS,
-            "--source-cell", str(src_cell),
-            "--source-actor", src_actor,
+            "--source-cell", str(tpl_entry["source_umap"]),
+            "--source-actor", tpl_entry["source_actor"],
             "--dst-cell", str(gen_dir / f"{cell}.umap"),
             "--output", str(gen_dir / f"{cell}.umap"),
             "--x", f"{e['X']}",
             "--y", f"{e['Y']}",
             "--z", f"{e['Z']}",
         ]
-        if preload:
-            cmd += ["--preload-bp", str(preload)]
+        if tpl_entry["preload_bp"]:
+            cmd += ["--preload-bp", str(tpl_entry["preload_bp"])]
         print(f"  [{i}] {bp_class} @ ({e['X']}, {e['Y']}, {e['Z']}) -> cell {cell}")
         r = subprocess.run(cmd, capture_output=True, text=True)
         if r.returncode != 0:

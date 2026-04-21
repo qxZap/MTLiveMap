@@ -622,3 +622,151 @@ Python float addition creates artifacts like `-91700.17000000001`. Use `round(va
 ### 17. Asset Path Dot Suffix Must Be Stripped
 
 UE asset references use `Package/Path.ExportName` format. The `.ExportName` suffix must be stripped in `resolve_mesh_path()` to get the package path. Otherwise UAssetAPI creates phantom imports with the wrong path.
+
+---
+
+## BP Actor Injection (Settled Approach)
+
+After many failed paths (hand-crafted NormalExport parking in the main map,
+hand-crafted BP children with wrong `Extras` sizes, sub-level registration),
+the reliable strategy is **cloning a vanilla in-game instance** into a
+WorldPartition cell.
+
+### Why hand-crafted BP actors don't spawn
+
+- BP-class-instance NormalExports require an exact 5-field SCS-component
+  pattern per subobject class (`BodyInstance`, `AttachParent`,
+  `UCSSerializationIndex`, `bNetAddressable`, `CreationMethod` encoded as
+  `ByteProperty` with value `SimpleConstructionScript=1`), plus class-
+  specific extras:
+  - Root-style `RF_Transactional | RF_DefaultSubObject, Inherited=True`,
+    2 props, 4-byte Extras
+  - SCS component `RF_NoFlags, Inherited=False`, 4 props, 4-byte Extras
+  - SCS primitive (StaticMeshComponent-like) 4 props, **16-byte Extras**
+    `00×8 01 00 00 00 00×4`
+- Main-map BP injection into `PersistentLevel.Actors` doesn't spawn at
+  runtime for cooked WP maps. Vanilla BP instances that *are* in
+  `PersistentLevel.Actors` are editor placeholders; the engine runs the
+  game from the partitioned cells.
+- The only thing in the main map's `PersistentLevel.Actors` path that
+  reliably spawns at runtime is native `StaticMeshActor` content.
+
+### Working path: cross-cell clone
+
+`MTBPInjector clone-cross-cell`:
+1. Load a source `.umap` that has a working vanilla instance.
+2. Find the actor + its direct children (`OuterIndex == srcActorNum`).
+3. Deep-clone actor + children, remapping every `FPackageIndex`:
+   src-actor → new-actor, src-children → new-children, src-imports →
+   dst-imports (adding new imports as needed), and `PersistentLevel` →
+   dst-`PersistentLevel`.
+4. Overwrite `RelativeLocation` / `RelativeRotation` on the root child.
+5. Regenerate the `FGuid` inside the actor's `Extras` (otherwise WP
+   dedupes against the original).
+6. Append the new actor to the destination's `PersistentLevel.Actors` via
+   `PatchActorsInBytes` (binary patch of the count + list, preserving WP
+   `Extras`).
+
+Source actor's import chain (`/Game/.../SomeClass.SomeClass_C` → package
+→ package root) has to be transplanted. `CloneCrossCell`'s `RemapImport`
+walks the outer chain recursively, dedupes against existing dst-imports,
+and adds missing ones.
+
+### WP cell runtime hash (new-cell creation)
+
+`Jeju_World.umap` holds the runtime partition data:
+
+```
+WorldPartition_0 (class UWorldPartition)
+  └─ RuntimeHash → WorldPartitionRuntimeSpatialHash_0
+      └─ StreamingGrids [SpatialHashStreamingGrid × 2]
+          MainGrid:   CellSize=12800, 11 GridLevels
+          Landscape:  CellSize=51200,  9 GridLevels
+          Each GridLevel:
+            LayerCells [SpatialHashStreamingGridLayerCell × N]
+              Each LayerCell: GridCells → [ObjectProperty → cell export]
+            LayerCellsMapping Map<Int64, Int32>  (grid key → LayerCells idx)
+```
+
+Each vanilla cell is expressed in Jeju_World via 3 linked exports:
+- **WorldPartitionRuntimeLevelStreamingCell** (the cell) — child of
+  `WorldPartitionRuntimeSpatialHash_0`. Props: `LevelStreaming` (→ cell
+  streaming actor), `CellGuid`, `RuntimeCellData` (→ spatial info).
+- **WorldPartitionRuntimeCellDataSpatialHash** — Props: `Position`
+  (FVector = cell center), `Extent` (half-width), `ContentBounds`,
+  `GridName` (FName), `HierarchicalLevel` (int). Extras contains a
+  `Jeju_World_MainGrid_Lx_Xx_Yy` C-string.
+- **WorldPartitionLevelStreaming_\<cellname\>** — Props: `StreamingCell`
+  (weak back-ref), `OuterWorldPartition`, `WorldAsset` (soft ref to the
+  cell's `.umap`), `PackageNameToLoad` = `/Game/Maps/Jeju/Jeju_World/_Generated_/<cellname>`.
+
+Plus the companion `_Generated_/<cellname>.umap` file holds the actor
+content that streams in.
+
+### `LayerCellsMapping` key packing (MainGrid level 0 / L-1)
+
+Empirically decoded:
+```
+key = (gridX + 524_800) + gridY * 1024
+where gridX = floor(pos.X / 12800), gridY = floor(pos.Y / 12800)
+```
+
+(Derived by cross-referencing a sample of Map entries against the pointed
+cell's `RuntimeCellData.Position`. Verified across positive/negative X
+and Y. See `MTBPInjector decode-layer-keys`.)
+
+### `MTBPInjector register-new-cell`
+
+One-shot command that creates a cell at arbitrary coords:
+1. Clones the 3 registration exports from a template vanilla cell (we use
+   `0W5HFJERQNYIKT4TIFEZBU4PD` — small L-1 MainGrid cell with minimal
+   content, ext=6400).
+2. Updates the clone's `Position`, `Extent`, `GridName`, `HierarchicalLevel`
+   to the new target; re-links cross-refs; regenerates `CellGuid`.
+3. Updates `PackageNameToLoad` / Extras on the LevelStreaming clone so WP
+   loads our new `.umap` instead of the template's.
+4. Appends a new `LayerCell` to
+   `StreamingGrids[grid].GridLevels[idx].LayerCells` and inserts a
+   `LayerCellsMapping` entry with the decoded packed key.
+5. Copies the template cell content file to `<new-name>.umap` under the
+   mod `_Generated_/` dir so WP has something to stream.
+
+`clone_bp_actors.py` calls this automatically when an entry's coords land
+outside any useful (hierarchical level ≤ 2) vanilla cell. L10 / Landscape
+catch-all cells (center 0,0 ext 6.5M) are deliberately rejected as
+candidates — they don't spawn runtime BP actors we inject into them.
+
+Multiple BP actors on the same 12800-unit grid tile share one created
+cell. `clone_bp_actors.py` keys by `(floor(X/12800), floor(Y/12800))` and
+reuses an already-registered MOD cell instead of registering again.
+
+---
+
+## BP Registry Convention (`bp_registry.py`)
+
+Single source of truth — `REGISTRY` dict in `bp_registry.py`:
+
+```python
+"ParkingLarge": {
+    "bp_path":      "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
+    "bp_class":     "ParkingSpace_Large_01_C",
+    "source_umap":  CELLS_DIR / "0MYO9WO9JBZ10BIDLXVFRXAOG.umap",
+    "source_actor": "ParkingSpace_Large_01_UAID_2CF05D790A1CFFDB01_1915517403",
+    "preload_bp":   ".../Interaction_ParkingSpace_Large.uasset",
+}
+```
+
+- `import_meshes.py` uses registry keys to split rows into
+  `blueprint_actors` vs `static_meshes`.
+- `clone_bp_actors.py` looks up `bp_class` in the registry to find the
+  source umap + actor to clone.
+- Users add a new type by adding one entry and dropping a placeholder
+  under `/Game/DC/Actors/<asset_key>` in their editor scene.
+
+### Picking a source actor
+
+For the source to clone reliably, pick an instance whose direct children
+(`OuterIndex == actor`) actually include the actor's root / components.
+Some BP classes only exist wrapped inside a `ChildActorComponent`
+(e.g. `Interaction_PublicParkingSpac_C`). Those can't be cloned standalone
+— register the wrapper class (`ParkingSpace_Small_02_C` etc.) instead.
