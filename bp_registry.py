@@ -49,29 +49,26 @@ REGISTRY: dict[str, dict] = {
         "preload_bp":   GAME_CONTENT / "Objects/ParkingSpace/Interaction_ParkingSpace_Large.uasset",
     },
     "ParkingMedium": {
-        "bp_path":      "/Game/Objects/ParkingSpace/ParkingSpace_Middle_01",
-        "bp_class":     "ParkingSpace_Middle_01_C",
-        "source_umap":  JEJU_MAIN,
-        "source_actor": "ParkingSpace_Middle_01_C_116",
-        # Both the wrapper and the inner ChildActor-spawned Interaction BP
-        # need schemas available so UAssetAPI parses them as NormalExport
-        # (otherwise the inner spawned actor is a RawExport whose embedded
-        # FPackageIndex values point into the source cell and we can't
-        # remap them, causing crashes).
-        "preload_bp":   [
-            GAME_CONTENT / "Objects/ParkingSpace/ParkingSpace_Middle_01.uasset",
-            GAME_CONTENT / "Objects/ParkingSpace/Interaction_PublicParkingSpac.uasset",
-        ],
+        # Motor Town ships no dedicated Interaction_ParkingSpace_Medium BP;
+        # the ParkingSpace_Middle_01_C wrapper uses a ChildActorComponent
+        # whose cloned inner actor we can't fully remap. Fall back to the
+        # Interaction_ParkingSpace_Large_C — same gameplay behavior, user
+        # differentiates medium vs large slots by placement.
+        "bp_path":      "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large",
+        "bp_class":     "ParkingSpace_Large_01_C",
+        "source_umap":  CELLS_DIR / "0MYO9WO9JBZ10BIDLXVFRXAOG.umap",
+        "source_actor": "ParkingSpace_Large_01_UAID_2CF05D790A1CFFDB01_1915517403",
+        "preload_bp":   GAME_CONTENT / "Objects/ParkingSpace/Interaction_ParkingSpace_Large.uasset",
     },
     "ParkingSmall": {
-        "bp_path":      "/Game/Objects/ParkingSpace/ParkingSpace_Small_02",
-        "bp_class":     "ParkingSpace_Small_02_C",
-        "source_umap":  CELLS_DIR / "1KW42BDFT73JWB9PXN8CUSUXV.umap",
-        "source_actor": "PublicParkingSpace_Small15_UAID_2CF05D790A1C63D301_1789842301",
-        "preload_bp":   [
-            GAME_CONTENT / "Objects/ParkingSpace/ParkingSpace_Small_02.uasset",
-            GAME_CONTENT / "Objects/ParkingSpace/Interaction_PublicParkingSpac.uasset",
-        ],
+        # Use the direct Interaction BP (not the ChildActorComponent-wrapper
+        # ParkingSpace_Small_02_C). Same structural shape as ParkingLarge
+        # which already works — no inner-ChildActor refs to remap.
+        "bp_path":      "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small",
+        "bp_class":     "Interaction_ParkingSpace_Small_C",
+        "source_umap":  CELLS_DIR / "0Y7AAM17BE5AI5AAH9BGUE9CG.umap",
+        "source_actor": "Interaction_ParkingSpace_Small_C_UAID_345A60416115A7A802_1236712312",
+        "preload_bp":   GAME_CONTENT / "Objects/ParkingSpace/Interaction_ParkingSpace_Small.uasset",
     },
 }
 

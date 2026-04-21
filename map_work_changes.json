@@ -29044,9 +29044,9 @@
                 "Z": 34930.0,
                 "Pitch": 0.0,
                 "Roll": 0.0,
-                "Yaw": 0.0,
-                "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Small_02",
-                "blueprint_class": "ParkingSpace_Small_02_C"
+                "Yaw": 90.0,
+                "blueprint_path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small",
+                "blueprint_class": "Interaction_ParkingSpace_Small_C"
             },
             {
                 "X": -615500.0,
@@ -29054,9 +29054,9 @@
                 "Z": 34930.0,
                 "Pitch": 0.0,
                 "Roll": 0.0,
-                "Yaw": 0.0,
-                "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Middle_01",
-                "blueprint_class": "ParkingSpace_Middle_01_C"
+                "Yaw": 90.0,
+                "blueprint_path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large",
+                "blueprint_class": "ParkingSpace_Large_01_C"
             },
             {
                 "X": -615505.0,
@@ -29064,7 +29064,7 @@
                 "Z": 34930.0,
                 "Pitch": 0.0,
                 "Roll": 0.0,
-                "Yaw": 0.0,
+                "Yaw": 90.0,
                 "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
                 "blueprint_class": "ParkingSpace_Large_01_C"
             }
