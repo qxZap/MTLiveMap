@@ -1323,13 +1323,93 @@ internal static class Program
                 Guid.NewGuid().ToByteArray().CopyTo(newActor.Extras, 8 + strlen);
         }
 
-        // Register in dst PersistentLevel's Actors (via raw-bytes patch preserving unparsed WP data)
-        PatchLevelExportAsRaw(dst, dstCellPath, new List<int> { newActorNum });
+        // Two modes:
+        //   --replace-slot N : replace Actors list index N with our new actor.
+        //                      Body size unchanged. Use when the template cell
+        //                      already has the right per-actor metadata for N+1
+        //                      actors and we want to reuse one of its slots.
+        //   (default)        : append to Actors list. Only safe when UE's
+        //                      per-actor metadata doesn't care about count.
+        if (f.TryGetValue("replace-slot", out var rs) && int.TryParse(rs, out var slotIdx))
+        {
+            ReplaceActorSlotInLevel(dst, dstCellPath, slotIdx, newActorNum);
+        }
+        else
+        {
+            PatchLevelExportAsRaw(dst, dstCellPath, new List<int> { newActorNum });
+        }
 
         Console.WriteLine($"Writing {dstOutPath}");
         dst.Write(dstOutPath);
         Console.WriteLine($"Cloned actor #{newActorNum}, {srcChildren.Count} children at #{newActorNum + 1}..{newActorNum + srcChildren.Count}");
         return 0;
+    }
+
+    // Replace the Nth entry in PersistentLevel.Actors with newActorIdx, keeping
+    // the Actors list length (and therefore the body size + per-actor metadata
+    // layout) unchanged.
+    private static void ReplaceActorSlotInLevel(UAsset asset, string originalPath, int slotIdx, int newActorIdx)
+    {
+        int lvlIdx = -1;
+        for (int i = 0; i < asset.Exports.Count; i++)
+            if (asset.Exports[i] is LevelExport) { lvlIdx = i; break; }
+        if (lvlIdx < 0)
+            for (int i = 0; i < asset.Exports.Count; i++)
+                if (asset.Exports[i].ObjectName.ToString() == "PersistentLevel") { lvlIdx = i; break; }
+        if (lvlIdx < 0) { Console.Error.WriteLine("  No PersistentLevel"); return; }
+        var lvl = asset.Exports[lvlIdx];
+
+        byte[] bodyIn;
+        if (lvl is RawExport alreadyRaw && alreadyRaw.Data != null && alreadyRaw.Data.Length > 0)
+            bodyIn = alreadyRaw.Data;
+        else
+        {
+            string uexpPath = Path.ChangeExtension(originalPath, ".uexp");
+            byte[] umapBytes = File.ReadAllBytes(originalPath);
+            byte[] uexpBytes = File.Exists(uexpPath) ? File.ReadAllBytes(uexpPath) : Array.Empty<byte>();
+            long off = lvl.SerialOffset;
+            long sz  = lvl.SerialSize;
+            bodyIn = new byte[sz];
+            if (off >= umapBytes.Length)
+                Array.Copy(uexpBytes, off - umapBytes.Length, bodyIn, 0, sz);
+            else
+                Array.Copy(umapBytes, off, bodyIn, 0, sz);
+        }
+
+        // Locate URL marker + count backwards for largest matching count
+        byte[] marker = new byte[] { 7, 0, 0, 0, (byte)'u', (byte)'n', (byte)'r', (byte)'e', (byte)'a', (byte)'l', 0 };
+        int urlOff = IndexOfSeq(bodyIn, marker);
+        if (urlOff < 0) { Console.Error.WriteLine("  URL marker not found"); return; }
+        int countOff = -1, count = 0;
+        for (int probe = urlOff - 4; probe >= 4; probe -= 4)
+        {
+            int c = BitConverter.ToInt32(bodyIn, probe);
+            if (c > 0 && probe + 4 + c * 4 == urlOff && c > count) { countOff = probe; count = c; }
+        }
+        if (countOff < 0 || slotIdx >= count)
+        {
+            Console.Error.WriteLine($"  Slot {slotIdx} out of range (count={count})");
+            return;
+        }
+
+        // Actors list starts immediately after count. Slot N is at (countOff + 4 + N*4).
+        int slotOff = countOff + 4 + slotIdx * 4;
+        int oldVal = BitConverter.ToInt32(bodyIn, slotOff);
+        BitConverter.GetBytes(newActorIdx).CopyTo(bodyIn, slotOff);
+        Console.WriteLine($"  Replaced Actors[{slotIdx}]: {oldVal} -> {newActorIdx}");
+
+        if (lvl is RawExport raw)
+        {
+            raw.Data = bodyIn;
+        }
+        else
+        {
+            var newRaw = new RawExport { Data = bodyIn, Asset = asset };
+            CopyExportHeader(from: lvl, to: newRaw);
+            newRaw.Extras = Array.Empty<byte>();
+            newRaw.CreateBeforeSerializationDependencies.Add(new FPackageIndex(newActorIdx));
+            asset.Exports[lvlIdx] = newRaw;
+        }
     }
 
     private static int InspectExport(string[] args)

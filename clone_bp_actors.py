@@ -24,9 +24,12 @@ from bp_registry import REGISTRY, CELLS_DIR, JEJU_MAIN, template_for_class
 
 MAPPINGS = r"D:\MT\MotorTown718P1.usmap"
 INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
-# Fallback template cell (small L-1 MainGrid cell with minimal content) used
-# when we have to create a new WP cell for far coords.
-TEMPLATE_CELL = "0W5HFJERQNYIKT4TIFEZBU4PD"
+# Fallback template cell used when creating a new WP cell for far coords.
+# Chosen for having 4 actor slots — our 4 BP clones replace the Actors list
+# entries in-place so the PersistentLevel body stays the exact same size
+# the engine expects for 4 actors. Using a 3-actor template would require
+# growing the metadata sections, which UAssetAPI doesn't handle.
+TEMPLATE_CELL = "04QX4ZMDLBZ1XADCR4XOK2A7M"
 
 
 def resolve_cell(x: float, y: float) -> str | None:
@@ -128,6 +131,11 @@ def main():
     main_in = args.main_in
     main_out = args.main_out or main_in
     created_cells: dict[tuple[int, int], str] = {}
+    # For created cells we replace template slots in-place (can't grow Actors
+    # list without bloating per-actor metadata, which UE rejects). Count the
+    # slot index per created cell so each actor goes into the next slot.
+    slot_counter: dict[str, int] = {}
+    MAX_SLOTS_PER_CREATED_CELL = 4  # matches TEMPLATE_CELL's Actors.Count
 
     for i, e in enumerate(entries):
         bp_class = e.get("blueprint_class")
@@ -185,6 +193,15 @@ def main():
             "--y", f"{e['Y']}",
             "--z", f"{e['Z']}",
         ]
+        # When the cell was created by us, replace one of the template's Actors
+        # slots instead of appending — keeps body size / metadata layout intact.
+        if cell in created_cells.values():
+            slot = slot_counter.get(cell, 0)
+            if slot >= MAX_SLOTS_PER_CREATED_CELL:
+                print(f"     [warn] exhausted {MAX_SLOTS_PER_CREATED_CELL} slots in created cell {cell}, skipping", file=sys.stderr)
+                continue
+            cmd += ["--replace-slot", str(slot)]
+            slot_counter[cell] = slot + 1
         if tpl_entry["preload_bp"]:
             cmd += ["--preload-bp", str(tpl_entry["preload_bp"])]
         print(f"  [{i}] {bp_class} @ ({e['X']}, {e['Y']}, {e['Z']}) -> cell {cell}")
