@@ -37,6 +37,7 @@ internal static class Program
                 "find-cell-wp" => FindCellWP(args.Skip(1).ToArray()),
                 "dump-level-extras" => DumpLevelExtras(args.Skip(1).ToArray()),
                 "dump-streaming-grids" => DumpStreamingGridsCmd(args.Skip(1).ToArray()),
+                "decode-layer-keys" => DecodeLayerKeys(args.Skip(1).ToArray()),
                 _ => Fail($"Unknown command: {args[0]}"),
             };
         }
@@ -295,11 +296,89 @@ internal static class Program
                 Console.WriteLine($"{indent}{field.Name}: -> {op.Value?.Index}"); break;
             case UAssetAPI.PropertyTypes.Objects.SoftObjectPropertyData sop:
                 Console.WriteLine($"{indent}{field.Name}: <SoftObject>"); break;
+            case UAssetAPI.PropertyTypes.Objects.MapPropertyData mp:
+                Console.WriteLine($"{indent}{field.Name}: Map key={mp.KeyType} value={mp.ValueType} entries={mp.Value?.Count ?? 0}");
+                if (mp.Value != null)
+                {
+                    int shown = 0;
+                    foreach (var kv in mp.Value)
+                    {
+                        if (shown++ >= 3) { Console.WriteLine($"{indent}  ..."); break; }
+                        Console.WriteLine($"{indent}  key:");
+                        DumpField(kv.Key, indent + "    ", maxDepth - 1);
+                        Console.WriteLine($"{indent}  val:");
+                        DumpField(kv.Value, indent + "    ", maxDepth - 1);
+                    }
+                }
+                break;
             case UAssetAPI.PropertyTypes.Structs.VectorPropertyData vp:
                 Console.WriteLine($"{indent}{field.Name}: ({vp.Value.X}, {vp.Value.Y}, {vp.Value.Z})"); break;
             default:
                 Console.WriteLine($"{indent}{field.Name}: ({field.GetType().Name})"); break;
         }
+    }
+
+    // Decode the first few LayerCellsMapping keys + cross-reference the pointed
+    // LayerCell's GridCells[0] -> RuntimeLevelStreamingCell -> RuntimeCellData
+    // to extract Position, so we can reverse-engineer the int64 key packing.
+    private static int DecodeLayerKeys(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["main"], EngineVer, LoadMappings(f["mappings"]));
+        int hashIdx = -1;
+        for (int i = 0; i < asset.Exports.Count; i++)
+        {
+            var cls = asset.Exports[i].ClassIndex.IsImport() ? asset.Exports[i].ClassIndex.ToImport(asset).ObjectName.ToString() : "";
+            if (cls == "WorldPartitionRuntimeSpatialHash") { hashIdx = i; break; }
+        }
+        var hash = (NormalExport)asset.Exports[hashIdx];
+        var grids = hash.Data.OfType<ArrayPropertyData>().First(a => a.Name.ToString() == "StreamingGrids");
+        int gridIdx = f.TryGetValue("grid", out var gs) ? int.Parse(gs) : 0;
+        int levelIdx = f.TryGetValue("level", out var ls) ? int.Parse(ls) : 0;
+        int limit = f.TryGetValue("limit", out var lim) ? int.Parse(lim) : 10;
+
+        var sgrid = (UAssetAPI.PropertyTypes.Structs.StructPropertyData)grids.Value[gridIdx];
+        var gridName = ((UAssetAPI.PropertyTypes.Objects.NamePropertyData)sgrid.Value.First(p => p.Name.ToString() == "GridName")).Value.ToString();
+        var cellSize = ((UAssetAPI.PropertyTypes.Objects.IntPropertyData)sgrid.Value.First(p => p.Name.ToString() == "CellSize")).Value;
+        var gridLevels = (ArrayPropertyData)sgrid.Value.First(p => p.Name.ToString() == "GridLevels");
+        var lvl = (UAssetAPI.PropertyTypes.Structs.StructPropertyData)gridLevels.Value[levelIdx];
+        var layerCells = (ArrayPropertyData)lvl.Value.First(p => p.Name.ToString() == "LayerCells");
+        var mapping = (UAssetAPI.PropertyTypes.Objects.MapPropertyData)lvl.Value.First(p => p.Name.ToString() == "LayerCellsMapping");
+
+        Console.WriteLine($"Grid={gridName} CellSize={cellSize} level={levelIdx} LayerCells={layerCells.Value.Length} mapEntries={mapping.Value.Count}");
+        int shown = 0;
+        foreach (var kv in mapping.Value)
+        {
+            if (shown++ >= limit) break;
+            long key = ((UAssetAPI.PropertyTypes.Objects.Int64PropertyData)kv.Key).Value;
+            int val = ((UAssetAPI.PropertyTypes.Objects.IntPropertyData)kv.Value).Value;
+            // fetch the cell referenced via layerCells[val] -> GridCells[0] -> CellDataSpatialHash
+            var layerCellStruct = (UAssetAPI.PropertyTypes.Structs.StructPropertyData)layerCells.Value[val];
+            var gridCells = (ArrayPropertyData)layerCellStruct.Value.First(p => p.Name.ToString() == "GridCells");
+            int cellExpIdx = ((UAssetAPI.PropertyTypes.Objects.ObjectPropertyData)gridCells.Value[0]).Value.Index;
+            var cellExp = asset.Exports[cellExpIdx - 1];
+            // RuntimeCellData object ref is on cellExp.Data
+            double px = 0, py = 0, ext = 0;
+            if (cellExp is NormalExport cne)
+            {
+                var rcd = cne.Data.OfType<UAssetAPI.PropertyTypes.Objects.ObjectPropertyData>().FirstOrDefault(p => p.Name.ToString() == "RuntimeCellData");
+                if (rcd != null)
+                {
+                    var rcdExp = (NormalExport)asset.Exports[rcd.Value.Index - 1];
+                    var pos = rcdExp.Data.OfType<UAssetAPI.PropertyTypes.Structs.StructPropertyData>().FirstOrDefault(p => p.Name.ToString() == "Position");
+                    if (pos != null && pos.Value.Count > 0 && pos.Value[0] is UAssetAPI.PropertyTypes.Structs.VectorPropertyData vp)
+                    {
+                        px = vp.Value.X; py = vp.Value.Y;
+                    }
+                    var extF = rcdExp.Data.OfType<UAssetAPI.PropertyTypes.Objects.FloatPropertyData>().FirstOrDefault(p => p.Name.ToString() == "Extent");
+                    if (extF != null) ext = extF.Value;
+                }
+            }
+            int gridX = (int)Math.Floor(px / (ext * 2));
+            int gridY = (int)Math.Floor(py / (ext * 2));
+            Console.WriteLine($"  key=0x{key:X16} ({key,20}) -> layerIdx={val,5}  pos=({px,12:F0},{py,12:F0}) ext={ext,6}  guessed grid=({gridX,4},{gridY,4})");
+        }
+        return 0;
     }
 
     private static int DumpStreamingGridsCmd(string[] args)
