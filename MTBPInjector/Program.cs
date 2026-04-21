@@ -36,6 +36,7 @@ internal static class Program
                 "inspect-by-class" => InspectByClass(args.Skip(1).ToArray()),
                 "find-cell-wp" => FindCellWP(args.Skip(1).ToArray()),
                 "dump-level-extras" => DumpLevelExtras(args.Skip(1).ToArray()),
+                "dump-streaming-grids" => DumpStreamingGridsCmd(args.Skip(1).ToArray()),
                 _ => Fail($"Unknown command: {args[0]}"),
             };
         }
@@ -254,8 +255,79 @@ internal static class Program
         {
             UAssetAPI.PropertyTypes.Structs.VectorPropertyData vp => $" = Vec({vp.Value.X},{vp.Value.Y},{vp.Value.Z})",
             UAssetAPI.PropertyTypes.Structs.RotatorPropertyData rp => $" = Rot(P{rp.Value.Pitch},Y{rp.Value.Yaw},R{rp.Value.Roll})",
-            _ => $" <Struct {sp.StructType?.Value} inner={inner?.GetType().Name}>"
+            _ => $" <Struct {sp.StructType?.Value} fields={sp.Value.Count}>"
         };
+    }
+
+    private static void DumpField(PropertyData field, string indent, int maxDepth = 10)
+    {
+        if (maxDepth <= 0) { Console.WriteLine($"{indent}{field.Name}: <depth-limited>"); return; }
+        switch (field)
+        {
+            case ArrayPropertyData ap:
+                Console.WriteLine($"{indent}{field.Name}: [Array {ap.ArrayType} count={ap.Value?.Length ?? 0}]");
+                if (ap.Value != null && ap.Value.Length > 0)
+                {
+                    for (int i = 0; i < Math.Min(ap.Value.Length, 3); i++)
+                    {
+                        Console.WriteLine($"{indent}  [{i}]:");
+                        DumpField(ap.Value[i], indent + "    ", maxDepth - 1);
+                    }
+                    if (ap.Value.Length > 3) Console.WriteLine($"{indent}  ... {ap.Value.Length - 3} more");
+                }
+                break;
+            case UAssetAPI.PropertyTypes.Structs.StructPropertyData sp:
+                Console.WriteLine($"{indent}{field.Name}: Struct {sp.StructType?.Value} ({sp.Value?.Count ?? 0} fields)");
+                if (sp.Value != null)
+                    foreach (var sub in sp.Value) DumpField(sub, indent + "  ", maxDepth - 1);
+                break;
+            case UAssetAPI.PropertyTypes.Objects.NamePropertyData np:
+                Console.WriteLine($"{indent}{field.Name}: \"{np.Value}\""); break;
+            case UAssetAPI.PropertyTypes.Objects.IntPropertyData ip:
+                Console.WriteLine($"{indent}{field.Name}: {ip.Value}"); break;
+            case UAssetAPI.PropertyTypes.Objects.FloatPropertyData fp:
+                Console.WriteLine($"{indent}{field.Name}: {fp.Value}"); break;
+            case UAssetAPI.PropertyTypes.Objects.DoublePropertyData dp:
+                Console.WriteLine($"{indent}{field.Name}: {dp.Value}"); break;
+            case UAssetAPI.PropertyTypes.Objects.BoolPropertyData bp:
+                Console.WriteLine($"{indent}{field.Name}: {bp.Value}"); break;
+            case UAssetAPI.PropertyTypes.Objects.ObjectPropertyData op:
+                Console.WriteLine($"{indent}{field.Name}: -> {op.Value?.Index}"); break;
+            case UAssetAPI.PropertyTypes.Objects.SoftObjectPropertyData sop:
+                Console.WriteLine($"{indent}{field.Name}: <SoftObject>"); break;
+            case UAssetAPI.PropertyTypes.Structs.VectorPropertyData vp:
+                Console.WriteLine($"{indent}{field.Name}: ({vp.Value.X}, {vp.Value.Y}, {vp.Value.Z})"); break;
+            default:
+                Console.WriteLine($"{indent}{field.Name}: ({field.GetType().Name})"); break;
+        }
+    }
+
+    private static int DumpStreamingGridsCmd(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["main"], EngineVer, LoadMappings(f["mappings"]));
+        int hashIdx = -1;
+        for (int i = 0; i < asset.Exports.Count; i++)
+        {
+            var cls = asset.Exports[i].ClassIndex.IsImport() ? asset.Exports[i].ClassIndex.ToImport(asset).ObjectName.ToString() : "";
+            if (cls == "WorldPartitionRuntimeSpatialHash") { hashIdx = i; break; }
+        }
+        if (hashIdx < 0) { Console.Error.WriteLine("No RuntimeSpatialHash"); return 1; }
+        var hash = (NormalExport)asset.Exports[hashIdx];
+        var grids = hash.Data.OfType<ArrayPropertyData>().FirstOrDefault(a => a.Name.ToString() == "StreamingGrids");
+        if (grids == null) { Console.Error.WriteLine("No StreamingGrids"); return 1; }
+        Console.WriteLine($"StreamingGrids: Array of {grids.ArrayType?.Value}, count={grids.Value.Length}");
+        for (int g = 0; g < grids.Value.Length; g++)
+        {
+            var sp = grids.Value[g] as UAssetAPI.PropertyTypes.Structs.StructPropertyData;
+            if (sp == null) { Console.WriteLine($"  [{g}] ?? {grids.Value[g].GetType().Name}"); continue; }
+            Console.WriteLine($"  [{g}] Struct {sp.StructType?.Value} ({sp.Value.Count} fields):");
+            foreach (var field in sp.Value)
+            {
+                DumpField(field, "      ");
+            }
+        }
+        return 0;
     }
 
     // ----------------------------------------------------------------------
@@ -832,7 +904,13 @@ internal static class Program
         var newActor = DeepClone(srcActor);
         // OuterIndex should be dst PersistentLevel
         newActor.OuterIndex = new FPackageIndex(dstLevelNum);
-        newActor.ObjectName = FName.FromString(dst, $"ParkingLot_MOD_0");
+        string label = f.TryGetValue("label", out var lb) ? lb : $"{srcActor.ObjectName}_MOD";
+        // Ensure unique in dst
+        int suffix = 0;
+        string finalLabel = label;
+        while (dst.Exports.Any(e => e.ObjectName.ToString() == finalLabel))
+            finalLabel = $"{label}_{++suffix}";
+        newActor.ObjectName = FName.FromString(dst, finalLabel);
         EnsureName(dst, newActor.ObjectName.ToString());
         dst.Exports.Add(newActor);
 
@@ -931,6 +1009,7 @@ internal static class Program
                         UAssetAPI.PropertyTypes.Objects.FloatPropertyData fp => $" = {fp.Value}",
                         UAssetAPI.PropertyTypes.Objects.IntPropertyData ip => $" = {ip.Value}",
                         UAssetAPI.PropertyTypes.Objects.NamePropertyData np => $" = \"{np.Value}\"",
+                        UAssetAPI.PropertyTypes.Objects.ArrayPropertyData ap => $" [Array {ap.ArrayType} count={ap.Value?.Length ?? 0}]",
                         _ => ""
                     };
                     Console.WriteLine($"    prop: {p.Name} ({p.GetType().Name}){valStr}");
@@ -1237,8 +1316,38 @@ internal static class Program
         int lvlIdx = -1;
         for (int i = 0; i < asset.Exports.Count; i++)
             if (asset.Exports[i] is LevelExport) { lvlIdx = i; break; }
-        if (lvlIdx < 0) { Console.Error.WriteLine("  No LevelExport found to patch"); return; }
-        var lvl = (LevelExport)asset.Exports[lvlIdx];
+        if (lvlIdx < 0)
+        {
+            for (int i = 0; i < asset.Exports.Count; i++)
+                if (asset.Exports[i].ObjectName.ToString() == "PersistentLevel") { lvlIdx = i; break; }
+        }
+        if (lvlIdx < 0) { Console.Error.WriteLine("  No PersistentLevel found to patch"); return; }
+        var lvl = asset.Exports[lvlIdx];
+
+        // Fast path: if typed LevelExport, just mutate the Actors list.
+        // UAssetAPI's LevelExport.Write preserves unparsed trailing bytes via Extras.
+        if (lvl is LevelExport typedLvl)
+        {
+            foreach (var n in newActorIndices)
+            {
+                typedLvl.Actors.Add(new FPackageIndex(n));
+                typedLvl.CreateBeforeSerializationDependencies.Add(new FPackageIndex(n));
+            }
+            Console.WriteLine($"  Patched PersistentLevel (typed): +{newActorIndices.Count} actor(s), now {typedLvl.Actors.Count}");
+            return;
+        }
+
+        // RawExport path: patch bytes directly.
+        if (lvl is RawExport prev && prev.Data != null && prev.Data.Length > 0)
+        {
+            var patchedInPlace = PatchActorsInBytes(prev.Data, newActorIndices);
+            if (patchedInPlace != null)
+            {
+                prev.Data = patchedInPlace;
+                Console.WriteLine($"  Patched PersistentLevel (in-memory RawExport): +{newActorIndices.Count} actor(s)");
+                return;
+            }
+        }
 
         // Read original body bytes from source .umap/.uexp combined stream.
         // SerialOffset is absolute in the combined file (.umap header + .uexp data).
@@ -1305,6 +1414,33 @@ internal static class Program
         asset.Exports[lvlIdx] = raw;
 
         Console.WriteLine($"  Patched PersistentLevel: actor count {oldCount} -> {newCount} (as RawExport)");
+    }
+
+    // Patch Actors count + list in an opaque LevelExport body. Returns new bytes
+    // or null if the layout couldn't be located.
+    private static byte[] PatchActorsInBytes(byte[] body, List<int> newActorIndices)
+    {
+        byte[] marker = new byte[] { 7, 0, 0, 0, (byte)'u', (byte)'n', (byte)'r', (byte)'e', (byte)'a', (byte)'l', 0 };
+        int urlOff = IndexOfSeq(body, marker);
+        if (urlOff < 0) return null;
+        int countOff = -1;
+        int oldCount = 0;
+        for (int probe = urlOff - 4; probe >= 4; probe -= 4)
+        {
+            int c = BitConverter.ToInt32(body, probe);
+            if (c > 0 && probe + 4 + c * 4 == urlOff) { countOff = probe; oldCount = c; break; }
+        }
+        if (countOff < 0) return null;
+        int newCount = oldCount + newActorIndices.Count;
+        int insertBytes = newActorIndices.Count * 4;
+        byte[] patched = new byte[body.Length + insertBytes];
+        Array.Copy(body, patched, countOff + 4);
+        BitConverter.GetBytes(newCount).CopyTo(patched, countOff);
+        Array.Copy(body, countOff + 4, patched, countOff + 4, urlOff - (countOff + 4));
+        for (int i = 0; i < newActorIndices.Count; i++)
+            BitConverter.GetBytes(newActorIndices[i]).CopyTo(patched, urlOff + i * 4);
+        Array.Copy(body, urlOff, patched, urlOff + insertBytes, body.Length - urlOff);
+        return patched;
     }
 
     private static int IndexOfSeq(byte[] haystack, byte[] needle)

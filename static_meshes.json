@@ -3239,6 +3239,19 @@
                 "ScaleZ": 1.0
             },
             {
+                "asset_path": "/Game/Models/PolygonStreetRacer/Custom/Garage1.Garage1",
+                "asset_key": "Garage1",
+                "X": 49.14,
+                "Y": -1340.17,
+                "Z": 2629.65,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0
+            },
+            {
                 "asset_path": "/Game/DC/Meshes/Landscape/SM_Env_Snow_Slope_Straight_01.SM_Env_Snow_Slope_Straight_01",
                 "asset_key": "SM_Env_Snow_Slope_Straight_01",
                 "X": -692370.0,

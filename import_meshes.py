@@ -54,10 +54,21 @@ OFFSET_YAW = 0.0
 TARGET_GROUP = "imported"
 
 # Mesh names to skip entirely (by asset_key)
-SKIP_KEYS = {"SM_SkySphere", "Parking1"}
+SKIP_KEYS = {"SM_SkySphere", "Parking1", "Garage1"}
 
-# Meshes that become blueprint actors instead of static meshes
-PARKING_KEYS = {"Parking1"}
+# Map an asset_key to a blueprint class — these entries become
+# blueprint_actors entries cloned via MTBPInjector (clone_bp_actors.py).
+BP_CLASS_FROM_KEY = {
+    "Parking1": {
+        "blueprint_path":  "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large",
+        "blueprint_class": "Interaction_ParkingSpace_Large_C",
+    },
+    "Garage1": {
+        "blueprint_path":  "/Game/Blueprints/Interaction/GarageActorBP",
+        "blueprint_class": "GarageActorBP_C",
+    },
+}
+PARKING_KEYS = set(BP_CLASS_FROM_KEY.keys())
 
 SRC = "static_meshes.json"
 DST = "map_work_changes.json"
@@ -159,9 +170,9 @@ def main():
                 "Yaw": round(float(entry.get("Yaw", 0)) + OFFSET_YAW, 4),
             }
 
-            if entry.get("asset_key") in PARKING_KEYS:
-                base_entry["blueprint_path"] = "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large"
-                base_entry["blueprint_class"] = "Interaction_ParkingSpace_Large_C"
+            key = entry.get("asset_key")
+            if key in PARKING_KEYS:
+                base_entry.update(BP_CLASS_FROM_KEY[key])
                 parking.append(base_entry)
             else:
                 base_entry["asset_path"] = raw_path
