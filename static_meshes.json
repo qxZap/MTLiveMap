@@ -27352,6 +27352,71 @@
                 "ScaleX": 1.0,
                 "ScaleY": 1.0,
                 "ScaleZ": 1.0
+            },
+            {
+                "asset_path": "/Game/DC/Actors/ParkingSmall.ParkingSmall",
+                "asset_key": "ParkingSmall",
+                "X": -575725.0,
+                "Y": 102165.0,
+                "Z": 59380.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 89.999999,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0
+            },
+            {
+                "asset_path": "/Game/DC/Actors/ParkingSmall.ParkingSmall",
+                "asset_key": "ParkingSmall",
+                "X": -575725.0,
+                "Y": 101820.0,
+                "Z": 59380.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 89.999999,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0
+            },
+            {
+                "asset_path": "/Game/DC/Actors/ParkingSmall.ParkingSmall",
+                "asset_key": "ParkingSmall",
+                "X": -575725.0,
+                "Y": 101415.0,
+                "Z": 59380.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 89.999999,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0
+            },
+            {
+                "asset_path": "/Game/DC/Actors/ParkingSmall.ParkingSmall",
+                "asset_key": "ParkingSmall",
+                "X": -575725.0,
+                "Y": 101015.0,
+                "Z": 59380.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 89.999999,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0
+            },
+            {
+                "asset_path": "/Game/DC/Actors/ParkingSmall.ParkingSmall",
+                "asset_key": "ParkingSmall",
+                "X": -575725.0,
+                "Y": 100605.0,
+                "Z": 59380.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 89.999999,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0
             }
         ],
         "foliage": []

@@ -860,6 +860,21 @@ internal static class Program
                 }
                 return RemapImport(i);
             }
+            // UAssetAPI's PropertyData.Clone() is MemberwiseClone → shallow.
+            // For StructPropertyData the .Value List<PropertyData> is the SAME
+            // reference as source's. If we later mutate refs inside those
+            // structs (e.g. RemapPropRefs recursing through Array/Struct),
+            // we corrupt the source and any subsequent clone of the same
+            // source sees the mutated state. Recursive deep-clone fixes it.
+            PropertyData DeepCloneProp(PropertyData p)
+            {
+                var c = (PropertyData)p.Clone();
+                if (c is StructPropertyData scp && scp.Value != null)
+                    scp.Value = scp.Value.Select(DeepCloneProp).ToList();
+                else if (c is ArrayPropertyData acp && acp.Value != null)
+                    acp.Value = acp.Value.Select(DeepCloneProp).ToArray();
+                return c;
+            }
             Export DeepClone(Export e)
             {
                 Export d;
@@ -867,7 +882,7 @@ internal static class Program
                 {
                     d = new NormalExport
                     {
-                        Data = ne.Data.Select(p => (PropertyData)p.Clone()).ToList(),
+                        Data = ne.Data.Select(DeepCloneProp).ToList(),
                         ObjectGuid = ne.ObjectGuid,
                         SerializationControl = ne.SerializationControl,
                         Operation = ne.Operation,
@@ -1694,15 +1709,28 @@ internal static class Program
                 Array.Copy(umapBytes, off, bodyIn, 0, sz);
         }
 
-        // Locate URL marker + count backwards for largest matching count
+        // Locate URL marker and count. Use the typed LevelExport's Actors.Count
+        // as the expected value if available — prevents false positives where
+        // other int32 fields in the body happen to satisfy the "count * 4 +
+        // 4 == urlOff" equation.
+        int expected = (lvl is LevelExport tlvl) ? tlvl.Actors.Count : -1;
         byte[] marker = new byte[] { 7, 0, 0, 0, (byte)'u', (byte)'n', (byte)'r', (byte)'e', (byte)'a', (byte)'l', 0 };
         int urlOff = IndexOfSeq(bodyIn, marker);
         if (urlOff < 0) { Console.Error.WriteLine("  URL marker not found"); return; }
         int countOff = -1, count = 0;
-        for (int probe = urlOff - 4; probe >= 4; probe -= 4)
+        if (expected >= 0)
         {
-            int c = BitConverter.ToInt32(bodyIn, probe);
-            if (c > 0 && probe + 4 + c * 4 == urlOff && c > count) { countOff = probe; count = c; }
+            int probe = urlOff - 4 - expected * 4;
+            if (probe >= 4 && BitConverter.ToInt32(bodyIn, probe) == expected)
+            { countOff = probe; count = expected; }
+        }
+        if (countOff < 0)
+        {
+            for (int probe = urlOff - 4; probe >= 4; probe -= 4)
+            {
+                int c = BitConverter.ToInt32(bodyIn, probe);
+                if (c > 0 && probe + 4 + c * 4 == urlOff && c > count) { countOff = probe; count = c; }
+            }
         }
         if (countOff < 0 || slotIdx >= count)
         {
@@ -1778,6 +1806,7 @@ internal static class Program
             if (e is LevelExport lvl)
             {
                 Console.WriteLine($"  LevelExport.Actors.Count={lvl.Actors.Count}");
+                Console.WriteLine($"  first 10 actors: {string.Join(",", lvl.Actors.Take(10).Select(a => a.Index))}");
                 Console.WriteLine($"  last 5 actors: {string.Join(",", lvl.Actors.Skip(Math.Max(0, lvl.Actors.Count-5)).Select(a => a.Index))}");
                 if (f.TryGetValue("contains", out var containsStr) && int.TryParse(containsStr, out var containsIdx))
                 {
@@ -2122,7 +2151,8 @@ internal static class Program
         }
         Console.WriteLine($"  [dbg] PersistentLevel source={(lvl is RawExport ? "RawExport" : "LevelExport")} pre-patch count={dbgCountPre} bodyLen={bodyIn.Length}");
 
-        var patched = PatchActorsInBytes(bodyIn, newActorIndices);
+        int expectedCt = (lvl is LevelExport tLvl) ? tLvl.Actors.Count : -1;
+        var patched = PatchActorsInBytes(bodyIn, newActorIndices, expectedCt);
         if (patched == null) { Console.Error.WriteLine("  URL marker not found in PersistentLevel body"); return; }
 
         if (lvl is RawExport raw)
@@ -2145,26 +2175,34 @@ internal static class Program
     }
 
     // Patch Actors count + list in an opaque LevelExport body. Returns new bytes
-    // or null if the layout couldn't be located.
-    private static byte[] PatchActorsInBytes(byte[] body, List<int> newActorIndices)
+    // or null if the layout couldn't be located. If expectedCount >= 0, only
+    // accept a match whose int32 equals that exact value (avoids false
+    // positives from both small actor indices AND large int32s that land
+    // earlier in the body by coincidence).
+    private static byte[] PatchActorsInBytes(byte[] body, List<int> newActorIndices, int expectedCount = -1)
     {
         byte[] marker = new byte[] { 7, 0, 0, 0, (byte)'u', (byte)'n', (byte)'r', (byte)'e', (byte)'a', (byte)'l', 0 };
         int urlOff = IndexOfSeq(body, marker);
         if (urlOff < 0) return null;
-        // Scan all candidates where probe + 4 + c * 4 == urlOff; pick the
-        // LARGEST c. Actor indices before the URL can themselves satisfy the
-        // simple equation (e.g. actor_index = 1 at urlOff-4 gives probe+4+1*4 =
-        // urlOff), so the naive first-hit backward scan produces count=1 once
-        // small actor indices appear — picking the largest c avoids that.
         int countOff = -1;
         int oldCount = 0;
-        for (int probe = urlOff - 4; probe >= 4; probe -= 4)
+        if (expectedCount >= 0)
         {
-            int c = BitConverter.ToInt32(body, probe);
-            if (c > 0 && probe + 4 + c * 4 == urlOff && c > oldCount)
+            int probe = urlOff - 4 - expectedCount * 4;
+            if (probe >= 4 && BitConverter.ToInt32(body, probe) == expectedCount)
+            { countOff = probe; oldCount = expectedCount; }
+        }
+        if (countOff < 0)
+        {
+            // Fall back to "largest-c" heuristic.
+            for (int probe = urlOff - 4; probe >= 4; probe -= 4)
             {
-                countOff = probe;
-                oldCount = c;
+                int c = BitConverter.ToInt32(body, probe);
+                if (c > 0 && probe + 4 + c * 4 == urlOff && c > oldCount)
+                {
+                    countOff = probe;
+                    oldCount = c;
+                }
             }
         }
         if (countOff < 0) return null;

@@ -26,10 +26,10 @@ from bp_registry import REGISTRY, CELLS_DIR, JEJU_MAIN, template_for_class
 MAPPINGS = r"D:\MT\MotorTown718P1.usmap"
 INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
 # Fallback template cell used when creating a new WP cell for far coords.
-# Chosen for having 4 actor slots — our 4 BP clones replace the Actors list
-# entries in-place so the PersistentLevel body stays the exact same size
-# the engine expects for 4 actors. Using a 3-actor template would require
-# growing the metadata sections, which UAssetAPI doesn't handle.
+# Chosen for a native-only actor list (no BP wrappers to accidentally carry
+# over) and enough actor slots to host dozens of injected BP clones in a
+# single cell: 35 slots. Clones replace existing Actors-list entries so the
+# PersistentLevel body layout stays the size UE's ULevel::Serialize expects.
 TEMPLATE_CELL = "0V18V8JBXKXUL8YILWZKCSMB4"
 
 
@@ -208,6 +208,7 @@ def main():
     import json as _json, tempfile
     for cell, items in grouped.items():
         specs = []
+        # 0V18V8J's slot 0 already is not WorldSettings — start at 0.
         slot = 0
         for (e, tpl, is_created) in items:
             spec = {
