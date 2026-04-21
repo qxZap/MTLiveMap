@@ -29029,17 +29029,27 @@
     "blueprint_actors": {
         "imported": [
             {
-                "X": -615500.0,
-                "Y": -91660.0,
+                "X": -618075.0,
+                "Y": -91625.0,
+                "Z": 34960.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0,
+                "blueprint_path": "/Game/Blueprints/Interaction/GarageActorBP",
+                "blueprint_class": "GarageActorBP_C"
+            },
+            {
+                "X": -615525.0,
+                "Y": -91670.0,
                 "Z": 34930.0,
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": 0.0,
-                "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
-                "blueprint_class": "ParkingSpace_Large_01_C"
+                "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Small_02",
+                "blueprint_class": "ParkingSpace_Small_02_C"
             },
             {
-                "X": -615415.0,
+                "X": -615500.0,
                 "Y": -92035.0,
                 "Z": 34930.0,
                 "Pitch": 0.0,
@@ -29049,24 +29059,14 @@
                 "blueprint_class": "ParkingSpace_Middle_01_C"
             },
             {
-                "X": -615470.0,
-                "Y": -92425.0,
+                "X": -615505.0,
+                "Y": -92420.0,
                 "Z": 34930.0,
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": 0.0,
-                "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Small_02",
-                "blueprint_class": "ParkingSpace_Small_02_C"
-            },
-            {
-                "X": -618070.0,
-                "Y": -91630.0,
-                "Z": 34930.0,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": 90.0,
-                "blueprint_path": "/Game/Blueprints/Interaction/GarageActorBP",
-                "blueprint_class": "GarageActorBP_C"
+                "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
+                "blueprint_class": "ParkingSpace_Large_01_C"
             }
         ]
     }

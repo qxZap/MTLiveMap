@@ -438,9 +438,21 @@ internal static class Program
                 EnsureName(asset, pkgName);
                 np.Value = FName.FromString(asset, pkgName);
             }
-            if (p is UAssetAPI.PropertyTypes.Objects.SoftObjectPropertyData sopd)
+            if (p is UAssetAPI.PropertyTypes.Objects.SoftObjectPropertyData sopd && p.Name.ToString() == "WorldAsset")
             {
-                // Leave WorldAsset alone for now — UE resolves the soft ref from PackageNameToLoad.
+                // Rewrite only the PackageName field of the existing soft path;
+                // leave the rest (sub-path + asset name) alone so its internal
+                // shape matches what UE expects for a WP cell WorldAsset ref.
+                string newPkg = $"/Game/Maps/Jeju/Jeju_World/_Generated_/{newCell}";
+                EnsureName(asset, newPkg);
+                if (sopd.Value != null)
+                {
+                    var old = sopd.Value;
+                    sopd.Value = new UAssetAPI.PropertyTypes.Objects.FSoftObjectPath(
+                        FName.FromString(asset, newPkg),
+                        old.AssetPath.AssetName,
+                        old.SubPathString);
+                }
             }
         }
 
@@ -540,13 +552,39 @@ internal static class Program
         asset.Write(outPath);
         Console.WriteLine($"  Wrote {outPath}");
 
-        // Also copy template cell content .umap + .uexp to new name in mod dir
+        // Also copy template cell content .umap + .uexp to new name in mod dir,
+        // then rewrite its internal FolderName so UE's package identity matches
+        // the new filename (otherwise streaming crashes with EXCEPTION_ACCESS_VIOLATION).
         string srcBase = Path.Combine(cellsDir, tplCell);
         string dstBase = Path.Combine(modCellsDir, newCell);
         Directory.CreateDirectory(modCellsDir);
         if (File.Exists(srcBase + ".umap")) File.Copy(srcBase + ".umap", dstBase + ".umap", true);
         if (File.Exists(srcBase + ".uexp")) File.Copy(srcBase + ".uexp", dstBase + ".uexp", true);
-        Console.WriteLine($"  Copied cell content {tplCell} -> {newCell}");
+        // Raw byte-replace the template cell name with the new cell name in
+        // both .umap and .uexp. Both names are 25 chars (our make_cell_name
+        // produces 25-char base32-ish IDs), so the file layout is preserved
+        // without UAssetAPI re-serialization (which corrupts offsets).
+        if (newCell.Length != tplCell.Length)
+            throw new InvalidOperationException(
+                $"Cell name length mismatch: tpl '{tplCell}' ({tplCell.Length}) vs new '{newCell}' ({newCell.Length}). " +
+                "Byte-replace requires equal length.");
+        foreach (var ext in new[] { ".umap", ".uexp" })
+        {
+            var path = dstBase + ext;
+            if (!File.Exists(path)) continue;
+            var bytes = File.ReadAllBytes(path);
+            var needle = System.Text.Encoding.ASCII.GetBytes(tplCell);
+            var replace = System.Text.Encoding.ASCII.GetBytes(newCell);
+            int hits = 0;
+            for (int i = 0; i <= bytes.Length - needle.Length; i++)
+            {
+                bool ok = true;
+                for (int j = 0; j < needle.Length; j++) if (bytes[i + j] != needle[j]) { ok = false; break; }
+                if (ok) { Array.Copy(replace, 0, bytes, i, replace.Length); hits++; i += needle.Length - 1; }
+            }
+            File.WriteAllBytes(path, bytes);
+            Console.WriteLine($"  {Path.GetFileName(path)}: replaced {hits} occurrence(s) of template name");
+        }
         return 0;
     }
 
@@ -1646,96 +1684,66 @@ internal static class Program
         if (lvlIdx < 0) { Console.Error.WriteLine("  No PersistentLevel found to patch"); return; }
         var lvl = asset.Exports[lvlIdx];
 
-        // Fast path: if typed LevelExport, just mutate the Actors list.
-        // UAssetAPI's LevelExport.Write preserves unparsed trailing bytes via Extras.
-        if (lvl is LevelExport typedLvl)
+        // Always go through raw-byte patching: UAssetAPI's LevelExport.Write
+        // is incomplete for UE5.5 WP cells (the upstream TODO). Read the
+        // current body from disk, patch Actors count+list, replace with a
+        // RawExport preserving the original SerialSize + Extras layout.
+        // If PersistentLevel is already RawExport (chained patch), read from
+        // its in-memory Data rather than disk so the accumulated patches stay.
+        byte[] bodyIn;
+        if (lvl is RawExport alreadyRaw && alreadyRaw.Data != null && alreadyRaw.Data.Length > 0)
         {
-            foreach (var n in newActorIndices)
-            {
-                typedLvl.Actors.Add(new FPackageIndex(n));
-                typedLvl.CreateBeforeSerializationDependencies.Add(new FPackageIndex(n));
-            }
-            Console.WriteLine($"  Patched PersistentLevel (typed): +{newActorIndices.Count} actor(s), now {typedLvl.Actors.Count}");
-            return;
-        }
-
-        // RawExport path: patch bytes directly.
-        if (lvl is RawExport prev && prev.Data != null && prev.Data.Length > 0)
-        {
-            var patchedInPlace = PatchActorsInBytes(prev.Data, newActorIndices);
-            if (patchedInPlace != null)
-            {
-                prev.Data = patchedInPlace;
-                Console.WriteLine($"  Patched PersistentLevel (in-memory RawExport): +{newActorIndices.Count} actor(s)");
-                return;
-            }
-        }
-
-        // Read original body bytes from source .umap/.uexp combined stream.
-        // SerialOffset is absolute in the combined file (.umap header + .uexp data).
-        string uexpPath = Path.ChangeExtension(originalPath, ".uexp");
-        byte[] umapBytes = File.ReadAllBytes(originalPath);
-        byte[] uexpBytes = File.Exists(uexpPath) ? File.ReadAllBytes(uexpPath) : Array.Empty<byte>();
-        // Combined length = umapBytes.Length + uexpBytes.Length (but there may be a split marker; simpler: read each half).
-        long serialOffset = lvl.SerialOffset;
-        long serialSize = lvl.SerialSize;
-        if (serialSize <= 0) { Console.Error.WriteLine("  SerialSize unknown"); return; }
-
-        byte[] body;
-        if (serialOffset >= umapBytes.Length)
-        {
-            long uexpStart = serialOffset - umapBytes.Length;
-            body = new byte[serialSize];
-            Array.Copy(uexpBytes, uexpStart, body, 0, serialSize);
+            bodyIn = alreadyRaw.Data;
         }
         else
         {
-            body = new byte[serialSize];
-            Array.Copy(umapBytes, serialOffset, body, 0, serialSize);
+            string uexpPath = Path.ChangeExtension(originalPath, ".uexp");
+            byte[] umapBytes = File.ReadAllBytes(originalPath);
+            byte[] uexpBytes = File.Exists(uexpPath) ? File.ReadAllBytes(uexpPath) : Array.Empty<byte>();
+            long off = lvl.SerialOffset;
+            long sz  = lvl.SerialSize;
+            if (sz <= 0) { Console.Error.WriteLine("  SerialSize unknown"); return; }
+            bodyIn = new byte[sz];
+            if (off >= umapBytes.Length)
+                Array.Copy(uexpBytes, off - umapBytes.Length, bodyIn, 0, sz);
+            else
+                Array.Copy(umapBytes, off, bodyIn, 0, sz);
         }
 
-        // Locate URL marker (7 + "unreal\0" = int32(7) + "unreal\0")
-        byte[] marker = new byte[] { 7, 0, 0, 0, (byte)'u', (byte)'n', (byte)'r', (byte)'e', (byte)'a', (byte)'l', 0 };
-        int urlOff = IndexOfSeq(body, marker);
-        if (urlOff < 0) { Console.Error.WriteLine("  URL marker not found in LevelExport body"); return; }
-
-        // Find count position: scan backward from urlOff, look for int32 C where urlOff == probe + 4 + C*4
-        int countOff = -1;
-        int oldCount = 0;
-        for (int probe = urlOff - 4; probe >= 4; probe -= 4)
+        // Debug probe: show current count before patching
+        int dbgCountPre = -1;
+        byte[] markerDbg = new byte[] { 7, 0, 0, 0, (byte)'u', (byte)'n', (byte)'r', (byte)'e', (byte)'a', (byte)'l', 0 };
+        int urlDbg = IndexOfSeq(bodyIn, markerDbg);
+        if (urlDbg > 0)
         {
-            int c = BitConverter.ToInt32(body, probe);
-            if (c > 0 && probe + 4 + c * 4 == urlOff)
+            for (int pr = urlDbg - 4; pr >= 4; pr -= 4)
             {
-                countOff = probe;
-                oldCount = c;
-                break;
+                int cc = BitConverter.ToInt32(bodyIn, pr);
+                if (cc > 0 && pr + 4 + cc * 4 == urlDbg) { dbgCountPre = cc; break; }
             }
         }
-        if (countOff < 0) { Console.Error.WriteLine("  Actor count not located"); return; }
+        Console.WriteLine($"  [dbg] PersistentLevel source={(lvl is RawExport ? "RawExport" : "LevelExport")} pre-patch count={dbgCountPre} bodyLen={bodyIn.Length}");
 
-        int newCount = oldCount + newActorIndices.Count;
-        int insertBytes = newActorIndices.Count * 4;
-        byte[] patched = new byte[body.Length + insertBytes];
-        // Copy up to and including countOff..+4 (the count field)
-        Array.Copy(body, patched, countOff + 4);
-        // Write new count in place
-        BitConverter.GetBytes(newCount).CopyTo(patched, countOff);
-        // Copy existing actor list
-        Array.Copy(body, countOff + 4, patched, countOff + 4, urlOff - (countOff + 4));
-        // Append new actor indices
-        for (int i = 0; i < newActorIndices.Count; i++)
-            BitConverter.GetBytes(newActorIndices[i]).CopyTo(patched, urlOff + i * 4);
-        // Copy remainder (URL onwards)
-        Array.Copy(body, urlOff, patched, urlOff + insertBytes, body.Length - urlOff);
+        var patched = PatchActorsInBytes(bodyIn, newActorIndices);
+        if (patched == null) { Console.Error.WriteLine("  URL marker not found in PersistentLevel body"); return; }
 
-        // Replace LevelExport with RawExport preserving all header fields.
-        var raw = new RawExport { Data = patched, Asset = asset };
-        CopyExportHeader(from: lvl, to: raw);
-        raw.Extras = Array.Empty<byte>(); // body now contains everything incl. extras
-        asset.Exports[lvlIdx] = raw;
-
-        Console.WriteLine($"  Patched PersistentLevel: actor count {oldCount} -> {newCount} (as RawExport)");
+        if (lvl is RawExport raw)
+        {
+            raw.Data = patched;
+            foreach (var n in newActorIndices)
+                raw.CreateBeforeSerializationDependencies.Add(new FPackageIndex(n));
+            Console.WriteLine($"  Patched PersistentLevel (raw in-place): +{newActorIndices.Count}");
+        }
+        else
+        {
+            var newRaw = new RawExport { Data = patched, Asset = asset };
+            CopyExportHeader(from: lvl, to: newRaw);
+            newRaw.Extras = Array.Empty<byte>();
+            foreach (var n in newActorIndices)
+                newRaw.CreateBeforeSerializationDependencies.Add(new FPackageIndex(n));
+            asset.Exports[lvlIdx] = newRaw;
+            Console.WriteLine($"  Patched PersistentLevel (typed -> raw): +{newActorIndices.Count}");
+        }
     }
 
     // Patch Actors count + list in an opaque LevelExport body. Returns new bytes
@@ -1745,12 +1753,21 @@ internal static class Program
         byte[] marker = new byte[] { 7, 0, 0, 0, (byte)'u', (byte)'n', (byte)'r', (byte)'e', (byte)'a', (byte)'l', 0 };
         int urlOff = IndexOfSeq(body, marker);
         if (urlOff < 0) return null;
+        // Scan all candidates where probe + 4 + c * 4 == urlOff; pick the
+        // LARGEST c. Actor indices before the URL can themselves satisfy the
+        // simple equation (e.g. actor_index = 1 at urlOff-4 gives probe+4+1*4 =
+        // urlOff), so the naive first-hit backward scan produces count=1 once
+        // small actor indices appear — picking the largest c avoids that.
         int countOff = -1;
         int oldCount = 0;
         for (int probe = urlOff - 4; probe >= 4; probe -= 4)
         {
             int c = BitConverter.ToInt32(body, probe);
-            if (c > 0 && probe + 4 + c * 4 == urlOff) { countOff = probe; oldCount = c; break; }
+            if (c > 0 && probe + 4 + c * 4 == urlOff && c > oldCount)
+            {
+                countOff = probe;
+                oldCount = c;
+            }
         }
         if (countOff < 0) return null;
         int newCount = oldCount + newActorIndices.Count;

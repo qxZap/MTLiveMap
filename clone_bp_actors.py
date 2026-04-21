@@ -166,6 +166,14 @@ def main():
                     shutil.copy2(src, dst)
             seeded.add(cell)
 
+        # Debug toggle: set SKIP_BP_CLONE=1 env to register the cell only (no
+        # BP actor content inside it). Useful to test whether the cell
+        # registration itself is valid.
+        import os
+        if os.environ.get("SKIP_BP_CLONE") == "1":
+            print(f"  [{i}] SKIP_BP_CLONE=1 — cell registered, actor clone skipped")
+            continue
+
         cmd = [
             str(INJECTOR), "clone-cross-cell",
             "--mappings", MAPPINGS,
@@ -185,6 +193,8 @@ def main():
             print(r.stdout)
             print(r.stderr, file=sys.stderr)
             return r.returncode
+        for line in r.stdout.splitlines():
+            if line.strip(): print(f"      {line}")
     return 0
 
 

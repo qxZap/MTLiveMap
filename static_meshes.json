@@ -27302,10 +27302,23 @@
                 "ScaleZ": 1.0
             },
             {
-                "asset_path": "/Game/DC/Actors/ParkingLarge.ParkingLarge",
-                "asset_key": "ParkingLarge",
-                "X": -575700.0,
-                "Y": 103340.0,
+                "asset_path": "/Game/DC/Actors/Garage.Garage",
+                "asset_key": "Garage",
+                "X": -578275.0,
+                "Y": 103375.0,
+                "Z": 59410.0,
+                "Pitch": 0.0,
+                "Roll": -0.0,
+                "Yaw": 0.0,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0
+            },
+            {
+                "asset_path": "/Game/DC/Actors/ParkingSmall.ParkingSmall",
+                "asset_key": "ParkingSmall",
+                "X": -575725.0,
+                "Y": 103330.0,
                 "Z": 59380.0,
                 "Pitch": 0.0,
                 "Roll": -0.0,
@@ -27317,7 +27330,7 @@
             {
                 "asset_path": "/Game/DC/Actors/ParkingMedium.ParkingMedium",
                 "asset_key": "ParkingMedium",
-                "X": -575615.0,
+                "X": -575700.0,
                 "Y": 102965.0,
                 "Z": 59380.0,
                 "Pitch": 0.0,
@@ -27328,27 +27341,14 @@
                 "ScaleZ": 1.0
             },
             {
-                "asset_path": "/Game/DC/Actors/ParkingSmall.ParkingSmall",
-                "asset_key": "ParkingSmall",
-                "X": -575670.0,
-                "Y": 102575.0,
+                "asset_path": "/Game/DC/Actors/ParkingLarge.ParkingLarge",
+                "asset_key": "ParkingLarge",
+                "X": -575705.0,
+                "Y": 102580.0,
                 "Z": 59380.0,
                 "Pitch": 0.0,
                 "Roll": -0.0,
                 "Yaw": 0.0,
-                "ScaleX": 1.0,
-                "ScaleY": 1.0,
-                "ScaleZ": 1.0
-            },
-            {
-                "asset_path": "/Game/DC/Actors/Garage.Garage",
-                "asset_key": "Garage",
-                "X": -578270.0,
-                "Y": 103370.0,
-                "Z": 59380.0,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": 89.9999993028274,
                 "ScaleX": 1.0,
                 "ScaleY": 1.0,
                 "ScaleZ": 1.0
