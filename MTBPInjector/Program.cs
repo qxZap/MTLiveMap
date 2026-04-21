@@ -939,6 +939,31 @@ internal static class Program
                     foreach (var p in nc.Data) RemapPropRefs(p);
             }
 
+            // Normalize component Extras. Source-side Extras for primitive
+            // components sometimes embed extra FPackageIndex values pointing
+            // into the source package (observed 44-byte Extras with negative
+            // import + positive export int32s). We can't safely remap those
+            // bytes because we don't know the layout; since the engine
+            // accepts the minimal SCS Extras pattern (16 bytes for primitives,
+            // 4 bytes for scene-only components), force that shape on every
+            // NON-actor cloned export so the dst has no dangling refs.
+            for (int k = 1; k < cloneSet.Count; k++)  // skip k=0 (the actor itself)
+            {
+                int dstIdx = idxMap[cloneSet[k] + 1] - 1;
+                var exp = dst.Exports[dstIdx];
+                if (exp is NormalExport ncn)
+                {
+                    string className = exp.ClassIndex.IsImport() ? exp.ClassIndex.ToImport(dst).ObjectName.ToString() : "";
+                    bool isPrimitive = className.Contains("MeshComponent") || className == "BoxComponent"
+                                       || className == "StaticMeshComponent" || className == "SkeletalMeshComponent"
+                                       || className == "InstancedStaticMeshComponent";
+                    if (isPrimitive)
+                        ncn.Extras = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 };
+                    else if (exp.Extras != null && exp.Extras.Length != 4)
+                        ncn.Extras = new byte[] { 0, 0, 0, 0 };
+                }
+            }
+
             // Set location on root child (Scene or Root)
             foreach (var n in newChildNums)
             {
