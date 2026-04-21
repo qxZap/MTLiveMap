@@ -38,6 +38,7 @@ internal static class Program
                 "dump-level-extras" => DumpLevelExtras(args.Skip(1).ToArray()),
                 "dump-streaming-grids" => DumpStreamingGridsCmd(args.Skip(1).ToArray()),
                 "decode-layer-keys" => DecodeLayerKeys(args.Skip(1).ToArray()),
+                "register-new-cell" => RegisterNewCell(args.Skip(1).ToArray()),
                 _ => Fail($"Unknown command: {args[0]}"),
             };
         }
@@ -316,6 +317,248 @@ internal static class Program
             default:
                 Console.WriteLine($"{indent}{field.Name}: ({field.GetType().Name})"); break;
         }
+    }
+
+    // ----------------------------------------------------------------------
+    // REGISTER-NEW-CELL: clone the 3 WP registration exports for a template
+    // vanilla cell (cell, CellDataSpatialHash, WorldPartitionLevelStreaming)
+    // with a new cell name + new Position/Extent, and append to the MainGrid
+    // StreamingGrids[0].GridLevels[0]. Also copies the template's content
+    // .umap file under _Generated_/<new-name>.umap so WP has something to
+    // stream.
+    // ----------------------------------------------------------------------
+    private static int RegisterNewCell(string[] args)
+    {
+        var f = ParseFlags(args);
+        string mainPath = f["main"];
+        string outPath  = f["output"];
+        string tplCell  = f["template-cell"];       // e.g. 0W5HFJERQNYIKT4TIFEZBU4PD
+        string newCell  = f["new-cell-name"];       // e.g. MODCELLISLAND000000000000
+        double tx = double.Parse(f["x"], System.Globalization.CultureInfo.InvariantCulture);
+        double ty = double.Parse(f["y"], System.Globalization.CultureInfo.InvariantCulture);
+        float extent = float.Parse(f.TryGetValue("extent", out var ex) ? ex : "6400", System.Globalization.CultureInfo.InvariantCulture);
+        string gridName = f.TryGetValue("grid", out var gn) ? gn : "MainGrid";
+        int hierLevel = int.Parse(f.TryGetValue("hier-level", out var hl) ? hl : "-1");
+        int gridLevelsIndex = int.Parse(f.TryGetValue("grid-levels-index", out var gli) ? gli : "0");
+        string cellsDir = f["cells-dir"]; // vanilla cells source, e.g. D:\MT\...\_Generated_
+        string modCellsDir = f["mod-cells-dir"]; // output _Generated_ dir in mod
+
+        var mappings = LoadMappings(f["mappings"]);
+        var asset = new UAsset(mainPath, EngineVer, mappings);
+
+        // Find the 3 template exports by name
+        int tplCellIdx = -1, tplLevelStreamIdx = -1;
+        for (int i = 0; i < asset.Exports.Count; i++)
+        {
+            var nm = asset.Exports[i].ObjectName.ToString();
+            if (nm == tplCell) tplCellIdx = i;
+            else if (nm == "WorldPartitionLevelStreaming_" + tplCell) tplLevelStreamIdx = i;
+        }
+        if (tplCellIdx < 0 || tplLevelStreamIdx < 0)
+            throw new InvalidOperationException($"Template cell '{tplCell}' registration exports not found in main map");
+        var tplCellExp = (NormalExport)asset.Exports[tplCellIdx];
+        var tplLsExp = (NormalExport)asset.Exports[tplLevelStreamIdx];
+        int tplRuntimeCellDataIdx = tplCellExp.Data.OfType<UAssetAPI.PropertyTypes.Objects.ObjectPropertyData>()
+            .First(p => p.Name.ToString() == "RuntimeCellData").Value.Index - 1;
+        var tplRcdExp = (NormalExport)asset.Exports[tplRuntimeCellDataIdx];
+
+        Console.WriteLine($"Template: cell#{tplCellIdx+1} rcd#{tplRuntimeCellDataIdx+1} levelstream#{tplLevelStreamIdx+1}");
+
+        // Pre-compute new export indices
+        int newCellIdx      = asset.Exports.Count;     // 0-based
+        int newRcdIdx       = asset.Exports.Count + 1;
+        int newLsIdx        = asset.Exports.Count + 2;
+        int newCellNum      = newCellIdx + 1;
+        int newRcdNum       = newRcdIdx + 1;
+        int newLsNum        = newLsIdx + 1;
+
+        // Helper to deep-clone a NormalExport in place in the same asset.
+        NormalExport Clone(NormalExport src, string newName)
+        {
+            EnsureName(asset, newName);
+            var dst = new NormalExport
+            {
+                Asset = asset,
+                Data = src.Data.Select(p => (PropertyData)p.Clone()).ToList(),
+                ObjectGuid = src.ObjectGuid,
+                SerializationControl = src.SerializationControl,
+                Operation = src.Operation,
+                HasLeadingFourNullBytes = src.HasLeadingFourNullBytes,
+                ObjectName = FName.FromString(asset, newName),
+                ClassIndex = new FPackageIndex(src.ClassIndex.Index),
+                SuperIndex = new FPackageIndex(src.SuperIndex.Index),
+                TemplateIndex = new FPackageIndex(src.TemplateIndex.Index),
+                OuterIndex = new FPackageIndex(src.OuterIndex.Index),
+                ObjectFlags = src.ObjectFlags,
+                bForcedExport = src.bForcedExport,
+                bNotForClient = src.bNotForClient,
+                bNotForServer = src.bNotForServer,
+                PackageGuid = src.PackageGuid,
+                PackageFlags = src.PackageFlags,
+                bNotAlwaysLoadedForEditorGame = src.bNotAlwaysLoadedForEditorGame,
+                bIsAsset = src.bIsAsset,
+                GeneratePublicHash = src.GeneratePublicHash,
+                IsInheritedInstance = src.IsInheritedInstance,
+                SerializationBeforeSerializationDependencies = new List<FPackageIndex>(src.SerializationBeforeSerializationDependencies),
+                CreateBeforeSerializationDependencies = new List<FPackageIndex>(src.CreateBeforeSerializationDependencies),
+                SerializationBeforeCreateDependencies = new List<FPackageIndex>(src.SerializationBeforeCreateDependencies),
+                CreateBeforeCreateDependencies = new List<FPackageIndex>(src.CreateBeforeCreateDependencies),
+                Extras = src.Extras != null ? (byte[])src.Extras.Clone() : null,
+            };
+            return dst;
+        }
+
+        // Clone the 3 exports
+        var newCellExp = Clone(tplCellExp, newCell);
+        var newRcdExp  = Clone(tplRcdExp, tplRcdExp.ObjectName.ToString()); // keep generic name for CellData
+        var newLsExp   = Clone(tplLsExp,  "WorldPartitionLevelStreaming_" + newCell);
+
+        // Fix cross-refs: cell.LevelStreaming -> newLs, cell.RuntimeCellData -> newRcd
+        foreach (var p in newCellExp.Data)
+        {
+            if (p is UAssetAPI.PropertyTypes.Objects.ObjectPropertyData op && op.Value != null)
+            {
+                if (p.Name.ToString() == "LevelStreaming") op.Value = new FPackageIndex(newLsNum);
+                if (p.Name.ToString() == "RuntimeCellData") op.Value = new FPackageIndex(newRcdNum);
+            }
+            // Regenerate CellGuid if present
+            if (p is UAssetAPI.PropertyTypes.Structs.StructPropertyData sp && p.Name.ToString() == "CellGuid"
+                && sp.Value.Count > 0 && sp.Value[0] is UAssetAPI.PropertyTypes.Structs.GuidPropertyData gp)
+                gp.Value = Guid.NewGuid();
+        }
+
+        // Fix newLs: StreamingCell (weak) -> newCell, PackageNameToLoad to new path
+        foreach (var p in newLsExp.Data)
+        {
+            if (p is UAssetAPI.PropertyTypes.Objects.WeakObjectPropertyData wop && p.Name.ToString() == "StreamingCell")
+                wop.Value = new FPackageIndex(newCellNum);
+            if (p is UAssetAPI.PropertyTypes.Objects.NamePropertyData np && p.Name.ToString() == "PackageNameToLoad")
+            {
+                string pkgName = $"/Game/Maps/Jeju/Jeju_World/_Generated_/{newCell}";
+                EnsureName(asset, pkgName);
+                np.Value = FName.FromString(asset, pkgName);
+            }
+            if (p is UAssetAPI.PropertyTypes.Objects.SoftObjectPropertyData sopd)
+            {
+                // Leave WorldAsset alone for now — UE resolves the soft ref from PackageNameToLoad.
+            }
+        }
+
+        // Fix RCD: Position + Extent + GridName + HierarchicalLevel
+        foreach (var p in newRcdExp.Data)
+        {
+            if (p is UAssetAPI.PropertyTypes.Structs.StructPropertyData sp && p.Name.ToString() == "Position"
+                && sp.Value.Count > 0 && sp.Value[0] is UAssetAPI.PropertyTypes.Structs.VectorPropertyData vp)
+            {
+                // Cell center aligned to grid (cell width = extent*2)
+                double cellWidth = extent * 2;
+                double cx = Math.Floor(tx / cellWidth) * cellWidth + extent;
+                double cy = Math.Floor(ty / cellWidth) * cellWidth + extent;
+                vp.Value = new FVector(cx, cy, 0);
+                Console.WriteLine($"  New cell Position=({cx},{cy},0) Extent={extent}");
+            }
+            if (p is UAssetAPI.PropertyTypes.Objects.FloatPropertyData fp && p.Name.ToString() == "Extent") fp.Value = extent;
+            if (p is UAssetAPI.PropertyTypes.Objects.NamePropertyData np && p.Name.ToString() == "GridName")
+            {
+                EnsureName(asset, gridName);
+                np.Value = FName.FromString(asset, gridName);
+            }
+            if (p is UAssetAPI.PropertyTypes.Objects.IntPropertyData ip && p.Name.ToString() == "HierarchicalLevel")
+                ip.Value = hierLevel;
+        }
+
+        // Also patch RCD Extras: vanilla had "<Jeju_World_MainGrid_L-1_X_Y>\0" ish string+null.
+        // Easiest: derive a fresh label and write count(=len+1)+string+null.
+        double cellWidth2 = extent * 2;
+        int gridX = (int)Math.Floor(tx / cellWidth2);
+        int gridY = (int)Math.Floor(ty / cellWidth2);
+        string rcdName = $"Jeju_World_{gridName}_L{hierLevel}_X{gridX}_Y{gridY}";
+        newRcdExp.Extras = MakeCStringExtras(rcdName);
+
+        // Cell's own Extras: similar "cell name" string
+        newCellExp.Extras = tplCellExp.Extras != null ? (byte[])tplCellExp.Extras.Clone() : null;
+        // LevelStreaming has no Extras normally
+
+        // Fix OuterIndex of RCD to point at the new cell (was tplCellNum)
+        newRcdExp.OuterIndex = new FPackageIndex(newCellNum);
+
+        asset.Exports.Add(newCellExp);
+        asset.Exports.Add(newRcdExp);
+        asset.Exports.Add(newLsExp);
+
+        // Append to StreamingGrids[0].GridLevels[gridLevelsIndex].LayerCells
+        // + mapping entry key = (gridX + 524800) + gridY * 1024
+        int hashIdx = -1;
+        for (int i = 0; i < asset.Exports.Count; i++)
+        {
+            var cls = asset.Exports[i].ClassIndex.IsImport() ? asset.Exports[i].ClassIndex.ToImport(asset).ObjectName.ToString() : "";
+            if (cls == "WorldPartitionRuntimeSpatialHash") { hashIdx = i; break; }
+        }
+        if (hashIdx < 0) throw new InvalidOperationException("No RuntimeSpatialHash export");
+        var hash = (NormalExport)asset.Exports[hashIdx];
+        // Mark new cell export as dep of hash (CBSD chain)
+        hash.CreateBeforeSerializationDependencies.Add(new FPackageIndex(newCellNum));
+
+        var grids = hash.Data.OfType<ArrayPropertyData>().First(a => a.Name.ToString() == "StreamingGrids");
+        int gridEntryIdx = -1;
+        for (int i = 0; i < grids.Value.Length; i++)
+        {
+            var s = (UAssetAPI.PropertyTypes.Structs.StructPropertyData)grids.Value[i];
+            var gn2 = (UAssetAPI.PropertyTypes.Objects.NamePropertyData)s.Value.First(p => p.Name.ToString() == "GridName");
+            if (gn2.Value.ToString() == gridName) { gridEntryIdx = i; break; }
+        }
+        if (gridEntryIdx < 0) throw new InvalidOperationException($"No grid '{gridName}'");
+        var sgrid = (UAssetAPI.PropertyTypes.Structs.StructPropertyData)grids.Value[gridEntryIdx];
+        var gridLevels = (ArrayPropertyData)sgrid.Value.First(p => p.Name.ToString() == "GridLevels");
+        var level0 = (UAssetAPI.PropertyTypes.Structs.StructPropertyData)gridLevels.Value[gridLevelsIndex];
+        var layerCells = (ArrayPropertyData)level0.Value.First(p => p.Name.ToString() == "LayerCells");
+        var mapping = (UAssetAPI.PropertyTypes.Objects.MapPropertyData)level0.Value.First(p => p.Name.ToString() == "LayerCellsMapping");
+
+        // Build a new LayerCell struct with GridCells array containing our new cell ref
+        var tplLayerCell = (UAssetAPI.PropertyTypes.Structs.StructPropertyData)layerCells.Value[0];
+        var newLayerCell = (UAssetAPI.PropertyTypes.Structs.StructPropertyData)tplLayerCell.Clone();
+        var newGridCells = (ArrayPropertyData)newLayerCell.Value.First(p => p.Name.ToString() == "GridCells");
+        // Replace value with one ObjectProperty -> newCellNum
+        var tplObj = (UAssetAPI.PropertyTypes.Objects.ObjectPropertyData)newGridCells.Value[0];
+        var newObj = (UAssetAPI.PropertyTypes.Objects.ObjectPropertyData)tplObj.Clone();
+        newObj.Value = new FPackageIndex(newCellNum);
+        newGridCells.Value = new PropertyData[] { newObj };
+
+        var newLayerCellsArr = new PropertyData[layerCells.Value.Length + 1];
+        Array.Copy(layerCells.Value, newLayerCellsArr, layerCells.Value.Length);
+        int newLayerCellIdxInArr = layerCells.Value.Length;
+        newLayerCellsArr[newLayerCellIdxInArr] = newLayerCell;
+        layerCells.Value = newLayerCellsArr;
+
+        // LayerCellsMapping: key = (gridX + 524800) + gridY * 1024; value = new LayerCells index
+        long key = (gridX + 524800L) + (long)gridY * 1024L;
+        var keyProp = new UAssetAPI.PropertyTypes.Objects.Int64PropertyData(FName.FromString(asset, "LayerCellsMapping")) { Value = key };
+        var valProp = new UAssetAPI.PropertyTypes.Objects.IntPropertyData(FName.FromString(asset, "LayerCellsMapping")) { Value = newLayerCellIdxInArr };
+        mapping.Value.Add(keyProp, valProp);
+        Console.WriteLine($"  Registered cell in Grid '{gridName}' level[{gridLevelsIndex}] at grid=({gridX},{gridY}) key=0x{key:X16} layerIdx={newLayerCellIdxInArr}");
+
+        asset.Write(outPath);
+        Console.WriteLine($"  Wrote {outPath}");
+
+        // Also copy template cell content .umap + .uexp to new name in mod dir
+        string srcBase = Path.Combine(cellsDir, tplCell);
+        string dstBase = Path.Combine(modCellsDir, newCell);
+        Directory.CreateDirectory(modCellsDir);
+        if (File.Exists(srcBase + ".umap")) File.Copy(srcBase + ".umap", dstBase + ".umap", true);
+        if (File.Exists(srcBase + ".uexp")) File.Copy(srcBase + ".uexp", dstBase + ".uexp", true);
+        Console.WriteLine($"  Copied cell content {tplCell} -> {newCell}");
+        return 0;
+    }
+
+    private static byte[] MakeCStringExtras(string s)
+    {
+        var b = System.Text.Encoding.UTF8.GetBytes(s);
+        var ms = new MemoryStream();
+        var bw = new BinaryWriter(ms);
+        bw.Write((uint)(b.Length + 1)); // count including null
+        bw.Write(b);
+        bw.Write((byte)0);
+        return ms.ToArray();
     }
 
     // Decode the first few LayerCellsMapping keys + cross-reference the pointed

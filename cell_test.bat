@@ -27,7 +27,9 @@ mkdir "%GENDIR%"
 echo [2b/3] Cloning BP actors from map_work_changes.json into auto-resolved WP cells...
 python clone_bp_actors.py ^
     --config map_work_changes.json ^
-    --gen-dir "%GENDIR%"
+    --gen-dir "%GENDIR%" ^
+    --main-in "%UMAP%" ^
+    --main-out "%UMAP%"
 if errorlevel 1 exit /b 1
 
 echo [3/3] Packing + deploying...
