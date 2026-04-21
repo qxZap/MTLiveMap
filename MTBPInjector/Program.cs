@@ -30,6 +30,7 @@ internal static class Program
                 "inject-main"  => InjectMain(args.Skip(1).ToArray()),
                 "clone-actor"  => CloneActor(args.Skip(1).ToArray()),
                 "clone-cross-cell" => CloneCrossCell(args.Skip(1).ToArray()),
+                "clone-batch"      => CloneBatch(args.Skip(1).ToArray()),
                 "inspect-cell" => InspectCell(args.Skip(1).ToArray()),
                 "inspect-export" => InspectExport(args.Skip(1).ToArray()),
                 "inspect-imports" => InspectImports(args.Skip(1).ToArray()),
@@ -687,6 +688,234 @@ internal static class Program
                 DumpField(field, "      ");
             }
         }
+        return 0;
+    }
+
+    // ----------------------------------------------------------------------
+    // CLONE-BATCH: load dst cell ONCE, clone N source actors into it (each
+    // with its own source .umap + slot + target coords), save dst ONCE.
+    // Avoids the integrity drift caused by N separate load/save cycles.
+    //
+    // --spec <json> with array of:
+    //   { "source_umap": "...", "source_actor": "...",
+    //     "x": N, "y": N, "z": N,
+    //     "pitch": N?, "yaw": N?, "roll": N?,
+    //     "slot": N?, "preload_bp": "..." | null, "label": "..." }
+    // ----------------------------------------------------------------------
+    private static int CloneBatch(string[] args)
+    {
+        var f = ParseFlags(args);
+        var mappings = LoadMappings(f["mappings"]);
+        string dstPath = f["dst-cell"];
+        string outPath = f["output"];
+        string specPath = f["spec"];
+
+        var specArr = JArray.Parse(File.ReadAllText(specPath));
+
+        // Pre-load all BP .uasset files once into the shared mappings so
+        // schema lookups succeed during cloning.
+        var preloads = new HashSet<string>();
+        foreach (var s in specArr)
+        {
+            var p = (string?)s["preload_bp"];
+            if (!string.IsNullOrEmpty(p)) preloads.Add(p);
+        }
+        foreach (var p in preloads)
+        {
+            try { _ = new UAsset(p, EngineVer, mappings); Console.WriteLine($"  Preloaded BP schema {Path.GetFileName(p)}"); }
+            catch (Exception ex) { Console.Error.WriteLine($"  preload failed {p}: {ex.Message}"); }
+        }
+
+        var dst = new UAsset(dstPath, EngineVer, mappings);
+
+        // Cache source assets (reload once per unique source file)
+        var srcCache = new Dictionary<string, UAsset>();
+        int dstLevelIdx = -1;
+        for (int i = 0; i < dst.Exports.Count; i++)
+            if (dst.Exports[i] is LevelExport) { dstLevelIdx = i; break; }
+        if (dstLevelIdx < 0) throw new InvalidOperationException("No LevelExport in dst");
+        int dstLevelNum = dstLevelIdx + 1;
+
+        var replaceOps = new List<(int slot, int newActorNum)>();
+
+        for (int idx = 0; idx < specArr.Count; idx++)
+        {
+            var s = specArr[idx];
+            string srcPath = (string)s["source_umap"]!;
+            string srcActorName = (string)s["source_actor"]!;
+            double tx = (double)s["x"]!;
+            double ty = (double)s["y"]!;
+            double tz = (double)s["z"]!;
+
+            if (!srcCache.TryGetValue(srcPath, out var src))
+            {
+                src = new UAsset(srcPath, EngineVer, mappings);
+                srcCache[srcPath] = src;
+            }
+
+            // Locate source actor
+            int srcIdx = -1;
+            for (int i = 0; i < src.Exports.Count; i++)
+                if (src.Exports[i].ObjectName.ToString().Contains(srcActorName)) { srcIdx = i; break; }
+            if (srcIdx < 0)
+            {
+                Console.Error.WriteLine($"  [{idx}] source actor '{srcActorName}' not found");
+                continue;
+            }
+            int srcActorNum = srcIdx + 1;
+            var srcActor = src.Exports[srcIdx];
+
+            var srcChildren = new List<int>();
+            for (int i = 0; i < src.Exports.Count; i++)
+                if (src.Exports[i].OuterIndex.Index == srcActorNum) srcChildren.Add(i);
+
+            int newActorNum = dst.Exports.Count + 1;
+            int[] newChildNums = srcChildren.Select((_, k) => newActorNum + 1 + k).ToArray();
+
+            var importRemap = new Dictionary<int, int>();
+            int RemapImport(int srcImportIdx1Based)
+            {
+                int zero = -srcImportIdx1Based - 1;
+                if (importRemap.TryGetValue(zero, out var cached)) return cached;
+                var simp = src.Imports[zero];
+                int outer = simp.OuterIndex.Index;
+                int mappedOuter = outer < 0 ? RemapImport(outer) : 0;
+                string objName = simp.ObjectName.ToString();
+                string className = simp.ClassName.ToString();
+                string classPkg  = simp.ClassPackage.ToString();
+                int dstIdx = -1;
+                for (int i = 0; i < dst.Imports.Count; i++)
+                {
+                    var di = dst.Imports[i];
+                    if (di.ObjectName.ToString() == objName && di.ClassName.ToString() == className && di.OuterIndex.Index == mappedOuter)
+                    { dstIdx = -(i + 1); break; }
+                }
+                if (dstIdx == -1)
+                {
+                    EnsureName(dst, objName); EnsureName(dst, className); EnsureName(dst, classPkg);
+                    dst.Imports.Add(new UAssetAPI.Import(classPkg, className, new FPackageIndex(mappedOuter), objName, simp.bImportOptional, dst));
+                    dstIdx = -dst.Imports.Count;
+                }
+                importRemap[zero] = dstIdx;
+                return dstIdx;
+            }
+            int RemapIdx(int i)
+            {
+                if (i == 0) return 0;
+                if (i > 0)
+                {
+                    if (i == srcActorNum) return newActorNum;
+                    int pos = srcChildren.IndexOf(i - 1);
+                    if (pos >= 0) return newChildNums[pos];
+                    if (i - 1 < src.Exports.Count && src.Exports[i - 1] is LevelExport) return dstLevelNum;
+                    return 0;
+                }
+                return RemapImport(i);
+            }
+            Export DeepClone(Export e)
+            {
+                Export d;
+                if (e is NormalExport ne)
+                {
+                    d = new NormalExport
+                    {
+                        Data = ne.Data.Select(p => (PropertyData)p.Clone()).ToList(),
+                        ObjectGuid = ne.ObjectGuid,
+                        SerializationControl = ne.SerializationControl,
+                        Operation = ne.Operation,
+                        HasLeadingFourNullBytes = ne.HasLeadingFourNullBytes,
+                    };
+                }
+                else if (e is RawExport re)
+                {
+                    d = new RawExport { Data = re.Data != null ? (byte[])re.Data.Clone() : Array.Empty<byte>() };
+                }
+                else throw new InvalidOperationException($"Unsupported {e.GetType().Name}");
+                d.Asset = dst;
+                string objName = e.ObjectName.ToString();
+                EnsureName(dst, objName);
+                d.ObjectName = FName.FromString(dst, objName);
+                d.ClassIndex    = new FPackageIndex(RemapIdx(e.ClassIndex.Index));
+                d.SuperIndex    = new FPackageIndex(RemapIdx(e.SuperIndex.Index));
+                d.TemplateIndex = new FPackageIndex(RemapIdx(e.TemplateIndex.Index));
+                d.OuterIndex    = new FPackageIndex(RemapIdx(e.OuterIndex.Index));
+                d.ObjectFlags = e.ObjectFlags;
+                d.bForcedExport = e.bForcedExport;
+                d.bNotForClient = e.bNotForClient; d.bNotForServer = e.bNotForServer;
+                d.PackageGuid = e.PackageGuid; d.PackageFlags = e.PackageFlags;
+                d.bNotAlwaysLoadedForEditorGame = e.bNotAlwaysLoadedForEditorGame;
+                d.bIsAsset = e.bIsAsset; d.GeneratePublicHash = e.GeneratePublicHash;
+                d.IsInheritedInstance = e.IsInheritedInstance;
+                d.SerializationBeforeSerializationDependencies = e.SerializationBeforeSerializationDependencies.Select(x => new FPackageIndex(RemapIdx(x.Index))).ToList();
+                d.CreateBeforeSerializationDependencies        = e.CreateBeforeSerializationDependencies.Select(x => new FPackageIndex(RemapIdx(x.Index))).ToList();
+                d.SerializationBeforeCreateDependencies        = e.SerializationBeforeCreateDependencies.Select(x => new FPackageIndex(RemapIdx(x.Index))).ToList();
+                d.CreateBeforeCreateDependencies               = e.CreateBeforeCreateDependencies.Select(x => new FPackageIndex(RemapIdx(x.Index))).ToList();
+                d.Extras = e.Extras != null ? (byte[])e.Extras.Clone() : null;
+                return d;
+            }
+            void RemapPropRefs(PropertyData p)
+            {
+                if (p is ObjectPropertyData op && op.Value != null)
+                    op.Value = new FPackageIndex(RemapIdx(op.Value.Index));
+                else if (p is ArrayPropertyData ap && ap.Value != null)
+                    foreach (var inner in ap.Value) RemapPropRefs(inner);
+                else if (p is StructPropertyData sp2 && sp2.Value != null)
+                    foreach (var inner in sp2.Value) RemapPropRefs(inner);
+            }
+
+            var newActor = DeepClone(srcActor);
+            newActor.OuterIndex = new FPackageIndex(dstLevelNum);
+            string label = (string?)s["label"] ?? $"{srcActor.ObjectName}_MOD";
+            int suffix = 0; string finalLabel = label;
+            while (dst.Exports.Any(e => e.ObjectName.ToString() == finalLabel))
+                finalLabel = $"{label}_{++suffix}";
+            newActor.ObjectName = FName.FromString(dst, finalLabel);
+            EnsureName(dst, finalLabel);
+            dst.Exports.Add(newActor);
+            foreach (var ci in srcChildren)
+            {
+                var clonedChild = DeepClone(src.Exports[ci]);
+                clonedChild.OuterIndex = new FPackageIndex(newActorNum);
+                dst.Exports.Add(clonedChild);
+            }
+            if (newActor is NormalExport naeN) foreach (var p in naeN.Data) RemapPropRefs(p);
+            foreach (var n in newChildNums)
+                if (dst.Exports[n - 1] is NormalExport nc) foreach (var p in nc.Data) RemapPropRefs(p);
+
+            // Set location on root child (Scene or Root)
+            foreach (var n in newChildNums)
+            {
+                if (dst.Exports[n - 1] is NormalExport nc)
+                    foreach (var p in nc.Data)
+                    {
+                        if (p.Name.ToString() == "RelativeLocation" && p is StructPropertyData sloc
+                            && sloc.Value.Count > 0 && sloc.Value[0] is VectorPropertyData vp)
+                            vp.Value = new FVector(tx, ty, tz);
+                    }
+            }
+            // Regenerate FGuid in Extras
+            if (newActor.Extras != null && newActor.Extras.Length >= 44)
+            {
+                int strlen = BitConverter.ToInt32(newActor.Extras, 4);
+                if (strlen > 0 && 8 + strlen + 16 <= newActor.Extras.Length)
+                    Guid.NewGuid().ToByteArray().CopyTo(newActor.Extras, 8 + strlen);
+            }
+
+            Console.WriteLine($"  [{idx}] cloned '{srcActorName}' -> #{newActorNum} ({srcChildren.Count} children, {dst.Imports.Count} imports total)");
+
+            int? slot = (int?)s["slot"];
+            if (slot.HasValue) replaceOps.Add((slot.Value, newActorNum));
+        }
+
+        // Apply Actors-list slot replacements ONCE at the end (single patch on the level body)
+        if (replaceOps.Count > 0)
+        {
+            foreach (var (slot, idx2) in replaceOps)
+                ReplaceActorSlotInLevel(dst, dstPath, slot, idx2);
+        }
+
+        dst.Write(outPath);
+        Console.WriteLine($"Wrote {outPath} ({dst.Exports.Count} exports, {dst.Imports.Count} imports)");
         return 0;
     }
 

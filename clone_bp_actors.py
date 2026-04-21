@@ -138,12 +138,26 @@ def main():
     slot_counter: dict[str, int] = {}
     MAX_SLOTS_PER_CREATED_CELL = 4  # matches TEMPLATE_CELL's Actors.Count
 
-    # DEBUG: set MAX_BP=1 to clone only the first entry — helps isolate
-    # whether a single BP clone in a new cell is already crashing.
+    # DEBUG: set MAX_BP=1 to clone only the first entry.
     _max = int(os.environ.get("MAX_BP", "999999"))
     if _max < len(entries):
         print(f"  [debug] MAX_BP={_max} — limiting from {len(entries)} entries")
         entries = entries[:_max]
+    # DEBUG: set BP_SKIP=ParkingSmall,ParkingMedium to skip specific BP classes
+    _skip = set(k.strip() for k in os.environ.get("BP_SKIP", "").split(",") if k.strip())
+    if _skip:
+        before = len(entries)
+        # Match on either blueprint_class or the short name derived from asset_key
+        def _match(e):
+            cls = e.get("blueprint_class", "")
+            return cls in _skip or any(k in cls for k in _skip)
+        entries = [e for e in entries if not _match(e)]
+        print(f"  [debug] BP_SKIP={sorted(_skip)} — {before} -> {len(entries)} entries")
+
+    # First pass: resolve/create destination cell per entry, group entries by
+    # cell. Second pass: run ONE clone-batch call per cell (all clones into
+    # that cell happen in a single UAssetAPI load/save).
+    grouped: dict[str, list] = {}   # cell_name -> list[(entry, tpl, is_created)]
 
     for i, e in enumerate(entries):
         bp_class = e.get("blueprint_class")
@@ -182,37 +196,52 @@ def main():
                     shutil.copy2(src, dst)
             seeded.add(cell)
 
-        # Debug toggle: set SKIP_BP_CLONE=1 env to register the cell only (no
-        # BP actor content inside it). Useful to test whether the cell
-        # registration itself is valid.
         if os.environ.get("SKIP_BP_CLONE") == "1":
             print(f"  [{i}] SKIP_BP_CLONE=1 — cell registered, actor clone skipped")
             continue
 
-        cmd = [
-            str(INJECTOR), "clone-cross-cell",
-            "--mappings", MAPPINGS,
-            "--source-cell", str(tpl_entry["source_umap"]),
-            "--source-actor", tpl_entry["source_actor"],
-            "--dst-cell", str(gen_dir / f"{cell}.umap"),
-            "--output", str(gen_dir / f"{cell}.umap"),
-            "--x", f"{e['X']}",
-            "--y", f"{e['Y']}",
-            "--z", f"{e['Z']}",
-        ]
-        # When the cell was created by us, replace one of the template's Actors
-        # slots instead of appending — keeps body size / metadata layout intact.
-        if cell in created_cells.values():
-            slot = slot_counter.get(cell, 0)
-            if slot >= MAX_SLOTS_PER_CREATED_CELL:
-                print(f"     [warn] exhausted {MAX_SLOTS_PER_CREATED_CELL} slots in created cell {cell}, skipping", file=sys.stderr)
-                continue
-            cmd += ["--replace-slot", str(slot)]
-            slot_counter[cell] = slot + 1
-        if tpl_entry["preload_bp"]:
-            cmd += ["--preload-bp", str(tpl_entry["preload_bp"])]
         print(f"  [{i}] {bp_class} @ ({e['X']}, {e['Y']}, {e['Z']}) -> cell {cell}")
-        r = subprocess.run(cmd, capture_output=True, text=True)
+        grouped.setdefault(cell, []).append((e, tpl_entry, cell in created_cells.values()))
+
+    # Second pass: one clone-batch per cell (all clones share a single
+    # UAssetAPI load/save, preventing integrity drift from repeated saves).
+    import json as _json, tempfile
+    for cell, items in grouped.items():
+        specs = []
+        slot = 0
+        for (e, tpl, is_created) in items:
+            spec = {
+                "source_umap":  str(tpl["source_umap"]),
+                "source_actor": tpl["source_actor"],
+                "x": e["X"], "y": e["Y"], "z": e["Z"],
+            }
+            if tpl.get("preload_bp"):
+                spec["preload_bp"] = str(tpl["preload_bp"])
+            if is_created:
+                if slot >= MAX_SLOTS_PER_CREATED_CELL:
+                    print(f"     [warn] skipping entry, slots exhausted in {cell}", file=sys.stderr)
+                    continue
+                spec["slot"] = slot
+                slot += 1
+            specs.append(spec)
+        if not specs:
+            continue
+
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+            _json.dump(specs, tf)
+            spec_path = tf.name
+        try:
+            r = subprocess.run([
+                str(INJECTOR), "clone-batch",
+                "--mappings", MAPPINGS,
+                "--dst-cell", str(gen_dir / f"{cell}.umap"),
+                "--output",   str(gen_dir / f"{cell}.umap"),
+                "--spec", spec_path,
+            ], capture_output=True, text=True)
+        finally:
+            try: os.unlink(spec_path)
+            except OSError: pass
+
         if r.returncode != 0:
             print(r.stdout)
             print(r.stderr, file=sys.stderr)
