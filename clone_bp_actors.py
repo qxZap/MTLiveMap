@@ -80,7 +80,11 @@ def make_cell_name(x: float, y: float) -> str:
 
 
 def register_new_cell(main_path: str, out_path: str, new_cell: str,
-                       x: float, y: float, mod_gen_dir: Path) -> bool:
+                       x: float, y: float, mod_gen_dir: Path,
+                       hier_level: int = -1, grid_levels_index: int = 0) -> bool:
+    # Each hierarchical level doubles the cell size; extent at level N is
+    # 6400 * 2^(N+1). At level -1 we use 6400 (the base).
+    extent = 6400 * (2 ** (hier_level + 1))
     cmd = [
         str(INJECTOR), "register-new-cell",
         "--main", main_path,
@@ -90,10 +94,10 @@ def register_new_cell(main_path: str, out_path: str, new_cell: str,
         "--new-cell-name", new_cell,
         "--x", f"{x}",
         "--y", f"{y}",
-        "--extent", "6400",
+        "--extent", str(extent),
         "--grid", "MainGrid",
-        "--hier-level", "-1",
-        "--grid-levels-index", "0",
+        "--hier-level", str(hier_level),
+        "--grid-levels-index", str(grid_levels_index),
         "--cells-dir", str(CELLS_DIR),
         "--mod-cells-dir", str(mod_gen_dir),
     ]
@@ -159,36 +163,80 @@ def main():
     # that cell happen in a single UAssetAPI load/save).
     grouped: dict[str, list] = {}   # cell_name -> list[(entry, tpl, is_created)]
 
+    # Auto-shard state: when the home L-1 tile fills up, spill into adjacent
+    # L-1 tiles (same hier-level, neighbor grid coords). WP streams neighbor
+    # tiles together with the home tile, so the actors spawn as if in one
+    # big cell — without needing higher hierarchical levels (whose key math
+    # in register-new-cell isn't verified).
+    # Expanding ring of tile offsets around the home tile. Generated on demand
+    # so there's no cap on how many actors can be placed at one island — each
+    # extra shard adds MAX_SLOTS_PER_CREATED_CELL slots. Order: center, then
+    # rings of increasing Chebyshev distance (1, 2, 3, ...).
+    def tile_offset(idx: int) -> tuple[int, int]:
+        if idx == 0:
+            return (0, 0)
+        # Find ring r such that (2r-1)^2 <= idx < (2r+1)^2.
+        r = 1
+        while (2 * r + 1) ** 2 <= idx:
+            r += 1
+        local = idx - (2 * r - 1) ** 2       # 0..(8r-1)
+        side = 2 * r                          # length of each ring side
+        s = local // side                     # which side 0..3
+        t = local %  side                     # position along side
+        if s == 0: return ( r,     -r + t)    # right
+        if s == 1: return ( r - t,  r)        # top
+        if s == 2: return (-r,      r - t)    # left
+        return (-r + t, -r)                   # bottom
+
+    shards: dict[tuple[int, int], list[str]] = {}  # home_grid -> [cell_name per offset index]
+
+    def pick_cell_for_entry(e):
+        # Returns (cell_name, is_created)
+        cell = resolve_cell(e["X"], e["Y"])
+        if cell is not None:
+            return cell, False
+        home = (int(e["X"] // 12800), int(e["Y"] // 12800))
+        chain = shards.get(home, [])
+        # Reuse existing shard with remaining slots
+        for cell_name in chain:
+            if slot_counter.get(cell_name, 0) < MAX_SLOTS_PER_CREATED_CELL:
+                return cell_name, True
+        # Create a new L-1 tile at the next ring offset.
+        idx = len(chain)
+        dx, dy = tile_offset(idx)
+        tile_gx, tile_gy = home[0] + dx, home[1] + dy
+        # Cell's own center (for WP bounds): middle of that tile.
+        cx = (tile_gx + 0.5) * 12800.0
+        cy = (tile_gy + 0.5) * 12800.0
+        new_cell = make_cell_name(cx, cy)
+        print(f"  [{entry_idx_ref[0]}] shard #{idx+1} for home {home}: creating L-1 cell '{new_cell}' at tile ({tile_gx},{tile_gy})")
+        nonlocal main_in
+        if not register_new_cell(main_in, main_out, new_cell,
+                                 cx, cy, gen_dir,
+                                 hier_level=-1,
+                                 grid_levels_index=0):
+            return None, False
+        chain.append(new_cell)
+        shards[home] = chain
+        seeded.add(new_cell)
+        main_in = main_out
+        return new_cell, True
+
+    entry_idx_ref = [0]
     for i, e in enumerate(entries):
+        entry_idx_ref[0] = i
         bp_class = e.get("blueprint_class")
         tpl_entry = template_for_class(bp_class)
         if not tpl_entry:
             print(f"  [{i}] skipped — no registry entry for {bp_class}")
             continue
 
-        cell = resolve_cell(e["X"], e["Y"])
-        needs_create = cell is None
-        if needs_create:
-            # Dedupe by cell grid coord so multiple actors in the same island
-            # share one created cell instead of re-registering.
-            grid_key = (int(e["X"] // 12800), int(e["Y"] // 12800))
-            if grid_key in created_cells:
-                cell = created_cells[grid_key]
-                print(f"  [{i}] reusing cell '{cell}' for ({e['X']}, {e['Y']})")
-            else:
-                cell = make_cell_name(e["X"], e["Y"])
-                print(f"  [{i}] no existing WP cell — creating new cell '{cell}' at ({e['X']}, {e['Y']})")
-                if not main_in:
-                    print("     need --main-in to register new cells", file=sys.stderr)
-                    return 1
-                if not register_new_cell(main_in, main_out, cell, e["X"], e["Y"], gen_dir):
-                    return 2
-                created_cells[grid_key] = cell
-                seeded.add(cell)
-                # Point subsequent registrations at the freshly-written map
-                main_in = main_out
+        cell, needs_create = pick_cell_for_entry(e)
+        if cell is None:
+            print(f"  [{i}] failed to pick/create cell for ({e['X']},{e['Y']})", file=sys.stderr)
+            return 1
         # Seed cell from vanilla once (for existing vanilla cells)
-        elif cell not in seeded:
+        if not needs_create and cell not in seeded:
             for ext in (".umap", ".uexp"):
                 src = CELLS_DIR / f"{cell}{ext}"
                 dst = gen_dir / f"{cell}{ext}"
@@ -200,36 +248,38 @@ def main():
             print(f"  [{i}] SKIP_BP_CLONE=1 — cell registered, actor clone skipped")
             continue
 
-        print(f"  [{i}] {bp_class} @ ({e['X']}, {e['Y']}, {e['Z']}) -> cell {cell}")
-        grouped.setdefault(cell, []).append((e, tpl_entry, cell in created_cells.values()))
+        # Bump slot counter for created cells (used by next entry's shard check).
+        if needs_create:
+            slot_counter[cell] = slot_counter.get(cell, 0) + 1
+            assigned_slot = slot_counter[cell] - 1
+        else:
+            assigned_slot = None
+
+        print(f"  [{i}] {bp_class} @ ({e['X']}, {e['Y']}, {e['Z']}) -> cell {cell}" + (f" slot={assigned_slot}" if assigned_slot is not None else ""))
+        grouped.setdefault(cell, []).append((e, tpl_entry, needs_create, assigned_slot))
 
     # Second pass: one clone-batch per cell (all clones share a single
     # UAssetAPI load/save, preventing integrity drift from repeated saves).
     import json as _json, tempfile
     for cell, items in grouped.items():
         specs = []
-        # 0V18V8J's slot 0 already is not WorldSettings — start at 0.
-        slot = 0
-        for (e, tpl, is_created) in items:
+        for (e, tpl, is_created, assigned_slot) in items:
             spec = {
                 "source_umap":  str(tpl["source_umap"]),
                 "source_actor": tpl["source_actor"],
                 "x": e["X"], "y": e["Y"], "z": e["Z"],
+                "pitch": e.get("Pitch", 0.0),
+                "yaw":   e.get("Yaw", 0.0),
+                "roll":  e.get("Roll", 0.0),
             }
             pb = tpl.get("preload_bp")
             if pb:
-                # Accept either a single path or a list of paths. The batch
-                # command picks up multiple via semicolon-separated string.
                 if isinstance(pb, (list, tuple)):
                     spec["preload_bp"] = ";".join(str(x) for x in pb)
                 else:
                     spec["preload_bp"] = str(pb)
-            if is_created:
-                if slot >= MAX_SLOTS_PER_CREATED_CELL:
-                    print(f"     [warn] skipping entry, slots exhausted in {cell}", file=sys.stderr)
-                    continue
-                spec["slot"] = slot
-                slot += 1
+            if is_created and assigned_slot is not None:
+                spec["slot"] = assigned_slot
             specs.append(spec)
         if not specs:
             continue

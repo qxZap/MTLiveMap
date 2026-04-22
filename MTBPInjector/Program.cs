@@ -750,6 +750,9 @@ internal static class Program
             double tx = (double)s["x"]!;
             double ty = (double)s["y"]!;
             double tz = (double)s["z"]!;
+            double? tPitch = (double?)s["pitch"];
+            double? tYaw   = (double?)s["yaw"];
+            double? tRoll  = (double?)s["roll"];
 
             if (!srcCache.TryGetValue(srcPath, out var src))
             {
@@ -986,12 +989,20 @@ internal static class Program
                 }
             }
 
-            // Set location on root child (Scene or Root)
+            // Set location + rotation on root child (Scene or Root)
             foreach (var n in newChildNums)
             {
                 if (dst.Exports[n - 1] is NormalExport nc)
                     foreach (var p in nc.Data)
                     {
+                        if (p.Name.ToString() == "RelativeRotation" && p is StructPropertyData srot
+                            && srot.Value.Count > 0 && srot.Value[0] is RotatorPropertyData rp)
+                        {
+                            rp.Value = new FRotator(
+                                tPitch ?? rp.Value.Pitch,
+                                tYaw   ?? rp.Value.Yaw,
+                                tRoll  ?? rp.Value.Roll);
+                        }
                         if (p.Name.ToString() == "RelativeLocation" && p is StructPropertyData sloc
                             && sloc.Value.Count > 0 && sloc.Value[0] is VectorPropertyData vp)
                             vp.Value = new FVector(tx, ty, tz);
