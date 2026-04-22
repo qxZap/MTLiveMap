@@ -1029,6 +1029,25 @@ internal static class Program
                 ReplaceActorSlotInLevel(dst, dstPath, slot, idx2);
         }
 
+        // Null any Actor slot we didn't explicitly fill. The L-1 template cell
+        // has 4 slots occupied by unrelated vanilla actors (e.g. a container
+        // ship) — if we leave them alone, every cloned cell spawns those too.
+        // Setting the ref to FPackageIndex(0) orphans the exports so nothing
+        // attaches to the level.
+        {
+            if (dst.Exports[0] is UAssetAPI.ExportTypes.LevelExport lvl)
+            {
+                var used = new HashSet<int>(replaceOps.Select(o => o.slot));
+                for (int i = 0; i < lvl.Actors.Count; i++)
+                {
+                    if (used.Contains(i)) continue;
+                    int cur = lvl.Actors[i].Index;
+                    if (cur == 0) continue;
+                    ReplaceActorSlotInLevel(dst, dstPath, i, 0);
+                }
+            }
+        }
+
         dst.Write(outPath);
         Console.WriteLine($"Wrote {outPath} ({dst.Exports.Count} exports, {dst.Imports.Count} imports)");
         return 0;
