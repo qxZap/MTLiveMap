@@ -150,10 +150,13 @@ def main():
                 skipped += 1
                 continue
 
-            # Copy missing assets to mod (once per unique path)
+            # Copy missing assets to mod (once per unique path). Skip DC/Actors
+            # placeholders — they're scene-only markers that the BP-clone pass
+            # replaces at runtime, so shipping their .uasset adds nothing.
             raw_path = entry.get("asset_path", "")
             rel_path = game_path_to_disk(raw_path)
-            if rel_path and rel_path not in copied_paths:
+            if (rel_path and rel_path not in copied_paths
+                    and not rel_path.startswith("DC/Actors")):
                 copy_asset_to_mod(rel_path, script_dir)
                 copied_paths.add(rel_path)
 

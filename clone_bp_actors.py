@@ -33,42 +33,50 @@ INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
 TEMPLATE_CELL = "0V18V8JBXKXUL8YILWZKCSMB4"
 
 
-def resolve_cell(x: float, y: float) -> str | None:
-    """Ask MTBPInjector which vanilla WP cell contains (x,y). Returns cell name
-    (without extension) or None if not found."""
-    r = subprocess.run(
-        [str(INJECTOR), "find-cell-wp",
-         "--main", str(JEJU_MAIN),
-         "--mappings", MAPPINGS,
-         "--x", f"{x}",
-         "--y", f"{y}"],
-        capture_output=True, text=True)
-    if r.returncode != 0:
-        print(r.stderr, file=sys.stderr)
-        return None
-    # "Cells containing (x, y): N" then rows "  #idx <name> grid=... L<n> pos=(..) ext=.. owner=<cellName>"
-    owners = []  # (level, grid, owner)
-    mode = None
-    for line in r.stdout.splitlines():
-        if line.startswith("Cells containing"):
-            mode = "containing"; continue
-        if line.startswith("Nearest"):
-            mode = "nearest"; continue
-        if mode == "containing":
-            m = re.search(r"grid=(\w+) L(-?\d+).*owner=([A-Z0-9]+)", line)
-            if m:
-                owners.append((int(m.group(2)), m.group(1), m.group(3)))
-    if not owners:
-        return None
-    # Filter to cells that have a .umap file on disk and are small enough to
-    # stream (L10 / Landscape catch-alls at center 0,0 with ext=6.5M don't
-    # spawn runtime BP actors we inject into them).
+def _pick_owner(hits: list[dict]) -> str | None:
+    owners = [(int(h["level"]), h["grid"], h["owner"]) for h in hits]
     owners = [(lvl, grid, name) for (lvl, grid, name) in owners
               if (CELLS_DIR / f"{name}.umap").exists() and lvl <= 2]
     if not owners:
         return None
     owners.sort(key=lambda t: (t[0], 0 if t[1] == "MainGrid" else 1))
     return owners[0][2]
+
+
+def resolve_cells_batch(points: list[tuple[float, float]]) -> list[str | None]:
+    """Resolve all (x, y) points against vanilla WP cells in ONE injector
+    invocation. Previous per-point calls reloaded the 30 MB mappings + the
+    main Jeju_World.umap each time and dominated pipeline runtime."""
+    if not points:
+        return []
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+        json.dump([{"x": x, "y": y} for (x, y) in points], tf)
+        in_path = tf.name
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+        out_path = tf.name
+    try:
+        r = subprocess.run(
+            [str(INJECTOR), "find-cells-batch",
+             "--main", str(JEJU_MAIN),
+             "--mappings", MAPPINGS,
+             "--spec", in_path,
+             "--output", out_path],
+            capture_output=True, text=True)
+        if r.returncode != 0:
+            print(r.stdout); print(r.stderr, file=sys.stderr)
+            return [None] * len(points)
+        data = json.loads(Path(out_path).read_text(encoding="utf-8"))
+    finally:
+        for p in (in_path, out_path):
+            try: os.unlink(p)
+            except OSError: pass
+    return [_pick_owner(entry.get("containing", [])) for entry in data]
+
+
+def resolve_cell(x: float, y: float) -> str | None:
+    """Single-point wrapper (kept for backwards compat); routes through batch."""
+    return resolve_cells_batch([(x, y)])[0]
 
 
 def make_cell_name(seed: str) -> str:
@@ -87,36 +95,51 @@ def entry_seed(e: dict) -> str:
                      "blueprint_path", "blueprint_class"))
 
 
-def register_new_cell(main_path: str, out_path: str, new_cell: str,
-                       x: float, y: float, mod_gen_dir: Path,
-                       hier_level: int = -1, grid_levels_index: int = 0) -> bool:
-    # Each hierarchical level doubles the cell size; extent at level N is
-    # 6400 * 2^(N+1). At level -1 we use 6400 (the base).
+def cell_spec(new_cell: str, x: float, y: float, mod_gen_dir: Path,
+              hier_level: int = -1, grid_levels_index: int = 0) -> dict:
+    """Spec for one cell registration. Consumed by register-cells-batch so N
+    cells land in the main map via a single UAssetAPI load/save."""
     extent = 6400 * (2 ** (hier_level + 1))
-    cmd = [
-        str(INJECTOR), "register-new-cell",
-        "--main", main_path,
-        "--output", out_path,
-        "--mappings", MAPPINGS,
-        "--template-cell", TEMPLATE_CELL,
-        "--new-cell-name", new_cell,
-        "--x", f"{x}",
-        "--y", f"{y}",
-        "--extent", str(extent),
-        "--grid", "MainGrid",
-        "--hier-level", str(hier_level),
-        "--grid-levels-index", str(grid_levels_index),
-        "--cells-dir", str(CELLS_DIR),
-        "--mod-cells-dir", str(mod_gen_dir),
-    ]
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    return {
+        "template-cell":     TEMPLATE_CELL,
+        "new-cell-name":     new_cell,
+        "x":                 f"{x}",
+        "y":                 f"{y}",
+        "extent":            str(extent),
+        "grid":              "MainGrid",
+        "hier-level":        str(hier_level),
+        "grid-levels-index": str(grid_levels_index),
+        "cells-dir":         str(CELLS_DIR),
+        "mod-cells-dir":     str(mod_gen_dir),
+    }
+
+
+def register_cells_batch(main_in: str, main_out: str, specs: list[dict]) -> bool:
+    """Register all pending cells against the main map in one load/save."""
+    if not specs:
+        return True
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+        json.dump(specs, tf)
+        spec_path = tf.name
+    try:
+        r = subprocess.run([
+            str(INJECTOR), "register-cells-batch",
+            "--main",     main_in,
+            "--output",   main_out,
+            "--mappings", MAPPINGS,
+            "--spec",     spec_path,
+        ], capture_output=True, text=True)
+    finally:
+        try: os.unlink(spec_path)
+        except OSError: pass
     if r.returncode != 0:
         print(r.stdout)
         print(r.stderr, file=sys.stderr)
-    else:
-        for line in r.stdout.splitlines():
-            if line.strip(): print(f"    {line}")
-    return r.returncode == 0
+        return False
+    for line in r.stdout.splitlines():
+        if line.strip(): print(f"    {line}")
+    return True
 
 
 def main():
@@ -206,10 +229,19 @@ def main():
     registered_tiles: dict[tuple[int, int], str] = {}
     # Per-home spiral progress so we deterministically fan out around each home.
     home_rings: dict[tuple[int, int], int] = {}
+    # Deferred cell registrations. Flushed in ONE register-cells-batch call
+    # after the first pass; registering per-actor was re-serializing the huge
+    # Jeju_World.umap N times and dominated pipeline runtime.
+    pending_cells: list[dict] = []
 
-    def pick_cell_for_entry(e):
+    # Pre-resolve every entry's vanilla-cell membership in a single injector
+    # invocation. Previously this was a per-entry subprocess call that each
+    # reloaded mappings + Jeju_World.umap.
+    resolved_cells = resolve_cells_batch([(e["X"], e["Y"]) for e in entries])
+
+    def pick_cell_for_entry(e, i):
         # Returns (cell_name, is_created)
-        cell = resolve_cell(e["X"], e["Y"])
+        cell = resolved_cells[i]
         if cell is not None:
             return cell, False
         home = (int(e["X"] // 12800), int(e["Y"] // 12800))
@@ -223,7 +255,6 @@ def main():
             if cname and slot_counter.get(cname, 0) < MAX_SLOTS_PER_CREATED_CELL:
                 return cname, True
         # All known tiles for this home full — take the next spiral step.
-        nonlocal main_in
         while True:
             dx, dy = tile_offset(steps_taken)
             tile = (home[0] + dx, home[1] + dy)
@@ -239,15 +270,10 @@ def main():
             cx = (tile[0] + 0.5) * 12800.0
             cy = (tile[1] + 0.5) * 12800.0
             new_cell = make_cell_name(entry_seed(e))
-            print(f"  [{entry_idx_ref[0]}] home {home} step {steps_taken}: creating L-1 cell '{new_cell}' at tile {tile}")
-            if not register_new_cell(main_in, main_out, new_cell,
-                                     cx, cy, gen_dir,
-                                     hier_level=-1,
-                                     grid_levels_index=0):
-                return None, False
+            print(f"  [{entry_idx_ref[0]}] home {home} step {steps_taken}: queued L-1 cell '{new_cell}' at tile {tile}")
+            pending_cells.append(cell_spec(new_cell, cx, cy, gen_dir))
             registered_tiles[tile] = new_cell
             seeded.add(new_cell)
-            main_in = main_out
             return new_cell, True
 
     entry_idx_ref = [0]
@@ -259,7 +285,7 @@ def main():
             print(f"  [{i}] skipped — no registry entry for {bp_class}")
             continue
 
-        cell, needs_create = pick_cell_for_entry(e)
+        cell, needs_create = pick_cell_for_entry(e, i)
         if cell is None:
             print(f"  [{i}] failed to pick/create cell for ({e['X']},{e['Y']})", file=sys.stderr)
             return 1
@@ -286,9 +312,12 @@ def main():
         print(f"  [{i}] {bp_class} @ ({e['X']}, {e['Y']}, {e['Z']}) -> cell {cell}" + (f" slot={assigned_slot}" if assigned_slot is not None else ""))
         grouped.setdefault(cell, []).append((e, tpl_entry, needs_create, assigned_slot))
 
-    # Second pass: one clone-batch per cell (all clones share a single
-    # UAssetAPI load/save, preventing integrity drift from repeated saves).
+    # Second pass: build a super-batch job list covering every target cell.
+    # Cell registrations AND clone jobs run in ONE injector invocation via
+    # register-and-clone so the 30 MB MotorTown.usmap is parsed exactly once
+    # for the entire BP phase.
     import json as _json, tempfile
+    jobs = []
     for cell, items in grouped.items():
         specs = []
         for (e, tpl, is_created, assigned_slot) in items:
@@ -311,22 +340,31 @@ def main():
             specs.append(spec)
         if not specs:
             continue
+        jobs.append({
+            "dst-cell": str(gen_dir / f"{cell}.umap"),
+            "output":   str(gen_dir / f"{cell}.umap"),
+            "spec":     specs,
+        })
 
+    if pending_cells or jobs:
+        combined = {
+            "main-in":  main_in,
+            "main-out": main_out,
+            "register": pending_cells,
+            "clone":    jobs,
+        }
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
-            _json.dump(specs, tf)
+            _json.dump(combined, tf)
             spec_path = tf.name
         try:
             r = subprocess.run([
-                str(INJECTOR), "clone-batch",
+                str(INJECTOR), "register-and-clone",
                 "--mappings", MAPPINGS,
-                "--dst-cell", str(gen_dir / f"{cell}.umap"),
-                "--output",   str(gen_dir / f"{cell}.umap"),
-                "--spec", spec_path,
+                "--spec",     spec_path,
             ], capture_output=True, text=True)
         finally:
             try: os.unlink(spec_path)
             except OSError: pass
-
         if r.returncode != 0:
             print(r.stdout)
             print(r.stderr, file=sys.stderr)

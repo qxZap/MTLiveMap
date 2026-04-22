@@ -31,15 +31,19 @@ internal static class Program
                 "clone-actor"  => CloneActor(args.Skip(1).ToArray()),
                 "clone-cross-cell" => CloneCrossCell(args.Skip(1).ToArray()),
                 "clone-batch"      => CloneBatch(args.Skip(1).ToArray()),
+                "clone-super-batch"=> CloneSuperBatch(args.Skip(1).ToArray()),
                 "inspect-cell" => InspectCell(args.Skip(1).ToArray()),
                 "inspect-export" => InspectExport(args.Skip(1).ToArray()),
                 "inspect-imports" => InspectImports(args.Skip(1).ToArray()),
                 "inspect-by-class" => InspectByClass(args.Skip(1).ToArray()),
                 "find-cell-wp" => FindCellWP(args.Skip(1).ToArray()),
+                "find-cells-batch" => FindCellsBatch(args.Skip(1).ToArray()),
                 "dump-level-extras" => DumpLevelExtras(args.Skip(1).ToArray()),
                 "dump-streaming-grids" => DumpStreamingGridsCmd(args.Skip(1).ToArray()),
                 "decode-layer-keys" => DecodeLayerKeys(args.Skip(1).ToArray()),
                 "register-new-cell" => RegisterNewCell(args.Skip(1).ToArray()),
+                "register-cells-batch" => RegisterCellsBatch(args.Skip(1).ToArray()),
+                "register-and-clone" => RegisterAndClone(args.Skip(1).ToArray()),
                 _ => Fail($"Unknown command: {args[0]}"),
             };
         }
@@ -333,6 +337,45 @@ internal static class Program
         var f = ParseFlags(args);
         string mainPath = f["main"];
         string outPath  = f["output"];
+        var mappings = LoadMappings(f["mappings"]);
+        var asset = new UAsset(mainPath, EngineVer, mappings);
+        RegisterOneCell(asset, f);
+        asset.Write(outPath);
+        Console.WriteLine($"  Wrote {outPath}");
+        return 0;
+    }
+
+    // Register N cells in a SINGLE Jeju_World load/save. Spec JSON is an array
+    // of objects, each with the same keys as register-new-cell flags
+    // (template-cell, new-cell-name, x, y, extent, grid, hier-level,
+    // grid-levels-index, cells-dir, mod-cells-dir).
+    private static int RegisterCellsBatch(string[] args)
+    {
+        var f = ParseFlags(args);
+        string mainPath = f["main"];
+        string outPath  = f["output"];
+        string specPath = f["spec"];
+        var mappings = LoadMappings(f["mappings"]);
+        var asset = new UAsset(mainPath, EngineVer, mappings);
+        var spec = Newtonsoft.Json.Linq.JArray.Parse(File.ReadAllText(specPath));
+        int n = 0;
+        foreach (var entry in spec)
+        {
+            var flags = new Dictionary<string, string>();
+            foreach (var prop in ((Newtonsoft.Json.Linq.JObject)entry).Properties())
+                flags[prop.Name] = prop.Value.ToString();
+            RegisterOneCell(asset, flags);
+            n++;
+        }
+        asset.Write(outPath);
+        Console.WriteLine($"  Wrote {outPath} ({n} cells registered)");
+        return 0;
+    }
+
+    // Body of register-new-cell, reusable against an already-loaded asset so
+    // a batch command can register N cells in one save.
+    private static void RegisterOneCell(UAsset asset, Dictionary<string, string> f)
+    {
         string tplCell  = f["template-cell"];       // e.g. 0W5HFJERQNYIKT4TIFEZBU4PD
         string newCell  = f["new-cell-name"];       // e.g. MODCELLISLAND000000000000
         double tx = double.Parse(f["x"], System.Globalization.CultureInfo.InvariantCulture);
@@ -343,9 +386,6 @@ internal static class Program
         int gridLevelsIndex = int.Parse(f.TryGetValue("grid-levels-index", out var gli) ? gli : "0");
         string cellsDir = f["cells-dir"]; // vanilla cells source, e.g. D:\MT\...\_Generated_
         string modCellsDir = f["mod-cells-dir"]; // output _Generated_ dir in mod
-
-        var mappings = LoadMappings(f["mappings"]);
-        var asset = new UAsset(mainPath, EngineVer, mappings);
 
         // Find the 3 template exports by name
         int tplCellIdx = -1, tplLevelStreamIdx = -1;
@@ -550,9 +590,6 @@ internal static class Program
         mapping.Value.Add(keyProp, valProp);
         Console.WriteLine($"  Registered cell in Grid '{gridName}' level[{gridLevelsIndex}] at grid=({gridX},{gridY}) key=0x{key:X16} layerIdx={newLayerCellIdxInArr}");
 
-        asset.Write(outPath);
-        Console.WriteLine($"  Wrote {outPath}");
-
         // Also copy template cell content .umap + .uexp to new name in mod dir,
         // then rewrite its internal FolderName so UE's package identity matches
         // the new filename (otherwise streaming crashes with EXCEPTION_ACCESS_VIOLATION).
@@ -586,7 +623,6 @@ internal static class Program
             File.WriteAllBytes(path, bytes);
             Console.WriteLine($"  {Path.GetFileName(path)}: replaced {hits} occurrence(s) of template name");
         }
-        return 0;
     }
 
     private static byte[] MakeCStringExtras(string s)
@@ -702,6 +738,73 @@ internal static class Program
     //     "pitch": N?, "yaw": N?, "roll": N?,
     //     "slot": N?, "preload_bp": "..." | null, "label": "..." }
     // ----------------------------------------------------------------------
+    // Fused: registers N new cells in Jeju_World.umap AND runs N clone-batches
+    // on target cell .umaps — ONE mappings load for the entire BP phase
+    // (mappings parse ~30s each was the last remaining redundancy in step 5).
+    // Spec: {
+    //   "main-in":  "<Jeju_World.umap path>",
+    //   "main-out": "<Jeju_World.umap path>",
+    //   "register": [ ...register-cells-batch spec... ],  // may be empty
+    //   "clone":    [ ...clone-super-batch spec... ],     // may be empty
+    // }
+    private static int RegisterAndClone(string[] args)
+    {
+        var f = ParseFlags(args);
+        var mappings = LoadMappings(f["mappings"]);
+        var cfg = (JObject)JToken.Parse(File.ReadAllText(f["spec"]));
+        string mainIn  = (string)cfg["main-in"]!;
+        string mainOut = (string)cfg["main-out"]!;
+        var reg = (JArray?)cfg["register"] ?? new JArray();
+        var clo = (JArray?)cfg["clone"]    ?? new JArray();
+
+        if (reg.Count > 0)
+        {
+            var asset = new UAsset(mainIn, EngineVer, mappings);
+            foreach (var entry in reg)
+            {
+                var flags = new Dictionary<string, string>();
+                foreach (var prop in ((JObject)entry).Properties())
+                    flags[prop.Name] = prop.Value.ToString();
+                RegisterOneCell(asset, flags);
+            }
+            asset.Write(mainOut);
+            Console.WriteLine($"  Wrote {mainOut} ({reg.Count} cells registered)");
+        }
+
+        foreach (var job in clo)
+        {
+            string dstPath = (string)job["dst-cell"]!;
+            string outPath = (string)job["output"]!;
+            var specArr = (JArray)job["spec"]!;
+            Console.WriteLine($"  -- cell {Path.GetFileName(dstPath)} ({specArr.Count} clone(s))");
+            CloneBatchBody(mappings, specArr, dstPath, outPath);
+        }
+        return 0;
+    }
+
+    // Run clone-batch over MANY cells in one process. Input JSON is an array of
+    // {dst-cell, output, spec} objects. The big MotorTown.usmap mappings file
+    // is loaded once — subprocess startup + mappings parse was the dominant
+    // cost of calling clone-batch N times.
+    private static int CloneSuperBatch(string[] args)
+    {
+        var f = ParseFlags(args);
+        var mappings = LoadMappings(f["mappings"]);
+        var jobs = JArray.Parse(File.ReadAllText(f["spec"]));
+        int n = 0;
+        foreach (var job in jobs)
+        {
+            string dstPath = (string)job["dst-cell"]!;
+            string outPath = (string)job["output"]!;
+            var specArr = (JArray)job["spec"]!;
+            Console.WriteLine($"  -- cell {Path.GetFileName(dstPath)} ({specArr.Count} clone(s))");
+            CloneBatchBody(mappings, specArr, dstPath, outPath);
+            n++;
+        }
+        Console.WriteLine($"clone-super-batch: processed {n} cell(s)");
+        return 0;
+    }
+
     private static int CloneBatch(string[] args)
     {
         var f = ParseFlags(args);
@@ -709,8 +812,12 @@ internal static class Program
         string dstPath = f["dst-cell"];
         string outPath = f["output"];
         string specPath = f["spec"];
-
         var specArr = JArray.Parse(File.ReadAllText(specPath));
+        return CloneBatchBody(mappings, specArr, dstPath, outPath);
+    }
+
+    private static int CloneBatchBody(Usmap mappings, JArray specArr, string dstPath, string outPath)
+    {
 
         // Pre-load all BP .uasset files once into the shared mappings so
         // schema lookups succeed during cloning. preload_bp may be a single
@@ -1377,6 +1484,72 @@ internal static class Program
     // Scan all WorldPartitionRuntimeCellDataSpatialHash exports. For each,
     // read Position + Extent + GridName + HierarchicalLevel, then find the
     // cell that would contain target coords.
+    // Load the cell bbox table once. Used by both single find-cell-wp and the
+    // batch variant — parsing the big Jeju_World export list takes seconds, so
+    // resolving N points should share one pass.
+    private static List<(int idx, string name, FVector pos, double extent, string grid, int level, string cellOwner)>
+        LoadCellBBoxes(UAsset asset)
+    {
+        var results = new List<(int idx, string name, FVector pos, double extent, string grid, int level, string cellOwner)>();
+        for (int i = 0; i < asset.Exports.Count; i++)
+        {
+            var e = asset.Exports[i];
+            if (e is not NormalExport ne) continue;
+            string cls = e.ClassIndex.IsImport() ? e.ClassIndex.ToImport(asset).ObjectName.ToString() : "";
+            if (cls != "WorldPartitionRuntimeCellDataSpatialHash") continue;
+            FVector pos = new(0, 0, 0);
+            double extent = 0;
+            string grid = "";
+            int level = -1;
+            foreach (var p in ne.Data)
+            {
+                if (p.Name.ToString() == "Position" && p is UAssetAPI.PropertyTypes.Structs.StructPropertyData sp &&
+                    sp.Value.Count > 0 && sp.Value[0] is UAssetAPI.PropertyTypes.Structs.VectorPropertyData vp)
+                    pos = vp.Value;
+                if (p.Name.ToString() == "Extent" && p is UAssetAPI.PropertyTypes.Objects.FloatPropertyData fp)
+                    extent = fp.Value;
+                if (p.Name.ToString() == "GridName" && p is UAssetAPI.PropertyTypes.Objects.NamePropertyData np)
+                    grid = np.Value.ToString();
+                if (p.Name.ToString() == "HierarchicalLevel" && p is UAssetAPI.PropertyTypes.Objects.IntPropertyData ip)
+                    level = ip.Value;
+            }
+            string owner = e.OuterIndex.IsExport() ? e.OuterIndex.ToExport(asset).ObjectName.ToString() : "";
+            results.Add((i + 1, e.ObjectName.ToString(), pos, extent, grid, level, owner));
+        }
+        return results;
+    }
+
+    // Resolve many XY points against the WP cell bbox table in one load. Spec
+    // is a JSON array of {x, y}; output is a JSON array aligned by index with
+    // {containing:[{name, grid, level, owner}, ...]} per entry.
+    private static int FindCellsBatch(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["main"], EngineVer, LoadMappings(f["mappings"]));
+        var results = LoadCellBBoxes(asset);
+        var points = JArray.Parse(File.ReadAllText(f["spec"]));
+        var outArr = new JArray();
+        foreach (var pt in points)
+        {
+            double px = (double)pt["x"]!;
+            double py = (double)pt["y"]!;
+            var cont = new JArray();
+            foreach (var r in results)
+            {
+                if (px < r.pos.X - r.extent || px > r.pos.X + r.extent) continue;
+                if (py < r.pos.Y - r.extent || py > r.pos.Y + r.extent) continue;
+                cont.Add(new JObject {
+                    ["name"] = r.name, ["grid"] = r.grid,
+                    ["level"] = r.level, ["owner"] = r.cellOwner,
+                });
+            }
+            outArr.Add(new JObject { ["containing"] = cont });
+        }
+        File.WriteAllText(f["output"], outArr.ToString());
+        Console.WriteLine($"find-cells-batch: resolved {points.Count} point(s) against {results.Count} cells");
+        return 0;
+    }
+
     private static int FindCellWP(string[] args)
     {
         var f = ParseFlags(args);
@@ -1384,34 +1557,7 @@ internal static class Program
         double tx = double.Parse(f["x"], System.Globalization.CultureInfo.InvariantCulture);
         double ty = double.Parse(f["y"], System.Globalization.CultureInfo.InvariantCulture);
 
-        var results = new List<(int idx, string name, FVector pos, double extent, string grid, int level, string cellOwner)>();
-        for (int i = 0; i < asset.Exports.Count; i++)
-        {
-            var e = asset.Exports[i];
-            if (e is NormalExport ne)
-            {
-                string cls = e.ClassIndex.IsImport() ? e.ClassIndex.ToImport(asset).ObjectName.ToString() : "";
-                if (cls != "WorldPartitionRuntimeCellDataSpatialHash") continue;
-                FVector pos = new(0, 0, 0);
-                double extent = 0;
-                string grid = "";
-                int level = -1;
-                foreach (var p in ne.Data)
-                {
-                    if (p.Name.ToString() == "Position" && p is UAssetAPI.PropertyTypes.Structs.StructPropertyData sp &&
-                        sp.Value.Count > 0 && sp.Value[0] is UAssetAPI.PropertyTypes.Structs.VectorPropertyData vp)
-                        pos = vp.Value;
-                    if (p.Name.ToString() == "Extent" && p is UAssetAPI.PropertyTypes.Objects.FloatPropertyData fp)
-                        extent = fp.Value;
-                    if (p.Name.ToString() == "GridName" && p is UAssetAPI.PropertyTypes.Objects.NamePropertyData np)
-                        grid = np.Value.ToString();
-                    if (p.Name.ToString() == "HierarchicalLevel" && p is UAssetAPI.PropertyTypes.Objects.IntPropertyData ip)
-                        level = ip.Value;
-                }
-                string owner = e.OuterIndex.IsExport() ? e.OuterIndex.ToExport(asset).ObjectName.ToString() : "";
-                results.Add((i + 1, e.ObjectName.ToString(), pos, extent, grid, level, owner));
-            }
-        }
+        var results = LoadCellBBoxes(asset);
         Console.WriteLine($"Total cell-data exports: {results.Count}");
 
         // Find cells whose bbox contains target (2D, XY)
