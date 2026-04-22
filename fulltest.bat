@@ -11,9 +11,13 @@ dotnet build -c Release --nologo -v quiet
 if errorlevel 1 ( popd & exit /b 1 )
 popd
 
-echo [%TIME%] [1/6] Cleaning mod _Generated_ folder...
+echo [%TIME%] [1/6] Cleaning mod _Generated_ + DC/Actors folders...
 if exist "%GENDIR%" rd /s /q "%GENDIR%"
 mkdir "%GENDIR%"
+rem DC/Actors ships only scene-only placeholder assets — the BP-clone pass
+rem replaces them at runtime, so any stale copies from prior runs would
+rem render as the raw placeholder mesh in-game. Wipe the folder each run.
+if exist "MapChangeTest_P\MotorTown\Content\DC\Actors" rd /s /q "MapChangeTest_P\MotorTown\Content\DC\Actors"
 
 echo [%TIME%] [2/6] Importing meshes (static_meshes.json -^> map_work_changes.json)...
 python import_meshes.py

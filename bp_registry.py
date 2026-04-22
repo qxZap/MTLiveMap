@@ -35,7 +35,7 @@ JEJU_MAIN = GAME_CONTENT / "Maps" / "Jeju" / "Jeju_World.umap"
 # asset_key -> template definition
 REGISTRY: dict[str, dict] = {
     "Garage": {
-        "bp_path":      "/Game/Blueprints/Interaction/GarageActorBP",
+        "bp_path":      "/Game/Objects/GarageActorBP",
         "bp_class":     "GarageActorBP_C",
         "source_umap":  JEJU_MAIN,
         "source_actor": "GarageActor2",
