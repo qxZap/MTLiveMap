@@ -41,20 +41,19 @@ REGISTRY: dict[str, dict] = {
         "source_actor": "GarageActor2",
         "preload_bp":   None,
     },
+    # Lightweight refuel actor — pump + nozzle interaction only. Final-boss
+    # GasStation_C (delivery-point variant) pulls in mission/ownership state
+    # too heavy for a cloned cell; FuelPump_01A_C gives the same fueling
+    # UX without the transitive footprint.
+    "GasStation": {
+        "bp_path":      "/Game/Objects/Fuel/FuelPump_01A",
+        "bp_class":     "FuelPump_01A_C",
+        "source_umap":  JEJU_MAIN,
+        "source_actor": "FuelPump2",
+        "preload_bp":   GAME_CONTENT / "Objects/Fuel/FuelPump_01A.uasset",
+    },
     "ParkingLarge": {
         "bp_path":      "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
-        "bp_class":     "ParkingSpace_Large_01_C",
-        "source_umap":  CELLS_DIR / "0MYO9WO9JBZ10BIDLXVFRXAOG.umap",
-        "source_actor": "ParkingSpace_Large_01_UAID_2CF05D790A1CFFDB01_1915517403",
-        "preload_bp":   GAME_CONTENT / "Objects/ParkingSpace/Interaction_ParkingSpace_Large.uasset",
-    },
-    "ParkingMedium": {
-        # Motor Town ships no dedicated Interaction_ParkingSpace_Medium BP;
-        # the ParkingSpace_Middle_01_C wrapper uses a ChildActorComponent
-        # whose cloned inner actor we can't fully remap. Fall back to the
-        # Interaction_ParkingSpace_Large_C — same gameplay behavior, user
-        # differentiates medium vs large slots by placement.
-        "bp_path":      "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large",
         "bp_class":     "ParkingSpace_Large_01_C",
         "source_umap":  CELLS_DIR / "0MYO9WO9JBZ10BIDLXVFRXAOG.umap",
         "source_actor": "ParkingSpace_Large_01_UAID_2CF05D790A1CFFDB01_1915517403",

@@ -29031,7 +29031,7 @@
             {
                 "X": -618075.0,
                 "Y": -91625.0,
-                "Z": 34960.0,
+                "Z": 34935.0,
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": 0.0,
@@ -29040,7 +29040,7 @@
             },
             {
                 "X": -615525.0,
-                "Y": -91670.0,
+                "Y": -91650.0,
                 "Z": 34930.0,
                 "Pitch": 0.0,
                 "Roll": 0.0,
@@ -29049,18 +29049,8 @@
                 "blueprint_class": "Interaction_ParkingSpace_Small_C"
             },
             {
-                "X": -615500.0,
-                "Y": -92035.0,
-                "Z": 34930.0,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": 180.0,
-                "blueprint_path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Large",
-                "blueprint_class": "ParkingSpace_Large_01_C"
-            },
-            {
                 "X": -615505.0,
-                "Y": -92420.0,
+                "Y": -92425.0,
                 "Z": 34930.0,
                 "Pitch": 0.0,
                 "Roll": 0.0,
@@ -29117,6 +29107,26 @@
                 "Yaw": 180.0,
                 "blueprint_path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small",
                 "blueprint_class": "Interaction_ParkingSpace_Small_C"
+            },
+            {
+                "X": -615505.0,
+                "Y": -92030.0,
+                "Z": 34930.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 180.0,
+                "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
+                "blueprint_class": "ParkingSpace_Large_01_C"
+            },
+            {
+                "X": -614155.0,
+                "Y": -93685.0,
+                "Z": 34930.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": -50.0,
+                "blueprint_path": "/Game/Objects/Fuel/FuelPump_01A",
+                "blueprint_class": "FuelPump_01A_C"
             }
         ]
     }

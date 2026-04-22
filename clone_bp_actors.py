@@ -71,12 +71,20 @@ def resolve_cell(x: float, y: float) -> str | None:
     return owners[0][2]
 
 
-def make_cell_name(x: float, y: float) -> str:
-    """Deterministic 25-char [A-Z0-9] name derived from coords — safe identifier."""
-    h = hashlib.sha1(f"{x:.2f}_{y:.2f}".encode()).hexdigest().upper()
+def make_cell_name(seed: str) -> str:
+    """Deterministic 25-char [A-Z0-9] name derived from a seed string."""
+    h = hashlib.sha1(seed.encode()).hexdigest().upper()
     # Keep 25 alphanumeric chars (vanilla cell names look like base32)
     safe = "".join(c for c in h if c in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")[:25]
     return "MOD" + safe[:22]
+
+
+def entry_seed(e: dict) -> str:
+    """Content-hash seed for a BP entry — guarantees a unique cell per actor
+    identity (same pose + same BP → same cell name across runs)."""
+    return "|".join(str(e.get(k, "")) for k in
+                    ("X", "Y", "Z", "Pitch", "Yaw", "Roll",
+                     "blueprint_path", "blueprint_class"))
 
 
 def register_new_cell(main_path: str, out_path: str, new_cell: str,
@@ -140,14 +148,18 @@ def main():
     # list without bloating per-actor metadata, which UE rejects). Count the
     # slot index per created cell so each actor goes into the next slot.
     slot_counter: dict[str, int] = {}
-    MAX_SLOTS_PER_CREATED_CELL = 4  # matches TEMPLATE_CELL's Actors.Count
+    # One actor per cell. Template has 4 slots but spawning multiple BP actors
+    # in the same cell has proven brittle (neighbor slots sometimes fail to
+    # spawn). 1-per-cell gives reliable placement; we just register more L-1
+    # tiles. User OK'd this explicitly.
+    MAX_SLOTS_PER_CREATED_CELL = 1
 
     # DEBUG: set MAX_BP=1 to clone only the first entry.
     _max = int(os.environ.get("MAX_BP", "999999"))
     if _max < len(entries):
         print(f"  [debug] MAX_BP={_max} — limiting from {len(entries)} entries")
         entries = entries[:_max]
-    # DEBUG: set BP_SKIP=ParkingSmall,ParkingMedium to skip specific BP classes
+    # DEBUG: set BP_SKIP=ParkingSmall,Garage to skip specific BP classes
     _skip = set(k.strip() for k in os.environ.get("BP_SKIP", "").split(",") if k.strip())
     if _skip:
         before = len(entries)
@@ -188,7 +200,12 @@ def main():
         if s == 2: return (-r,      r - t)    # left
         return (-r + t, -r)                   # bottom
 
-    shards: dict[tuple[int, int], list[str]] = {}  # home_grid -> [cell_name per offset index]
+    # Absolute tile (gx, gy) -> cell_name already registered for it. Shared
+    # across homes so two entries whose home tiles spill into the same
+    # physical neighbor tile reuse the same cell instead of registering twice.
+    registered_tiles: dict[tuple[int, int], str] = {}
+    # Per-home spiral progress so we deterministically fan out around each home.
+    home_rings: dict[tuple[int, int], int] = {}
 
     def pick_cell_for_entry(e):
         # Returns (cell_name, is_created)
@@ -196,31 +213,42 @@ def main():
         if cell is not None:
             return cell, False
         home = (int(e["X"] // 12800), int(e["Y"] // 12800))
-        chain = shards.get(home, [])
-        # Reuse existing shard with remaining slots
-        for cell_name in chain:
-            if slot_counter.get(cell_name, 0) < MAX_SLOTS_PER_CREATED_CELL:
-                return cell_name, True
-        # Create a new L-1 tile at the next ring offset.
-        idx = len(chain)
-        dx, dy = tile_offset(idx)
-        tile_gx, tile_gy = home[0] + dx, home[1] + dy
-        # Cell's own center (for WP bounds): middle of that tile.
-        cx = (tile_gx + 0.5) * 12800.0
-        cy = (tile_gy + 0.5) * 12800.0
-        new_cell = make_cell_name(cx, cy)
-        print(f"  [{entry_idx_ref[0]}] shard #{idx+1} for home {home}: creating L-1 cell '{new_cell}' at tile ({tile_gx},{tile_gy})")
+        # Try existing tiles already assigned around this home (any ring step
+        # previously taken for this home, including step 0 = home tile itself).
+        steps_taken = home_rings.get(home, 0)
+        for i in range(steps_taken + 1):
+            dx, dy = tile_offset(i) if i <= steps_taken else (0, 0)
+            tile = (home[0] + dx, home[1] + dy)
+            cname = registered_tiles.get(tile)
+            if cname and slot_counter.get(cname, 0) < MAX_SLOTS_PER_CREATED_CELL:
+                return cname, True
+        # All known tiles for this home full — take the next spiral step.
         nonlocal main_in
-        if not register_new_cell(main_in, main_out, new_cell,
-                                 cx, cy, gen_dir,
-                                 hier_level=-1,
-                                 grid_levels_index=0):
-            return None, False
-        chain.append(new_cell)
-        shards[home] = chain
-        seeded.add(new_cell)
-        main_in = main_out
-        return new_cell, True
+        while True:
+            dx, dy = tile_offset(steps_taken)
+            tile = (home[0] + dx, home[1] + dy)
+            steps_taken += 1
+            home_rings[home] = steps_taken
+            existing = registered_tiles.get(tile)
+            if existing:
+                # Tile already registered (by another home's spiral). Reuse if
+                # it has room; otherwise keep walking.
+                if slot_counter.get(existing, 0) < MAX_SLOTS_PER_CREATED_CELL:
+                    return existing, True
+                continue
+            cx = (tile[0] + 0.5) * 12800.0
+            cy = (tile[1] + 0.5) * 12800.0
+            new_cell = make_cell_name(entry_seed(e))
+            print(f"  [{entry_idx_ref[0]}] home {home} step {steps_taken}: creating L-1 cell '{new_cell}' at tile {tile}")
+            if not register_new_cell(main_in, main_out, new_cell,
+                                     cx, cy, gen_dir,
+                                     hier_level=-1,
+                                     grid_levels_index=0):
+                return None, False
+            registered_tiles[tile] = new_cell
+            seeded.add(new_cell)
+            main_in = main_out
+            return new_cell, True
 
     entry_idx_ref = [0]
     for i, e in enumerate(entries):
