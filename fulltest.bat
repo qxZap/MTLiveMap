@@ -5,6 +5,11 @@ set "UMAP=MapChangeTest_P\MotorTown\Content\Maps\Jeju\Jeju_World.umap"
 set "GENDIR=MapChangeTest_P\MotorTown\Content\Maps\Jeju\Jeju_World\_Generated_"
 set "INJECTOR=MTBPInjector\bin\Release\net8.0\MTBPInjector.exe"
 
+set "SKIP_ACTORS=0"
+:parse_args
+if /i "%~1"=="--skip-actors" ( set "SKIP_ACTORS=1" & shift & goto parse_args )
+if /i "%~1"=="--skip_actors" ( set "SKIP_ACTORS=1" & shift & goto parse_args )
+
 echo [%TIME%] [0/6] Rebuilding MTBPInjector (no-op if up to date)...
 pushd MTBPInjector
 dotnet build -c Release --nologo -v quiet
@@ -38,13 +43,17 @@ for %%F in ("%UMAP%") do set "AFTER=%%~tF"
 if "!AFTER!"=="!BEFORE!" goto wait_main
 echo   Main umap ready.
 
-echo [%TIME%] [5/6] BP actors -^> WP cells (auto-register new cells for far coords)...
-python clone_bp_actors.py ^
-    --config map_work_changes.json ^
-    --gen-dir "%GENDIR%" ^
-    --main-in "%UMAP%" ^
-    --main-out "%UMAP%"
-if errorlevel 1 exit /b 1
+if "%SKIP_ACTORS%"=="1" (
+    echo [%TIME%] [5/6] SKIPPED — --skip-actors passed; no BP actors will be injected.
+) else (
+    echo [%TIME%] [5/6] BP actors -^> WP cells ^(auto-register new cells for far coords^)...
+    python clone_bp_actors.py ^
+        --config map_work_changes.json ^
+        --gen-dir "%GENDIR%" ^
+        --main-in "%UMAP%" ^
+        --main-out "%UMAP%"
+    if errorlevel 1 exit /b 1
+)
 
 echo [%TIME%] [6/6] Packing and deploying...
 call .\modp.bat MapChangeTest_P
