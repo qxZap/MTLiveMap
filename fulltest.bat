@@ -4,48 +4,139 @@ setlocal enabledelayedexpansion
 set "UMAP=MapChangeTest_P\MotorTown\Content\Maps\Jeju\Jeju_World.umap"
 set "GENDIR=MapChangeTest_P\MotorTown\Content\Maps\Jeju\Jeju_World\_Generated_"
 set "INJECTOR=MTBPInjector\bin\Release\net8.0\MTBPInjector.exe"
+set "VANILLA_MAP=D:\MT\Output\Exports\MotorTown\Content\Maps\Jeju\Jeju_World.umap"
+set "CACHE_JSON=Jeju_Worldaa.json"
 
-set "SKIP_ACTORS=0"
+rem ---- Per-step gating. Each step can be skipped independently. Set STEP_X
+rem ---- to "0" to skip that step. --skip-* flips it; --only-* runs just that
+rem ---- step (convenience for iterating on a single slow stage).
+set "STEP_BUILD=1"
+set "STEP_CLEAN=1"
+set "STEP_MESHES=1"
+set "STEP_CONVERT=1"
+set "STEP_MAP=1"
+set "STEP_ACTORS=1"
+set "STEP_PACK=1"
+set "PULL_MAP=0"
+
 :parse_args
-if /i "%~1"=="--skip-actors" ( set "SKIP_ACTORS=1" & shift & goto parse_args )
-if /i "%~1"=="--skip_actors" ( set "SKIP_ACTORS=1" & shift & goto parse_args )
+if "%~1"=="" goto after_args
+if /i "%~1"=="--help"         goto usage
+if /i "%~1"=="-h"             goto usage
+if /i "%~1"=="--pull-map"     set "PULL_MAP=1"     & shift & goto parse_args
+if /i "%~1"=="--skip-build"   set "STEP_BUILD=0"   & shift & goto parse_args
+if /i "%~1"=="--skip-clean"   set "STEP_CLEAN=0"   & shift & goto parse_args
+if /i "%~1"=="--skip-meshes"  set "STEP_MESHES=0"  & shift & goto parse_args
+if /i "%~1"=="--skip-convert" set "STEP_CONVERT=0" & shift & goto parse_args
+if /i "%~1"=="--skip-map"     set "STEP_MAP=0"     & shift & goto parse_args
+if /i "%~1"=="--skip-actors"  set "STEP_ACTORS=0"  & shift & goto parse_args
+if /i "%~1"=="--skip_actors"  set "STEP_ACTORS=0"  & shift & goto parse_args
+if /i "%~1"=="--skip-pack"    set "STEP_PACK=0"    & shift & goto parse_args
+if /i "%~1"=="--only-build"   call :only build   & shift & goto parse_args
+if /i "%~1"=="--only-clean"   call :only clean   & shift & goto parse_args
+if /i "%~1"=="--only-meshes"  call :only meshes  & shift & goto parse_args
+if /i "%~1"=="--only-convert" call :only convert & shift & goto parse_args
+if /i "%~1"=="--only-map"     call :only map     & shift & goto parse_args
+if /i "%~1"=="--only-actors"  call :only actors  & shift & goto parse_args
+if /i "%~1"=="--only-pack"    call :only pack    & shift & goto parse_args
+echo Unknown flag: %~1
+goto usage
 
-echo [%TIME%] [0/6] Rebuilding MTBPInjector (no-op if up to date)...
-pushd MTBPInjector
-dotnet build -c Release --nologo -v quiet
-if errorlevel 1 ( popd & exit /b 1 )
-popd
+:only
+set "STEP_BUILD=0"
+set "STEP_CLEAN=0"
+set "STEP_MESHES=0"
+set "STEP_CONVERT=0"
+set "STEP_MAP=0"
+set "STEP_ACTORS=0"
+set "STEP_PACK=0"
+if /i "%~1"=="build"   set "STEP_BUILD=1"
+if /i "%~1"=="clean"   set "STEP_CLEAN=1"
+if /i "%~1"=="meshes"  set "STEP_MESHES=1"
+if /i "%~1"=="convert" set "STEP_CONVERT=1"
+if /i "%~1"=="map"     set "STEP_MAP=1"
+if /i "%~1"=="actors"  set "STEP_ACTORS=1"
+if /i "%~1"=="pack"    set "STEP_PACK=1"
+exit /b 0
 
-echo [%TIME%] [1/6] Cleaning mod _Generated_ + DC/Actors folders...
-if exist "%GENDIR%" rd /s /q "%GENDIR%"
-mkdir "%GENDIR%"
-rem DC/Actors ships only scene-only placeholder assets — the BP-clone pass
-rem replaces them at runtime, so any stale copies from prior runs would
-rem render as the raw placeholder mesh in-game. Wipe the folder each run.
-if exist "MapChangeTest_P\MotorTown\Content\DC\Actors" rd /s /q "MapChangeTest_P\MotorTown\Content\DC\Actors"
+:usage
+echo fulltest.bat [options]
+echo.
+echo   --pull-map       Cache vanilla Jeju_World.umap -^> %CACHE_JSON% and exit.
+echo                    Source: %VANILLA_MAP%
+echo.
+echo   --skip-build     Skip MTBPInjector rebuild
+echo   --skip-clean     Skip mod _Generated_ + DC/Actors cleanup
+echo   --skip-meshes    Skip import_meshes.py
+echo   --skip-convert   Skip convert2.py
+echo   --skip-map       Skip UAssetGUI fromjson (regenerate Jeju_World.umap)
+echo   --skip-actors    Skip clone_bp_actors.py (BP injection)
+echo   --skip-pack      Skip modp.bat pack/deploy
+echo.
+echo   --only-^<stage^>   Run only that stage. Stages: build, clean, meshes,
+echo                    convert, map, actors, pack
+endlocal
+exit /b 0
 
-echo [%TIME%] [2/6] Importing meshes (static_meshes.json -^> map_work_changes.json)...
-python import_meshes.py
-if errorlevel 1 exit /b 1
+:after_args
 
-echo [%TIME%] [3/6] Building main map JSON (dealerships + static meshes)...
-python convert2.py Jeju_Worldaa.json map_work_changes.json Jeju_World.json
-if errorlevel 1 exit /b 1
+if "%PULL_MAP%"=="1" (
+    echo [%TIME%] Pulling vanilla map from extracted content...
+    if not exist "%VANILLA_MAP%" (
+        echo   ERROR: vanilla Jeju_World.umap not found at:
+        echo   %VANILLA_MAP%
+        echo   Extract the game's cooked content there first.
+        exit /b 1
+    )
+    call :wait_write "%CACHE_JSON%" tojson "%VANILLA_MAP%" "%CACHE_JSON%" VER_UE5_5 MotorTown718P1
+    if errorlevel 1 exit /b 1
+    echo [%TIME%] Cached %CACHE_JSON%. You can now run fulltest.bat normally.
+    endlocal
+    exit /b 0
+)
 
-echo [%TIME%] [4/6] UAssetGUI fromjson -^> Jeju_World.umap...
-set "BEFORE="
-if exist "%UMAP%" for %%F in ("%UMAP%") do set "BEFORE=%%~tF"
-start /B UAssetGUI.exe fromjson Jeju_World.json "%UMAP%" VER_UE5_5 MotorTown718P1
-:wait_main
-timeout /t 1 /nobreak >nul
-if not exist "%UMAP%" goto wait_main
-for %%F in ("%UMAP%") do set "AFTER=%%~tF"
-if "!AFTER!"=="!BEFORE!" goto wait_main
-echo   Main umap ready.
+if "%STEP_BUILD%"=="1" (
+    echo [%TIME%] [0/6] Rebuilding MTBPInjector ^(no-op if up to date^)...
+    pushd MTBPInjector
+    dotnet build -c Release --nologo -v quiet
+    if errorlevel 1 ( popd & exit /b 1 )
+    popd
+) else ( echo [%TIME%] [0/6] skipped )
 
-if "%SKIP_ACTORS%"=="1" (
-    echo [%TIME%] [5/6] SKIPPED — --skip-actors passed; no BP actors will be injected.
-) else (
+if "%STEP_CLEAN%"=="1" (
+    echo [%TIME%] [1/6] Cleaning mod _Generated_ + DC/Actors folders...
+    if exist "%GENDIR%" rd /s /q "%GENDIR%"
+    mkdir "%GENDIR%"
+    rem DC/Actors ships only scene-only placeholder assets — the BP-clone pass
+    rem replaces them at runtime, so any stale copies from prior runs would
+    rem render as the raw placeholder mesh in-game. Wipe the folder each run.
+    if exist "MapChangeTest_P\MotorTown\Content\DC\Actors" rd /s /q "MapChangeTest_P\MotorTown\Content\DC\Actors"
+) else ( echo [%TIME%] [1/6] skipped )
+
+if "%STEP_MESHES%"=="1" (
+    echo [%TIME%] [2/6] Importing meshes ^(static_meshes.json -^> map_work_changes.json^)...
+    python import_meshes.py
+    if errorlevel 1 exit /b 1
+) else ( echo [%TIME%] [2/6] skipped )
+
+if "%STEP_CONVERT%"=="1" (
+    echo [%TIME%] [3/6] Building main map JSON ^(dealerships + static meshes^)...
+    if not exist "%CACHE_JSON%" (
+        echo   ERROR: %CACHE_JSON% missing. Run: fulltest.bat --pull-map
+        exit /b 1
+    )
+    python convert2.py %CACHE_JSON% map_work_changes.json Jeju_World.json
+    if errorlevel 1 exit /b 1
+) else ( echo [%TIME%] [3/6] skipped )
+
+if "%STEP_MAP%"=="1" (
+    echo [%TIME%] [4/6] UAssetGUI fromjson -^> Jeju_World.umap...
+    call :wait_write "%UMAP%" fromjson Jeju_World.json "%UMAP%" VER_UE5_5 MotorTown718P1
+    if errorlevel 1 exit /b 1
+    echo   Main umap ready.
+) else ( echo [%TIME%] [4/6] skipped )
+
+if "%STEP_ACTORS%"=="1" (
     echo [%TIME%] [5/6] BP actors -^> WP cells ^(auto-register new cells for far coords^)...
     python clone_bp_actors.py ^
         --config map_work_changes.json ^
@@ -53,11 +144,37 @@ if "%SKIP_ACTORS%"=="1" (
         --main-in "%UMAP%" ^
         --main-out "%UMAP%"
     if errorlevel 1 exit /b 1
-)
+) else ( echo [%TIME%] [5/6] skipped )
 
-echo [%TIME%] [6/6] Packing and deploying...
-call .\modp.bat MapChangeTest_P
-if errorlevel 1 exit /b 1
+if "%STEP_PACK%"=="1" (
+    echo [%TIME%] [6/6] Packing and deploying...
+    call .\modp.bat MapChangeTest_P
+    if errorlevel 1 exit /b 1
+) else ( echo [%TIME%] [6/6] skipped )
 
 echo [%TIME%] Done.
 endlocal
+exit /b 0
+
+rem ------------------------------------------------------------------
+rem :wait_write <target-file> <UAssetGUI-verb> <UAssetGUI-args...>
+rem Runs UAssetGUI.exe in the background and blocks until the target file
+rem has been (re)written. Needed because UAssetGUI's fromjson/tojson paths
+rem are asynchronous — the batch would otherwise race ahead with a stale
+rem file. Extracted from inline labels because cmd doesn't allow labels
+rem inside parenthesized blocks.
+rem ------------------------------------------------------------------
+:wait_write
+setlocal enabledelayedexpansion
+set "TARGET=%~1"
+shift
+set "BEFORE="
+if exist "%TARGET%" for %%F in ("%TARGET%") do set "BEFORE=%%~tF"
+start /B UAssetGUI.exe %1 %2 %3 %4 %5 %6 %7 %8 %9
+:wait_write_loop
+timeout /t 1 /nobreak >nul
+if not exist "%TARGET%" goto wait_write_loop
+for %%F in ("%TARGET%") do set "AFTER=%%~tF"
+if "!AFTER!"=="!BEFORE!" goto wait_write_loop
+endlocal
+exit /b 0

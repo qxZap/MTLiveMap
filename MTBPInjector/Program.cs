@@ -1058,6 +1058,52 @@ internal static class Program
                 }
                 dst.Exports.Add(cloned);
             }
+
+            // Optional: repoint the cloned actor at a NEW BP class shipped by
+            // the mod (makes it a distinct delivery-point type rather than
+            // another copy of the source's class). ClassIndex/TemplateIndex
+            // are remapped to imports that resolve to /Game/<target_bp_path>.
+            string? tgtPath  = (string?)s["target_bp_path"];
+            string? tgtClass = (string?)s["target_bp_class"];
+            if (newActor != null && !string.IsNullOrEmpty(tgtPath) && !string.IsNullOrEmpty(tgtClass))
+            {
+                int srcClsZ = -srcActor.ClassIndex.Index - 1;
+                int srcTplZ = -srcActor.TemplateIndex.Index - 1;
+                var srcClsImp = src.Imports[srcClsZ];
+                var srcTplImp = src.Imports[srcTplZ];
+                int srcPkgZ  = -srcClsImp.OuterIndex.Index - 1;
+                var srcPkgImp = src.Imports[srcPkgZ];
+
+                // New package import (/Game/.../ModDrop_1)
+                EnsureName(dst, tgtPath!);
+                EnsureName(dst, srcPkgImp.ClassPackage.ToString());
+                EnsureName(dst, srcPkgImp.ClassName.ToString());
+                dst.Imports.Add(new UAssetAPI.Import(
+                    srcPkgImp.ClassPackage.ToString(), srcPkgImp.ClassName.ToString(),
+                    new FPackageIndex(0), tgtPath!, srcPkgImp.bImportOptional, dst));
+                int newPkgIdx = -dst.Imports.Count;
+
+                // New class import (ModDrop_1_C, outer = new package)
+                EnsureName(dst, tgtClass!);
+                EnsureName(dst, srcClsImp.ClassPackage.ToString());
+                EnsureName(dst, srcClsImp.ClassName.ToString());
+                dst.Imports.Add(new UAssetAPI.Import(
+                    srcClsImp.ClassPackage.ToString(), srcClsImp.ClassName.ToString(),
+                    new FPackageIndex(newPkgIdx), tgtClass!, srcClsImp.bImportOptional, dst));
+                int newClsIdx = -dst.Imports.Count;
+
+                // New template import (Default__ModDrop_1_C, classpkg = new path)
+                string tplName = "Default__" + tgtClass;
+                EnsureName(dst, tplName);
+                dst.Imports.Add(new UAssetAPI.Import(
+                    tgtPath!, tgtClass!,
+                    new FPackageIndex(newPkgIdx), tplName, srcTplImp.bImportOptional, dst));
+                int newTplIdx = -dst.Imports.Count;
+
+                newActor.ClassIndex    = new FPackageIndex(newClsIdx);
+                newActor.TemplateIndex = new FPackageIndex(newTplIdx);
+                Console.WriteLine($"  Rewrote actor class {srcClsImp.ObjectName} -> {tgtClass} ({tgtPath})");
+            }
             // Remap prop refs on every newly-added export (they still hold
             // source-side FPackageIndex values until now).
             for (int k = 0; k < cloneSet.Count; k++)
@@ -1122,11 +1168,56 @@ internal static class Program
                 if (strlen > 0 && 8 + strlen + 16 <= newActor.Extras.Length)
                     Guid.NewGuid().ToByteArray().CopyTo(newActor.Extras, 8 + strlen);
             }
+            // Persistent-level actors carry their identity metadata directly
+            // in Extras: count(1) + strlen + actor-label + FGuid(16) + pad(16).
+            // Cell actors have empty Extras and use the level body's metadata
+            // table instead. When injecting into the main map this blob is
+            // what UE's mission/save subsystems use to key the actor — clone
+            // missed it entirely, so the new actor was anonymous.
+            bool mainInject = (bool?)s["main_inject"] ?? false;
+            if (mainInject && newActor != null)
+            {
+                string label = newActor.ObjectName.ToString();
+                var nameBytes = System.Text.Encoding.UTF8.GetBytes(label);
+                var ms = new System.IO.MemoryStream();
+                var bw = new System.IO.BinaryWriter(ms);
+                bw.Write((uint)1);                       // count
+                bw.Write((uint)(nameBytes.Length + 1));  // strlen incl. null
+                bw.Write(nameBytes);
+                bw.Write((byte)0);
+                bw.Write(Guid.NewGuid().ToByteArray());  // FGuid (16)
+                bw.Write(new byte[16]);                  // pad
+                newActor.Extras = ms.ToArray();
+                Console.WriteLine($"  Synthesized {newActor.Extras.Length}b actor-metadata Extras for {label}");
+            }
 
             Console.WriteLine($"  [{idx}] cloned '{srcActorName}' -> #{newActorNum} ({srcChildren.Count} children, {dst.Imports.Count} imports total)");
 
             int? slot = (int?)s["slot"];
-            if (slot.HasValue) replaceOps.Add((slot.Value, newActorNum));
+            if (slot.HasValue)
+            {
+                replaceOps.Add((slot.Value, newActorNum));
+            }
+            else if (dst.Exports[dstLevelIdx] is UAssetAPI.ExportTypes.LevelExport lvlForSlot)
+            {
+                // No explicit slot: for vanilla-cell injections (where the
+                // cell already has real actors in every used slot and we just
+                // want to add one more), find an already-null slot and use
+                // it. That keeps Actors.Count invariant so the level body
+                // layout UE validates against stays intact.
+                int openSlot = -1;
+                for (int i = 0; i < lvlForSlot.Actors.Count; i++)
+                    if (lvlForSlot.Actors[i].Index == 0) { openSlot = i; break; }
+                if (openSlot >= 0)
+                {
+                    replaceOps.Add((openSlot, newActorNum));
+                    Console.WriteLine($"    [auto-slot] chose empty Actors[{openSlot}]");
+                }
+                else
+                {
+                    Console.Error.WriteLine("    [auto-slot] WARNING: no empty Actors slot; actor will not spawn");
+                }
+            }
         }
 
         // Apply Actors-list slot replacements ONCE at the end (single patch on the level body)
@@ -1136,22 +1227,20 @@ internal static class Program
                 ReplaceActorSlotInLevel(dst, dstPath, slot, idx2);
         }
 
-        // Null any Actor slot we didn't explicitly fill. The L-1 template cell
-        // has 4 slots occupied by unrelated vanilla actors (e.g. a container
-        // ship) — if we leave them alone, every cloned cell spawns those too.
-        // Setting the ref to FPackageIndex(0) orphans the exports so nothing
-        // attaches to the level.
+        // Null any Actor slot we didn't explicitly fill. ONLY for cells we
+        // created from an L-1 template (whose unused slots reference unrelated
+        // junk like container ships). Vanilla cells have real neighbors in
+        // those slots — nulling would wipe legitimate actors.
+        bool anyTemplateCell = specArr.Any(se => se["slot"] != null);
+        if (anyTemplateCell && dst.Exports[dstLevelIdx] is UAssetAPI.ExportTypes.LevelExport lvl)
         {
-            if (dst.Exports[0] is UAssetAPI.ExportTypes.LevelExport lvl)
+            var used = new HashSet<int>(replaceOps.Select(o => o.slot));
+            for (int i = 0; i < lvl.Actors.Count; i++)
             {
-                var used = new HashSet<int>(replaceOps.Select(o => o.slot));
-                for (int i = 0; i < lvl.Actors.Count; i++)
-                {
-                    if (used.Contains(i)) continue;
-                    int cur = lvl.Actors[i].Index;
-                    if (cur == 0) continue;
-                    ReplaceActorSlotInLevel(dst, dstPath, i, 0);
-                }
+                if (used.Contains(i)) continue;
+                int cur = lvl.Actors[i].Index;
+                if (cur == 0) continue;
+                ReplaceActorSlotInLevel(dst, dstPath, i, 0);
             }
         }
 

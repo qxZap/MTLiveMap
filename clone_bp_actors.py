@@ -241,7 +241,10 @@ def main():
 
     def pick_cell_for_entry(e, i):
         # Returns (cell_name, is_created)
-        cell = resolved_cells[i]
+        bp_class = e.get("blueprint_class", "")
+        tpl = template_for_class(bp_class)
+        force_new = bool(tpl and tpl.get("force_new_cell"))
+        cell = None if force_new else resolved_cells[i]
         if cell is not None:
             return cell, False
         home = (int(e["X"] // 12800), int(e["Y"] // 12800))
@@ -276,6 +279,12 @@ def main():
             seeded.add(new_cell)
             return new_cell, True
 
+    # Sentinel for entries injected directly into the persistent level of the
+    # main map instead of into a WP cell. clone-batch can target Jeju_World.umap
+    # the same way it targets a cell — the underlying actor-clone code only
+    # cares about LevelExport semantics, not the package name.
+    MAIN_LEVEL_KEY = "__MAIN_LEVEL__"
+
     entry_idx_ref = [0]
     for i, e in enumerate(entries):
         entry_idx_ref[0] = i
@@ -283,6 +292,15 @@ def main():
         tpl_entry = template_for_class(bp_class)
         if not tpl_entry:
             print(f"  [{i}] skipped — no registry entry for {bp_class}")
+            continue
+
+        # Heavy BPs (delivery points etc.) crash the WP cell-streaming path
+        # because cells validate stricter than persistent-level load. Route
+        # them straight into Jeju_World.umap — same context as vanilla
+        # instances of the class.
+        if tpl_entry.get("inject_into_main"):
+            print(f"  [{i}] {bp_class} @ ({e['X']}, {e['Y']}, {e['Z']}) -> MAIN persistent level")
+            grouped.setdefault(MAIN_LEVEL_KEY, []).append((e, tpl_entry, False, None))
             continue
 
         cell, needs_create = pick_cell_for_entry(e, i)
@@ -329,6 +347,17 @@ def main():
                 "yaw":   e.get("Yaw", 0.0),
                 "roll":  e.get("Roll", 0.0),
             }
+            # Optional: rewrite the cloned actor's class to point at a NEW
+            # BP class shipped by the mod (makes the instance a distinct type
+            # rather than another copy of the source's class).
+            if tpl.get("target_bp_path") and tpl.get("target_bp_class"):
+                spec["target_bp_path"]  = tpl["target_bp_path"]
+                spec["target_bp_class"] = tpl["target_bp_class"]
+            # Tell CloneBatch to synthesize the persistent-level actor
+            # metadata blob (label + FGuid) when this entry targets the main
+            # map; without it MT's mission/save subsystems can't key the actor.
+            if tpl.get("inject_into_main"):
+                spec["main_inject"] = True
             pb = tpl.get("preload_bp")
             if pb:
                 if isinstance(pb, (list, tuple)):
@@ -340,11 +369,21 @@ def main():
             specs.append(spec)
         if not specs:
             continue
-        jobs.append({
-            "dst-cell": str(gen_dir / f"{cell}.umap"),
-            "output":   str(gen_dir / f"{cell}.umap"),
-            "spec":     specs,
-        })
+        # MAIN_LEVEL_KEY routes the clone batch at Jeju_World.umap itself so
+        # the cloned actor lands in the persistent level alongside the
+        # vanilla instances of its class.
+        if cell == MAIN_LEVEL_KEY:
+            jobs.append({
+                "dst-cell": main_out,  # main-in will already be patched by the
+                "output":   main_out,  # register phase by the time clone runs
+                "spec":     specs,
+            })
+        else:
+            jobs.append({
+                "dst-cell": str(gen_dir / f"{cell}.umap"),
+                "output":   str(gen_dir / f"{cell}.umap"),
+                "spec":     specs,
+            })
 
     if pending_cells or jobs:
         combined = {

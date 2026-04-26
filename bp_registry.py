@@ -45,6 +45,18 @@ REGISTRY: dict[str, dict] = {
     # GasStation_C (delivery-point variant) pulls in mission/ownership state
     # too heavy for a cloned cell; FuelPump_01A_C gives the same fueling
     # UX without the transitive footprint.
+    # Container Export/Import endpoint — supports BOTH cargo pickup AND
+    # drop, unlike the drop-only ComonDrop. Cloned straight into the main
+    # map's persistent level so it gets the same load context as the four
+    # vanilla ContainerDropper instances already in Jeju.
+    "DeliveryPoint": {
+        "bp_path":          "/Game/Objects/Mission/Delivery/DeliveryPoint/Container_ExportImport",
+        "bp_class":         "Container_ExportImport_C",
+        "source_umap":      JEJU_MAIN,
+        "source_actor":     "ContainerDropper",
+        "preload_bp":       GAME_CONTENT / "Objects/Mission/Delivery/DeliveryPoint/Container_ExportImport.uasset",
+        "inject_into_main": True,
+    },
     "GasStation": {
         "bp_path":      "/Game/Objects/Fuel/FuelPump_01A",
         "bp_class":     "FuelPump_01A_C",
