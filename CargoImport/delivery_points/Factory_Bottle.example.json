@@ -1,0 +1,32 @@
+{
+  "_source_class": "Factory_Bottle_C",
+  "label": "Factory_Bottle",
+  "recipes": [
+    {
+      "outputs": {
+        "BottlePallete": 8
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 60.0
+    },
+    {
+      "outputs": {
+        "BottlePallete": 2
+      },
+      "input_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 30.0
+    },
+    {
+      "inputs": {
+        "Fuel": 1
+      },
+      "speed": 2.0,
+      "time_seconds": 300.0
+    }
+  ],
+  "visuals_seen": {}
+}

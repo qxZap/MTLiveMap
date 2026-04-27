@@ -770,3 +770,300 @@ For the source to clone reliably, pick an instance whose direct children
 Some BP classes only exist wrapped inside a `ChildActorComponent`
 (e.g. `Interaction_PublicParkingSpac_C`). Those can't be cloned standalone
 — register the wrapper class (`ParkingSpace_Small_02_C` etc.) instead.
+
+## Persistent-Level vs WP-Cell BP Injection
+
+Heavy BPs (delivery points, factories, gas stations) **crash** when cloned
+into a WP cell — the cell-streaming path validates package imports and
+runtime state more strictly than persistent-level load. Symptom: "corrupt
+data" or memory leak on player approach.
+
+The same actors clone cleanly when injected into `Jeju_World.umap`'s
+**persistent level** (which is where the vanilla instances live). Same
+load context as the originals → full subsystem init, mission-system
+discovery, no streaming gap.
+
+`bp_registry` flag `inject_into_main: True` routes the entry through
+that path. CloneBatch uses `dst-cell = Jeju_World.umap` directly.
+
+### Required differences from cell injection
+
+1. **Synthesize actor-metadata Extras** (the `count + strlen + label +
+   FGuid + pad` blob). Vanilla persistent-level actors carry it; WP cell
+   actors leave Extras empty and use the level body's metadata table.
+   Without it, MT's mission/save subsystems can't key the actor.
+
+2. **Disable recursive ObjectProperty closure** for these clones. Heavy
+   BPs reference sibling actors (Factory_Concrete's
+   `InputInventoryShare`) — recursing duplicates them as new actors
+   that conflict with the originals. Instead let `RemapIdx` pass refs
+   through unchanged (src and dst are the same package, indices stay
+   valid).
+
+3. **Auto-slot reservation across the batch.** When multiple
+   main-injected entries need an empty `Actors[]` slot, the picker must
+   exclude slots already reserved by earlier entries in this batch
+   (replace ops fire at end). Otherwise all entries grab the first null
+   slot and only the last write survives.
+
+### Discovered delivery-point archetypes
+
+- **Standalone (no chaining):** `Farm_*_C` classes have no
+  `InputInventoryShare`. Each placed instance is its own
+  pickup-and-drop loop.
+- **Two-way:** `Container_ExportImport_C` (`ContainerDropper` instances).
+  Both pickup and drop without external dependencies.
+- **Chained:** `Factory_*_C` reference sibling delivery points as
+  inputs — cloning one with pass-through enabled makes the new spot a
+  satellite of the original factory rather than a new endpoint.
+
+### MT-doesn't-honor-instance-overrides
+
+`ProductionConfigs` (the recipe table on every `MTDeliveryPoint`) is
+read **only from the BP CDO**. Adding a `ProductionConfigs`
+ArrayPropertyData to the cloned actor instance has no effect. To
+customize a recipe (input cargo, output cargo, speed multiplier,
+production time) the only path is a NEW BP CLASS:
+
+1. Byte-copy the source `.uasset` + `.uexp` to a new same-length name
+   in the mod folder.
+2. Byte-replace the class name string everywhere in both files. UAsset
+   layout is preserved as long as the new name has the same length
+   (`Farm_Corn` → `ModFarmTr` works; `ComonDrop` → `ModDrop_1` works).
+3. Mutate the new BP's `Default__<class>_C` `ProductionConfigs` array
+   via UAssetAPI (load, edit struct values, save).
+4. Register a `target_bp_path` / `target_bp_class` override in
+   `bp_registry`. CloneBatch then rewrites the cloned actor's
+   `ClassIndex` and `TemplateIndex` to point at the new mod-shipped
+   class instead of the source's class.
+
+`MTProductionConfig` struct fields (from `Farm_Corn` / `Factory_*` CDO):
+
+| Field                           | Type                            |
+|---------------------------------|---------------------------------|
+| `InputCargos`                   | Map<Name, Int> (cargo → count)  |
+| `InputCargoTypes`               | Map<Enum (EDeliveryCargoType), Int> |
+| `InputCargoGameplayTagQuery`    | Struct GameplayTagQuery         |
+| `OutputCargos`                  | Map<Name, Int>                  |
+| `OutputCargoTypes`              | Map<Enum, Int>                  |
+| `OutputCargoRowGameplayTagQuery`| Struct GameplayTagQuery         |
+| `bStoreInputCargo`              | Bool                            |
+| `ProductionTimeSeconds`         | Float (seconds)                 |
+| `ProductionSpeedMultiplierZoneCoeffs` | (zone-based)             |
+| `ProductionSpeedMultiplier`     | Float (1.0 = baseline)          |
+| `LocalFoodSupply`               | (population-related)            |
+| `bHidden`                       | Bool                            |
+
+### Display-name strings
+
+Vanilla delivery points read `PointName` from a StringTable (e.g.
+`/Game/DataAsset/StringTables/Delivery`). The MoreTuning mod's
+convention works here too: use `MTTextByTexts` with variant `None` and
+the literal string as the name — bypasses the table lookup entirely.
+Useful when adding a custom-named cloned delivery point without
+patching the central string table asset.
+
+## Pak Load Order Gotcha
+
+UE loads `_P.pak` files in alphabetical order; later names shadow
+earlier ones for any file path they both contain. `MapChangeTest_P`
+sorts before `Racetrack_P`, so if both modify
+`MotorTown/Content/Maps/Jeju/Jeju_World.umap`, Racetrack's version
+wins and our changes look like they didn't apply.
+
+Diagnose with `repak list <pak> | grep Jeju_World` on each installed
+pak. Resolve by renaming our pak to sort last (e.g. `ZMapChange_P`)
+or removing the conflicting pak.
+
+## Vanilla-Cell Injection: Per-Actor Metadata Blob Mismatch
+
+`ReplaceActorSlotInLevel` only swaps the `FPackageIndex` in the
+`Actors` array. The level body also has a separate **per-actor
+metadata blob** (one entry per slot, containing GUID + package name).
+Vanilla cells fill this blob with metadata describing each real actor;
+our template L-1 cells have placeholder/empty metadata that UE
+tolerates being wrong.
+
+When you replace a slot in a **vanilla** cell, the blob still
+describes the OLD actor → UE's integrity check trips → "corrupt data"
+crash. Workaround: `force_new_cell: True` in registry skips the
+vanilla-cell route and always registers a fresh mod cell at the
+target coords. Real fix would parse and patch the metadata blob
+(deferred — adds complexity for marginal gain).
+
+## Registry Lookup by `asset_key`, Not `blueprint_class`
+
+When two `bp_registry` entries share the same `blueprint_class`
+(e.g. `FarmCorn` and `FarmTransformer` both clone `Farm_Corn_C`),
+class-based lookup is ambiguous and silently picks the first match.
+`import_meshes.py` carries the placeholder's `asset_key` through to
+`map_work_changes.json`'s `blueprint_actors` entries; `clone_bp_actors`
+prefers `REGISTRY[asset_key]` over `template_for_class`.
+
+## Cargo Catalog (`/Game/DataAsset/Cargos.uasset`)
+
+Single `DataTableExport` named **Cargos** with 91 rows. Each row's `Name`
+is the cargo identifier referenced by name from delivery-point recipes
+(`MTProductionConfig.InputCargos` / `OutputCargos` keys), cargo orders,
+mission scripts, etc. Adding a custom delivery point uses these names
+verbatim (e.g. `"Transformer_50MVA"`, `"CrudeOil"`, `"CornPallet"`).
+
+### Row schema (per cargo)
+
+| Field                                  | Type      | Notes                                                        |
+|----------------------------------------|-----------|--------------------------------------------------------------|
+| `bDepcreated`                          | Bool      | `true` excludes from spawning. (sic, MT typo)                |
+| `Name`                                 | Text      | In-game display label (string-table or inline `MTTextByTexts` variant=None). |
+| `Name2`                                | Struct    | Secondary label, often empty.                                |
+| `CargoType`                            | Enum      | `EDeliveryCargoType`. See distribution below.                |
+| `CargoSpaceTypes`                      | Array     | Which cargo bays accept this cargo.                          |
+| `VolumeSize`                           | Float     | Used for capacity packing.                                   |
+| `WeightRange`                          | Struct    | Min/max weight for spawn variance.                           |
+| `bAllowStacking`                       | Bool      |                                                              |
+| `bUseDamage`                           | Bool      | Damage tracked & affects payout.                             |
+| `Fragile`                              | Float     | Damage multiplier when handled rough.                        |
+| `SpawnProbability`                     | Int       | Weight in random pickup generation.                          |
+| `NumCargoMin` / `NumCargoMax`          | Int       | Pickup batch size range.                                     |
+| `PaymentPer1Km`                        | Float     | Base $/km.                                                   |
+| `PaymentPer1KmMultiplierByMaxWeight`   | Float     | Heavy cargo bonus.                                           |
+| `PaymentSqrtRatio`                     | Float     | Diminishing-returns curve on volume/distance.                |
+| `PaymentSqrtRatioMinCapcity`           | Int       |                                                              |
+| `BasePayment`                          | Int64     | Floor payout regardless of distance.                         |
+| `ExportPrice` / `ImportPrice`          | Int       | Container Export/Import economy.                             |
+| `MaxDamagePaymentMultiplier`           | Float     | Cap on damage penalty.                                       |
+| `DamageBonusMultiplier`                | Float     |                                                              |
+| `ManualLoadingPayment`                 | Int64     | Bonus for hand-loaded cargo.                                 |
+| `ActorClass`                           | Object    | Spawned BP class for the physical cargo (RawExport instance).|
+| `DumpCargoSurfaceMesh` / `Material`    | Object    | Visual when poured/dumped (sand, gravel etc.).               |
+| `DumpPileActorClass`                   | Object    | Pile-on-ground actor class.                                  |
+| `CargoFlags`                           | Int       | Bitfield (export/import allowed, hidden, etc.).              |
+| `GameplayTags`                         | Struct    | Tag query targets (used by some delivery points).            |
+| `MinDeliveryDistance` / `Max...`       | Float     | Mission filtering.                                           |
+| `bTimer` + `BaseTimeSeconds` + ...     | Bool/Float| Timed delivery missions (perishable).                        |
+| `bHoldingOffsetUsingItemBounds`        | Bool      |                                                              |
+| `Colors`                               | Array     | Optional palette variants.                                   |
+
+### `CargoType` distribution
+
+Roughly half the rows have `CargoType = None` (generic). The remainder
+are tagged for filtering by delivery points / vehicles:
+
+| Type             | Count |
+|------------------|-------|
+| `None`           | 22    |
+| `SmallPackage`   | 15    |
+| `LargePackage`   | 15    |
+| `Food`           | 8     |
+| `Furniture`      | 7     |
+| `Container`      | 5     |
+| `Stone`          | 5     |
+| `Log`            | 4     |
+| `FinalProduct`   | 2     |
+| `Sand`           | 2     |
+| `Garbage`        | 2     |
+| `Wood`, `Coal`, `Concrete`, `MilitarySupply` | 1 each |
+
+`MTProductionConfig.InputCargoTypes` / `OutputCargoTypes` use this enum
+for cargo-class routing instead of a specific name (e.g. accept ANY
+cargo of type `LargePackage`).
+
+### All cargo names (alphabetical)
+
+`AirlineMealPallet`, `AppleBox`, `BeanPallet`, `Bed_01`, `Bed_02`,
+`Bed_03`, `BottlePallete`, `BoxPallete_01`, `BoxPallete_02`,
+`BoxPallete_03`, `BreadBox`, `BreadPallet`, `Burger_01`,
+`Burger_01_Signature`, `CabbagePallet`, `CarrotBox`, `Cement`,
+`CheeseBox`, `CheesePallet`, `ChilliPallet`, `Coal`, `Concrete`,
+`Container_20ft_01`, `Container_30ft_10t`, `Container_30ft_20t`,
+`Container_30ft_5t`, `Container_40ft_01`, `CopperConcentrate`,
+`CopperOre`, `CopperRodCoil_2t`, `CornBox`, `CornPallet`, `CrudeOil`,
+`FineSand`, `FormulaSCM`, `Fuel`, `GiftBox_01`, `GlassBottleBox`,
+`GroceryBag`, `GroceryBox`, `HempPallet`, `IronOre`, `Limestone`,
+`LimestoneRock`, `LiveFish_01`, `Log_20ft`, `Log_30ft_30t`,
+`Log_Oak_12ft`, `Log_Oak_24ft`, `MeatBox`, `MilitarySupplyBox_01`,
+`MilitarySupplyBox_01_Empty`, `Milk`, `Oil`, `OrangeBox`,
+`OrangeBoxes`, `Pizza_01`, `Pizza_01_Premium`, `Pizza_02`,
+`Pizza_03`, `Pizza_04`, `Pizza_05`, `PlasticPallete`,
+`PlasticPipes_6m`, `PotatoPallet`, `PowerBox`, `PumpkinBox`,
+`PumpkinPallet`, `QuicklimePallet`, `Raven`, `Rice`, `RicePallet`,
+`Sand`, `SmallBox`, `SnackBox`, `Sofa_01`, `Sofa_02`, `Sofa_03`,
+`Sofa_04`, `SteelCoil_10t`, `SunflowerSeed`, `Tank_250kL`, `Terra`,
+`ToyBoxes`, `Transformer_20MVA`, `Transformer_50MVA`,
+`Transformer_5MVA`, `TrashBag`, `Trash_Big`, `WoodPlank_14ft_5t`,
+`lHBeam_6m`.
+
+### Adding cargo to a recipe
+
+For `inputs`/`outputs` in a `production_recipes` JSON entry, the key
+is the row's `Name` field above and the value is the integer count.
+Two-input recipe example (the FarmTransformer registry entry):
+
+```python
+"production_recipes": [
+    {
+        "inputs":       {"Transformer_50MVA": 1, "CrudeOil": 1},
+        "outputs":      {"CornPallet": 1},
+        "speed":        5.0,
+        "time_seconds": 30.0,
+    },
+],
+```
+
+Names that don't exist in `Cargos.uasset` will silently produce a recipe
+that cannot fire — MT looks up by name with no error handling. Always
+copy from the catalog above (or dump `Cargos.uasset` fresh if the
+game has been updated).
+
+## Marker / Icon Mutation (Pending)
+
+`MTDeliveryPoint`-derived BPs have NO marker/color/icon properties on
+their CDO — `import_cargo_data.py` confirmed `visuals_seen` is empty
+across all 86 vanilla delivery-point classes. The marker that appears
+on the in-game map is therefore set somewhere else, likely:
+
+- Native `MTDeliveryPoint` C++ defaults (not exposed via .uasset).
+- Per-instance properties on the actor in the persistent level (the
+  blob is RawExport, opaque without the schema).
+- Inferred at runtime from cargo type or mission system state.
+
+Empirical observation: a delivery point with NO marker/icon set still
+spawns and is interactable, but is invisible on the world map — a
+de-facto "secret delivery point" mode. Useful future capability:
+intentionally omit marker/icon to hide a destination from the map.
+
+`delivery_points.json` accepts `marker_color` + `icon` fields today and
+the framework propagates them through the registry, but no MTBPInjector
+mutation is wired yet — pending identification of the actual property
+names.
+
+## Generic Delivery-Point Framework (`delivery_points.json`)
+
+Scene placeholder convention: `DeliveryPoint_<KEY>` (asset under
+`/Game/DC/Actors/`). The pipeline:
+
+1. `import_meshes.py` carries `asset_key` through to
+   `map_work_changes.json` `blueprint_actors` entries.
+2. `bp_registry._load_delivery_points` registers each `delivery_points.json`
+   key as `REGISTRY["DeliveryPoint_<KEY>"]`. `clone_bp_actors` looks up
+   by `asset_key`, so the placeholder routes automatically.
+3. Cloning machinery (`source_class`, `target_class`, mod BP path) is
+   **auto-derived** from the key — JSON only carries user intent
+   (`label`, `recipes`, future visuals).
+
+`target_class` is hash-derived to keep byte-rename length-equal with
+the source class (`Farm_Corn` = 9 chars → `Mod` + 6 hash chars).
+
+### Recipe schema (per entry in `recipes`)
+
+| Field           | Type                         | Notes                                       |
+|-----------------|------------------------------|---------------------------------------------|
+| `inputs`        | `{Cargo: Count}` map         | Specific named cargos (see Cargos catalog). |
+| `outputs`       | `{Cargo: Count}` map         |                                             |
+| `input_types`   | `[Type, ...]` or `{Type:N}`  | EDeliveryCargoType filter (Wood, Log etc.). |
+| `output_types`  | `[Type, ...]` or `{Type:N}`  |                                             |
+| `speed`         | float                        | `ProductionSpeedMultiplier` (1.0 default).  |
+| `time_seconds`  | float                        | `ProductionTimeSeconds`.                    |
+
+Recipe with NO `inputs` / `input_types` = timed background production.
+`import_cargo_data.py` dumps every vanilla delivery-point class as a
+ready-to-paste example under `CargoImport/delivery_points/`.

@@ -1,0 +1,16 @@
+{
+  "_source_class": "IronOreWarehouse_C",
+  "label": "IronOreWarehou",
+  "recipes": [
+    {
+      "inputs": {
+        "IronOre": 1
+      },
+      "outputs": {
+        "IronOre": 1
+      },
+      "time_seconds": 1.0
+    }
+  ],
+  "visuals_seen": {}
+}

@@ -1,0 +1,25 @@
+{
+  "_source_class": "LogWarehouse_C",
+  "label": "LogWarehouse",
+  "recipes": [
+    {
+      "inputs": {
+        "Log_20ft": 1
+      },
+      "outputs": {
+        "Log_20ft": 1
+      },
+      "time_seconds": 1.0
+    },
+    {
+      "inputs": {
+        "Log_Oak_12ft": 1
+      },
+      "outputs": {
+        "Log_Oak_12ft": 1
+      },
+      "time_seconds": 1.0
+    }
+  ],
+  "visuals_seen": {}
+}

@@ -1,0 +1,16 @@
+{
+  "_source_class": "Factory_Meat_C",
+  "label": "Factory_Meat",
+  "recipes": [
+    {
+      "outputs": {
+        "MeatBox": 20
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 10.0
+    }
+  ],
+  "visuals_seen": {}
+}

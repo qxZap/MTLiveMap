@@ -1,0 +1,18 @@
+{
+  "_source_class": "Factory_Tank_250kL_C",
+  "label": "Factory_Tank_2",
+  "recipes": [
+    {
+      "inputs": {
+        "lHBeam_6m": 1,
+        "SteelCoil_10t": 3,
+        "PlasticPallete": 1
+      },
+      "outputs": {
+        "Tank_250kL": 1
+      },
+      "time_seconds": 300.0
+    }
+  ],
+  "visuals_seen": {}
+}

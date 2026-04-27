@@ -173,6 +173,11 @@ def main():
             key = entry.get("asset_key")
             if key in PARKING_KEYS:
                 base_entry.update(BP_CLASS_FROM_KEY[key])
+                # Carry the registry key through so clone_bp_actors can look
+                # up the exact entry — multiple entries may share the same
+                # blueprint_class (e.g. FarmCorn + FarmTransformer both use
+                # Farm_Corn_C), so a class-based lookup is ambiguous.
+                base_entry["asset_key"] = key
                 parking.append(base_entry)
             else:
                 base_entry["asset_path"] = raw_path

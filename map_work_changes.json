@@ -39657,7 +39657,8 @@
                 "Roll": 0.0,
                 "Yaw": 110.0,
                 "blueprint_path": "/Game/Objects/GarageActorBP",
-                "blueprint_class": "GarageActorBP_C"
+                "blueprint_class": "GarageActorBP_C",
+                "asset_key": "Garage"
             },
             {
                 "X": -1086207.599,
@@ -39667,7 +39668,8 @@
                 "Roll": 0.0,
                 "Yaw": 20.0,
                 "blueprint_path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small",
-                "blueprint_class": "Interaction_ParkingSpace_Small_C"
+                "blueprint_class": "Interaction_ParkingSpace_Small_C",
+                "asset_key": "ParkingSmall"
             },
             {
                 "X": -1093672.8357,
@@ -39677,7 +39679,8 @@
                 "Roll": 0.0,
                 "Yaw": -70.0,
                 "blueprint_path": "/Game/Objects/Fuel/FuelPump_01A",
-                "blueprint_class": "FuelPump_01A_C"
+                "blueprint_class": "FuelPump_01A_C",
+                "asset_key": "GasStation"
             },
             {
                 "X": -1093739.5296,
@@ -39687,7 +39690,8 @@
                 "Roll": 0.0,
                 "Yaw": -70.0,
                 "blueprint_path": "/Game/Objects/Fuel/FuelPump_01A",
-                "blueprint_class": "FuelPump_01A_C"
+                "blueprint_class": "FuelPump_01A_C",
+                "asset_key": "GasStation"
             },
             {
                 "X": -1082865.1608,
@@ -39697,7 +39701,8 @@
                 "Roll": 0.0,
                 "Yaw": -160.0,
                 "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
-                "blueprint_class": "ParkingSpace_Large_01_C"
+                "blueprint_class": "ParkingSpace_Large_01_C",
+                "asset_key": "ParkingLarge"
             },
             {
                 "X": -1082730.0628,
@@ -39707,7 +39712,8 @@
                 "Roll": 0.0,
                 "Yaw": -160.0,
                 "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
-                "blueprint_class": "ParkingSpace_Large_01_C"
+                "blueprint_class": "ParkingSpace_Large_01_C",
+                "asset_key": "ParkingLarge"
             },
             {
                 "X": -1086075.9212,
@@ -39717,7 +39723,8 @@
                 "Roll": 0.0,
                 "Yaw": 20.0,
                 "blueprint_path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small",
-                "blueprint_class": "Interaction_ParkingSpace_Small_C"
+                "blueprint_class": "Interaction_ParkingSpace_Small_C",
+                "asset_key": "ParkingSmall"
             },
             {
                 "X": -1084337.4551,
@@ -39727,7 +39734,8 @@
                 "Roll": 0.0,
                 "Yaw": 110.0,
                 "blueprint_path": "/Game/Objects/ParkingSpace/ParkingSpace_Large_01",
-                "blueprint_class": "ParkingSpace_Large_01_C"
+                "blueprint_class": "ParkingSpace_Large_01_C",
+                "asset_key": "ParkingLarge"
             },
             {
                 "X": -1094346.0434,
@@ -39737,7 +39745,8 @@
                 "Roll": 0.0,
                 "Yaw": -80.0,
                 "blueprint_path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small",
-                "blueprint_class": "Interaction_ParkingSpace_Small_C"
+                "blueprint_class": "Interaction_ParkingSpace_Small_C",
+                "asset_key": "ParkingSmall"
             },
             {
                 "X": -39030.86,
@@ -39746,8 +39755,9 @@
                 "Pitch": 0.0,
                 "Roll": 0.0,
                 "Yaw": 0.0,
-                "blueprint_path": "/Game/Objects/Mission/Delivery/DeliveryPoint/Container_ExportImport",
-                "blueprint_class": "Container_ExportImport_C"
+                "blueprint_path": "/Game/Objects/Mission/Delivery/DeliveryPoint/Farm_Corn",
+                "blueprint_class": "Farm_Corn_C",
+                "asset_key": "DeliveryPoint_TransformerFarm"
             }
         ]
     }

@@ -1,0 +1,27 @@
+{
+  "_source_class": "Farm_Ranch_C",
+  "label": "Farm_Ranch",
+  "recipes": [
+    {
+      "outputs": {
+        "Milk": 1
+      },
+      "time_seconds": 120.0
+    },
+    {
+      "inputs": {
+        "Fuel": 1
+      },
+      "speed": 2.0,
+      "time_seconds": 600.0
+    },
+    {
+      "input_types": [
+        "LargePackage"
+      ],
+      "speed": 2.0,
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}

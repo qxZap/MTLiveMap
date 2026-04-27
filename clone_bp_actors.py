@@ -25,6 +25,74 @@ from bp_registry import REGISTRY, CELLS_DIR, JEJU_MAIN, template_for_class
 
 MAPPINGS = r"D:\MT\MotorTown718P1.usmap"
 INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
+MOD_CONTENT_ROOT = Path("MapChangeTest_P/MotorTown/Content")
+
+
+def prepare_mod_bp_class(tpl: dict) -> bool:
+    """For registry entries that ship a custom BP class:
+       1. Byte-clone the source .uasset to the target path under the mod, with
+          the source class name byte-replaced by the target class name (both
+          must be the SAME LENGTH so file offsets stay valid).
+       2. If `production_recipes` is set, invoke MTBPInjector mutate-bp-cdo
+          to swap ProductionConfigs in the new BP's CDO.
+       Idempotent: regenerates from source each call so registry edits take
+       effect immediately."""
+    tgt_path  = tpl.get("target_bp_path")
+    tgt_class = tpl.get("target_bp_class")
+    if not tgt_path or not tgt_class:
+        return True
+
+    src_class = tpl["bp_class"]
+    src_short = src_class[:-2] if src_class.endswith("_C") else src_class
+    tgt_short = tgt_class[:-2] if tgt_class.endswith("_C") else tgt_class
+    if len(src_short) != len(tgt_short):
+        print(f"  ERROR: byte-rename needs equal length, got "
+              f"'{src_short}' ({len(src_short)}) vs '{tgt_short}' ({len(tgt_short)})",
+              file=sys.stderr)
+        return False
+
+    rel = tgt_path[len("/Game/"):] if tgt_path.startswith("/Game/") else tgt_path
+    src_uasset = (Path(str(tpl["preload_bp"][0]) if isinstance(tpl["preload_bp"], (list, tuple))
+                       else str(tpl["preload_bp"]))).with_name(src_short + ".uasset")
+    dst_uasset = MOD_CONTENT_ROOT / Path(rel).parent / (tgt_short + ".uasset")
+    dst_uasset.parent.mkdir(parents=True, exist_ok=True)
+
+    recipes = tpl.get("production_recipes")
+    if recipes:
+        # Mutate CDO + byte-rename in one step. Source schema is in mappings,
+        # so the CDO parses correctly there; rename happens after save.
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+            json.dump(recipes, tf)
+            recipes_path = tf.name
+        try:
+            r = subprocess.run([
+                str(INJECTOR), "mutate-bp-cdo",
+                "--mappings",   MAPPINGS,
+                "--src-uasset", str(src_uasset),
+                "--dst-uasset", str(dst_uasset),
+                "--src-class",  src_class,
+                "--dst-class",  tgt_class,
+                "--recipes",    recipes_path,
+            ], capture_output=True, text=True)
+        finally:
+            try: os.unlink(recipes_path)
+            except OSError: pass
+        if r.returncode != 0:
+            print(r.stdout); print(r.stderr, file=sys.stderr); return False
+        for line in r.stdout.splitlines():
+            if line.strip(): print(f"    {line}")
+    else:
+        # No recipe override — just byte-clone the BP under the new name.
+        needle  = src_short.encode("ascii")
+        replace = tgt_short.encode("ascii")
+        for ext in (".uasset", ".uexp"):
+            s = src_uasset.with_suffix(ext)
+            if not s.exists():
+                print(f"  ERROR: source BP missing {s}", file=sys.stderr); return False
+            (dst_uasset.parent / (tgt_short + ext)).write_bytes(s.read_bytes().replace(needle, replace))
+    print(f"  prepared mod BP class {tgt_class} at {tgt_path}")
+    return True
 # Fallback template cell used when creating a new WP cell for far coords.
 # Chosen for a native-only actor list (no BP wrappers to accidentally carry
 # over) and enough actor slots to host dozens of injected BP clones in a
@@ -234,6 +302,18 @@ def main():
     # Jeju_World.umap N times and dominated pipeline runtime.
     pending_cells: list[dict] = []
 
+    # Materialize any mod-shipped BP classes referenced by entries: byte-clone
+    # the source .uasset under the mod folder and (optionally) mutate its CDO.
+    # Done once up-front so all clone-batch work that follows uses the final
+    # state of the mod assets.
+    prepared_keys = set()
+    for e in entries:
+        k = e.get("asset_key")
+        tpl = REGISTRY.get(k) if k else None
+        if not tpl or not tpl.get("target_bp_path") or k in prepared_keys: continue
+        if not prepare_mod_bp_class(tpl): return 1
+        prepared_keys.add(k)
+
     # Pre-resolve every entry's vanilla-cell membership in a single injector
     # invocation. Previously this was a per-entry subprocess call that each
     # reloaded mappings + Jeju_World.umap.
@@ -289,9 +369,15 @@ def main():
     for i, e in enumerate(entries):
         entry_idx_ref[0] = i
         bp_class = e.get("blueprint_class")
-        tpl_entry = template_for_class(bp_class)
+        # Prefer asset_key lookup — multiple registry entries may share the
+        # same blueprint_class (FarmCorn + FarmTransformer both Farm_Corn_C),
+        # so class-based lookup picks the wrong one.
+        key = e.get("asset_key")
+        tpl_entry = REGISTRY.get(key) if key else None
         if not tpl_entry:
-            print(f"  [{i}] skipped — no registry entry for {bp_class}")
+            tpl_entry = template_for_class(bp_class)
+        if not tpl_entry:
+            print(f"  [{i}] skipped — no registry entry for {key or bp_class}")
             continue
 
         # Heavy BPs (delivery points etc.) crash the WP cell-streaming path
@@ -358,6 +444,13 @@ def main():
             # map; without it MT's mission/save subsystems can't key the actor.
             if tpl.get("inject_into_main"):
                 spec["main_inject"] = True
+            # Optional per-instance ProductionConfigs override (delivery-point
+            # recipe table). MT may or may not honor instance overrides for
+            # this property — if not, we'd need a full BP class clone.
+            if tpl.get("production_recipes"):
+                spec["production_recipes"] = tpl["production_recipes"]
+            if tpl.get("actor_label"):
+                spec["actor_label"] = tpl["actor_label"]
             pb = tpl.get("preload_bp")
             if pb:
                 if isinstance(pb, (list, tuple)):

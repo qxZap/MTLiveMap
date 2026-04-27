@@ -1,0 +1,13 @@
+{
+  "_source_class": "Store_LiveFishRestaurant_C",
+  "label": "Store_LiveFish",
+  "recipes": [
+    {
+      "inputs": {
+        "LiveFish_01": 2
+      },
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}

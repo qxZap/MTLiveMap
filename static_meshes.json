@@ -38209,8 +38209,8 @@
                 "ScaleZ": 2.0
             },
             {
-                "asset_path": "/Game/DC/Actors/DeliveryPoint.DeliveryPoint",
-                "asset_key": "DeliveryPoint",
+                "asset_path": "/Game/DC/Actors/DeliveryPoint_TransformerFarm.DeliveryPoint_TransformerFarm",
+                "asset_key": "DeliveryPoint_TransformerFarm",
                 "X": 472972.14,
                 "Y": -319458.17000000004,
                 "Z": 329.65000000000146,

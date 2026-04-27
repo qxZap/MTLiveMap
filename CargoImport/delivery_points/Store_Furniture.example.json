@@ -1,0 +1,16 @@
+{
+  "_source_class": "Store_Furniture_C",
+  "label": "Store_Furnitur",
+  "recipes": [
+    {
+      "input_types": [
+        "Furniture"
+      ],
+      "output_types": [
+        "Furniture"
+      ],
+      "time_seconds": 1.0
+    }
+  ],
+  "visuals_seen": {}
+}

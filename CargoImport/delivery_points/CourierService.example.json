@@ -1,0 +1,25 @@
+{
+  "_source_class": "CourierService_C",
+  "label": "CourierService",
+  "recipes": [
+    {
+      "input_types": [
+        "LargePackage"
+      ],
+      "output_types": [
+        "SmallPackage"
+      ],
+      "time_seconds": 60.0
+    },
+    {
+      "input_types": [
+        "SmallPackage"
+      ],
+      "output_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 1.0
+    }
+  ],
+  "visuals_seen": {}
+}

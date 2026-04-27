@@ -1,0 +1,16 @@
+{
+  "_source_class": "Factory_Cement_C",
+  "label": "Factory_Cement",
+  "recipes": [
+    {
+      "inputs": {
+        "Limestone": 10
+      },
+      "outputs": {
+        "Cement": 10
+      },
+      "time_seconds": 60.0
+    }
+  ],
+  "visuals_seen": {}
+}

@@ -1,0 +1,20 @@
+{
+  "_source_class": "Factory_Transformer_20MVA_C",
+  "label": "Factory_Transf",
+  "recipes": [
+    {
+      "inputs": {
+        "lHBeam_6m": 1,
+        "SteelCoil_10t": 3,
+        "PlasticPallete": 2,
+        "Oil": 1,
+        "CopperRodCoil_2t": 1
+      },
+      "outputs": {
+        "Transformer_20MVA": 1
+      },
+      "time_seconds": 300.0
+    }
+  ],
+  "visuals_seen": {}
+}

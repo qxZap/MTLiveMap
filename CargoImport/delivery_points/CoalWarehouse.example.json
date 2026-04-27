@@ -1,0 +1,16 @@
+{
+  "_source_class": "CoalWarehouse_C",
+  "label": "CoalWarehouse",
+  "recipes": [
+    {
+      "inputs": {
+        "Coal": 1
+      },
+      "outputs": {
+        "Coal": 1
+      },
+      "time_seconds": 1.0
+    }
+  ],
+  "visuals_seen": {}
+}

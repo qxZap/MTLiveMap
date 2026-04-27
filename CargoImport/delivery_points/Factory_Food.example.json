@@ -1,0 +1,25 @@
+{
+  "_source_class": "Factory_Food_C",
+  "label": "Factory_Food",
+  "recipes": [
+    {
+      "outputs": {
+        "AirlineMealPallet": 5
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 30.0
+    },
+    {
+      "outputs": {
+        "AirlineMealPallet": 1
+      },
+      "input_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 10.0
+    }
+  ],
+  "visuals_seen": {}
+}

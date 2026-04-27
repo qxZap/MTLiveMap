@@ -1,0 +1,13 @@
+{
+  "_source_class": "FuelDemand_C",
+  "label": "FuelDemand",
+  "recipes": [
+    {
+      "inputs": {
+        "Fuel": 1
+      },
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}

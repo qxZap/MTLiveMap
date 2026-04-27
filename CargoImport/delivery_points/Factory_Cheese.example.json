@@ -1,0 +1,25 @@
+{
+  "_source_class": "Factory_Cheese_C",
+  "label": "Factory_Cheese",
+  "recipes": [
+    {
+      "inputs": {
+        "Milk": 1
+      },
+      "outputs": {
+        "CheesePallet": 1
+      },
+      "time_seconds": 10.0
+    },
+    {
+      "inputs": {
+        "Milk": 1
+      },
+      "outputs": {
+        "CheeseBox": 5
+      },
+      "time_seconds": 10.0
+    }
+  ],
+  "visuals_seen": {}
+}

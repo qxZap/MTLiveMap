@@ -1,0 +1,35 @@
+{
+  "_source_class": "Factory_Plastic_C",
+  "label": "Factory_Plasti",
+  "recipes": [
+    {
+      "inputs": {
+        "Oil": 20
+      },
+      "outputs": {
+        "PlasticPallete": 20
+      },
+      "time_seconds": 180.0
+    },
+    {
+      "inputs": {
+        "Oil": 20
+      },
+      "outputs": {
+        "PlasticPipes_6m": 20
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 180.0
+    },
+    {
+      "input_types": [
+        "LargePackage"
+      ],
+      "speed": 1.5,
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}

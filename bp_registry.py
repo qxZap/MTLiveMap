@@ -57,6 +57,21 @@ REGISTRY: dict[str, dict] = {
         "preload_bp":       GAME_CONTENT / "Objects/Mission/Delivery/DeliveryPoint/Container_ExportImport.uasset",
         "inject_into_main": True,
     },
+    # Standalone farm endpoint — fully self-contained pickup + drop, no
+    # InputInventoryShare chaining to siblings (unlike Factory_*). Each
+    # placed instance is its own production loop.
+    "FarmCorn": {
+        "bp_path":          "/Game/Objects/Mission/Delivery/DeliveryPoint/Farm_Corn",
+        "bp_class":         "Farm_Corn_C",
+        "source_umap":      JEJU_MAIN,
+        "source_actor":     "CornFarm_2",
+        "preload_bp":       GAME_CONTENT / "Objects/Mission/Delivery/DeliveryPoint/Farm_Corn.uasset",
+        "inject_into_main": True,
+    },
+    # Diagnostic: clone of Farm_Corn with a per-instance ProductionConfigs
+    # override — accepts 50t transformers as input, 5x speed. If MT honors
+    # instance overrides for this property we can author custom recipes
+    # without touching the BP class.
     "GasStation": {
         "bp_path":      "/Game/Objects/Fuel/FuelPump_01A",
         "bp_class":     "FuelPump_01A_C",
@@ -82,6 +97,105 @@ REGISTRY: dict[str, dict] = {
         "preload_bp":   GAME_CONTENT / "Objects/ParkingSpace/Interaction_ParkingSpace_Small.uasset",
     },
 }
+
+
+# ----------------------------------------------------------------------
+# delivery_points.json — JSON-driven custom delivery points.
+#
+# Scene placeholders named `Delivery_<NAME>` map to the entry under
+# `<NAME>` in delivery_points.json. Each entry is converted into a
+# normal REGISTRY entry under the key `Delivery_<NAME>` at import time
+# so the rest of the pipeline picks it up unchanged. Missing entries
+# are logged and skipped (the placeholder is treated as an unknown).
+# ----------------------------------------------------------------------
+import hashlib as _hashlib
+import json as _json
+import sys as _sys
+from pathlib import Path as _Path
+
+_DP_PATH = _Path(__file__).with_name("delivery_points.json")
+_DP_BP_FOLDER = "Objects/Mission/Delivery/DeliveryPoint"
+
+# Default base BP cloned for every JSON-defined delivery point. Farm_Corn_C
+# is standalone (no InputInventoryShare chaining), accepts arbitrary recipe
+# overrides via CDO mutation, and clones cleanly through the persistent-level
+# inject path. Per-entry override is intentionally NOT exposed in
+# delivery_points.json — keeps the JSON purely user-intent.
+_DEFAULT_SOURCE_CLASS = "Farm_Corn_C"
+_DEFAULT_SOURCE_ACTOR = "CornFarm_2"
+
+
+def _derive_target_class(key: str, source_class: str) -> tuple[str, str]:
+    """Generate a unique mod BP class name for a delivery point key.
+    Byte-rename requires the new class string to be the same length as the
+    source's, so we hash the key into the trailing characters and prefix
+    with 'Mod' for readability."""
+    src_short = source_class[:-2] if source_class.endswith("_C") else source_class
+    h = _hashlib.sha1(key.encode()).hexdigest().upper()
+    safe = "".join(c for c in h if c in "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    prefix = "Mod"
+    fill = max(0, len(src_short) - len(prefix))
+    short = (prefix + safe)[:len(src_short)]
+    cls = short + "_C"
+    path = f"/Game/{_DP_BP_FOLDER}/{short}"
+    return cls, path
+
+
+def _derive_actor_label(key: str, max_len: int = 14) -> str:
+    """Convert 'My_Cool_Delivery_Point' -> 'My Cool Delivery Point', clipped
+    to fit inside the source actor's label byte budget (Farm_Corn vanilla
+    label 'NamwonCornFarm' = 14 ASCII bytes). Truncated names show the
+    leading prefix in-game."""
+    label = key.replace("_", " ")
+    return label[:max_len]
+
+
+def _expand_dp_entry(key: str, cfg: dict) -> dict | None:
+    """Materialize a delivery_points.json entry as a REGISTRY-shaped dict.
+    The JSON only carries user intent (recipes, optional label, optional
+    visuals). Cloning machinery (source_class, target_class, paths) is
+    auto-derived from the entry key."""
+    src_class = _DEFAULT_SOURCE_CLASS
+    src_short = src_class[:-2] if src_class.endswith("_C") else src_class
+    src_uasset = GAME_CONTENT / _DP_BP_FOLDER / (src_short + ".uasset")
+    tgt_class, tgt_path = _derive_target_class(key, src_class)
+    tgt_short = tgt_class[:-2]
+    mod_uasset = (_Path("MapChangeTest_P/MotorTown/Content") /
+                  _DP_BP_FOLDER / (tgt_short + ".uasset"))
+    entry = {
+        "bp_path":          f"/Game/{_DP_BP_FOLDER}/{src_short}",
+        "bp_class":         src_class,
+        "source_umap":      JEJU_MAIN,
+        "source_actor":     _DEFAULT_SOURCE_ACTOR,
+        "preload_bp":       [src_uasset, mod_uasset],
+        "inject_into_main": True,
+        "target_bp_class":  tgt_class,
+        "target_bp_path":   tgt_path,
+        "actor_label":      cfg.get("label") or _derive_actor_label(key),
+    }
+    recipes = cfg.get("recipes") or cfg.get("production_recipes")
+    if recipes:
+        entry["production_recipes"] = recipes
+    # Future visuals: marker_color / icon — pass through for downstream code
+    # (not yet wired into MT property mutation).
+    for k in ("marker_color", "icon"):
+        if k in cfg: entry[k] = cfg[k]
+    return entry
+
+
+def _load_delivery_points():
+    if not _DP_PATH.exists(): return
+    try:
+        cfg = _json.loads(_DP_PATH.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"  [delivery_points.json] parse error: {e}", file=_sys.stderr); return
+    for name, dp in cfg.items():
+        if name.startswith("_"): continue   # skip _doc, _comment etc.
+        # Scene placeholder convention: DeliveryPoint_<key>
+        REGISTRY[f"DeliveryPoint_{name}"] = _expand_dp_entry(name, dp)
+
+
+_load_delivery_points()
 
 
 def asset_keys() -> set[str]:

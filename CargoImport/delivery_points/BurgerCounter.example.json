@@ -1,0 +1,17 @@
+{
+  "_source_class": "BurgerCounter_C",
+  "label": "BurgerCounter",
+  "recipes": [
+    {
+      "inputs": {
+        "MeatBox": 1,
+        "CheeseBox": 1
+      },
+      "outputs": {
+        "Burger_01_Signature": 10
+      },
+      "time_seconds": 60.0
+    }
+  ],
+  "visuals_seen": {}
+}

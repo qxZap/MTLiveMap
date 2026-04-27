@@ -1,0 +1,37 @@
+{
+  "_source_class": "WarehouseDoor_C",
+  "label": "WarehouseDoor",
+  "recipes": [
+    {
+      "input_types": [
+        "Container"
+      ],
+      "output_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 60.0
+    },
+    {
+      "input_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 10.0
+    },
+    {
+      "input_types": [
+        "FinalProduct"
+      ],
+      "time_seconds": 10.0
+    },
+    {
+      "inputs": {
+        "MilitarySupplyBox_01_Empty": 1
+      },
+      "outputs": {
+        "MilitarySupplyBox_01": 1
+      },
+      "time_seconds": 10.0
+    }
+  ],
+  "visuals_seen": {}
+}

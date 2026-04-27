@@ -1,0 +1,15 @@
+Coal
+Concrete
+Container
+FinalProduct
+Food
+Furniture
+Garbage
+LargePackage
+Log
+MilitarySupply
+None
+Sand
+SmallPackage
+Stone
+Wood

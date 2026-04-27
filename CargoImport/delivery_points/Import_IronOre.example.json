@@ -1,0 +1,13 @@
+{
+  "_source_class": "Import_IronOre_C",
+  "label": "Import_IronOre",
+  "recipes": [
+    {
+      "outputs": {
+        "IronOre": 1
+      },
+      "time_seconds": 300.0
+    }
+  ],
+  "visuals_seen": {}
+}

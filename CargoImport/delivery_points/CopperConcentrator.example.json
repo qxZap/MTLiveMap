@@ -1,0 +1,16 @@
+{
+  "_source_class": "CopperConcentrator_C",
+  "label": "CopperConcentr",
+  "recipes": [
+    {
+      "inputs": {
+        "CopperOre": 30
+      },
+      "outputs": {
+        "CopperConcentrate": 1
+      },
+      "time_seconds": 60.0
+    }
+  ],
+  "visuals_seen": {}
+}

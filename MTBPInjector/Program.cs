@@ -44,6 +44,7 @@ internal static class Program
                 "register-new-cell" => RegisterNewCell(args.Skip(1).ToArray()),
                 "register-cells-batch" => RegisterCellsBatch(args.Skip(1).ToArray()),
                 "register-and-clone" => RegisterAndClone(args.Skip(1).ToArray()),
+                "mutate-bp-cdo" => MutateBpCdo(args.Skip(1).ToArray()),
                 _ => Fail($"Unknown command: {args[0]}"),
             };
         }
@@ -625,6 +626,180 @@ internal static class Program
         }
     }
 
+    // Build a mod-shipped BP class from a vanilla BP source: load the source
+    // (where UAssetAPI has its schema in mappings, so the CDO parses as
+    // NormalExport), mutate the CDO's ProductionConfigs to the supplied
+    // recipes, save, then byte-rename the source class name to the target
+    // name in the saved bytes (preserves file offsets — both names must be
+    // the same length).
+    // Args:
+    //   --src-uasset path to vanilla BP .uasset
+    //   --dst-uasset path to write the mod BP .uasset (and matching .uexp)
+    //   --src-class  e.g. "Farm_Corn_C"
+    //   --dst-class  e.g. "ModFarmTr_C" (must be the same length as src,
+    //                including the trailing _C)
+    //   --recipes    path to JSON array of recipe specs
+    //   --mappings   usmap
+    // MT reads ProductionConfigs from the BP CDO only — instance overrides
+    // are silently ignored, so this is the only path that actually changes
+    // a delivery point's behavior.
+    private static int MutateBpCdo(string[] args)
+    {
+        var f = ParseFlags(args);
+        var mappings = LoadMappings(f["mappings"]);
+        string srcUasset = f["src-uasset"];
+        string dstUasset = f["dst-uasset"];
+        string srcClass  = f["src-class"];
+        string dstClass  = f["dst-class"];
+        // Strip trailing _C for the byte-rename — we replace the bare class
+        // name everywhere it appears, which catches "Farm_Corn", "Farm_Corn_C",
+        // "Default__Farm_Corn_C", and the package-name string in references.
+        string srcShort = srcClass.EndsWith("_C") ? srcClass[..^2] : srcClass;
+        string dstShort = dstClass.EndsWith("_C") ? dstClass[..^2] : dstClass;
+        if (srcShort.Length != dstShort.Length)
+        {
+            Console.Error.WriteLine($"  byte-rename needs equal length: '{srcShort}' ({srcShort.Length}) vs '{dstShort}' ({dstShort.Length})");
+            return 1;
+        }
+        var recipes = (JArray)JToken.Parse(File.ReadAllText(f["recipes"]));
+
+        var asset = new UAsset(srcUasset, EngineVer, mappings);
+        string cdoName = "Default__" + srcClass;
+        int cdoIdx = -1;
+        for (int i = 0; i < asset.Exports.Count; i++)
+            if (asset.Exports[i].ObjectName.ToString() == cdoName) { cdoIdx = i; break; }
+        if (cdoIdx < 0) { Console.Error.WriteLine($"  CDO {cdoName} not found in {srcUasset}"); return 1; }
+        if (asset.Exports[cdoIdx] is not NormalExport cdo)
+        { Console.Error.WriteLine("  CDO is not a NormalExport — schema missing for src-class?"); return 1; }
+
+        var newProd = BuildProductionConfigs(recipes, asset);
+        int existing = -1;
+        for (int i = 0; i < cdo.Data.Count; i++)
+            if (cdo.Data[i].Name.ToString() == "ProductionConfigs") { existing = i; break; }
+        if (existing >= 0) { cdo.Data[existing] = newProd; Console.WriteLine($"  Replaced ProductionConfigs on {cdoName}"); }
+        else               { cdo.Data.Add(newProd);       Console.WriteLine($"  Added ProductionConfigs to {cdoName}"); }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(dstUasset)!);
+        // Save to dst path first so UAssetAPI handles offsets cleanly. Then
+        // byte-rename the source class in both .uasset and .uexp.
+        asset.Write(dstUasset);
+        var needle  = System.Text.Encoding.ASCII.GetBytes(srcShort);
+        var replace = System.Text.Encoding.ASCII.GetBytes(dstShort);
+        foreach (var ext in new[] { ".uasset", ".uexp" })
+        {
+            string p = Path.ChangeExtension(dstUasset, ext);
+            if (!File.Exists(p)) continue;
+            var bytes = File.ReadAllBytes(p);
+            int hits = 0;
+            for (int i = 0; i <= bytes.Length - needle.Length; i++)
+            {
+                bool ok = true;
+                for (int j = 0; j < needle.Length; j++) if (bytes[i + j] != needle[j]) { ok = false; break; }
+                if (ok) { Array.Copy(replace, 0, bytes, i, replace.Length); hits++; i += needle.Length - 1; }
+            }
+            File.WriteAllBytes(p, bytes);
+            Console.WriteLine($"  {Path.GetFileName(p)}: byte-renamed {hits} occurrence(s) of '{srcShort}'");
+        }
+        return 0;
+    }
+
+    // Build a ProductionConfigs ArrayPropertyData for instance-level override
+    // of MTDeliveryPoint's recipe table. Each recipe is a partial
+    // MTProductionConfig — fields not specified fall back to struct defaults.
+    private static ArrayPropertyData BuildProductionConfigs(JArray recipes, UAsset dst)
+    {
+        EnsureName(dst, "ProductionConfigs");
+        EnsureName(dst, "MTProductionConfig");
+        EnsureName(dst, "InputCargos");
+        EnsureName(dst, "OutputCargos");
+        EnsureName(dst, "InputCargoTypes");
+        EnsureName(dst, "OutputCargoTypes");
+        EnsureName(dst, "EDeliveryCargoType");
+        EnsureName(dst, "ProductionSpeedMultiplier");
+        EnsureName(dst, "ProductionTimeSeconds");
+        EnsureName(dst, "StructProperty");
+        EnsureName(dst, "NameProperty");
+        EnsureName(dst, "IntProperty");
+        EnsureName(dst, "EnumProperty");
+
+        MapPropertyData BuildCargoMap(string fieldName, JObject entries)
+        {
+            var map = new MapPropertyData(FName.FromString(dst, fieldName))
+            {
+                KeyType   = FName.FromString(dst, "NameProperty"),
+                ValueType = FName.FromString(dst, "IntProperty"),
+            };
+            foreach (var kv in entries)
+            {
+                EnsureName(dst, kv.Key);
+                var k = new NamePropertyData(FName.FromString(dst, fieldName))
+                    { Value = FName.FromString(dst, kv.Key) };
+                var v = new IntPropertyData(FName.FromString(dst, fieldName))
+                    { Value = (int)kv.Value! };
+                map.Value.Add(k, v);
+            }
+            return map;
+        }
+        // Cargo-type filter: enum-keyed map. JSON form is either a flat
+        // array ["LargePackage", "Log"] (count defaults to 1) or an object
+        // {"LargePackage": 1, "Log": 2}.
+        MapPropertyData BuildCargoTypeMap(string fieldName, JToken types)
+        {
+            var map = new MapPropertyData(FName.FromString(dst, fieldName))
+            {
+                KeyType   = FName.FromString(dst, "EnumProperty"),
+                ValueType = FName.FromString(dst, "IntProperty"),
+            };
+            void Add(string typeName, int cnt)
+            {
+                string fq = "EDeliveryCargoType::" + typeName;
+                EnsureName(dst, fq);
+                var k = new EnumPropertyData(FName.FromString(dst, fieldName))
+                    { Value = FName.FromString(dst, fq) };
+                var v = new IntPropertyData(FName.FromString(dst, fieldName))
+                    { Value = cnt };
+                map.Value.Add(k, v);
+            }
+            if (types is JArray arr)
+                foreach (var t in arr) Add((string)t!, 1);
+            else if (types is JObject obj)
+                foreach (var kv in obj) Add(kv.Key, (int)kv.Value!);
+            return map;
+        }
+
+        var configs = new PropertyData[recipes.Count];
+        for (int i = 0; i < recipes.Count; i++)
+        {
+            var r = (JObject)recipes[i];
+            var cfg = new StructPropertyData(
+                FName.FromString(dst, i.ToString()),
+                FName.FromString(dst, "MTProductionConfig"))
+            {
+                Value = new List<PropertyData>(),
+            };
+            if (r["inputs"] is JObject ins && ins.Count > 0)
+                cfg.Value.Add(BuildCargoMap("InputCargos", ins));
+            if (r["outputs"] is JObject outs && outs.Count > 0)
+                cfg.Value.Add(BuildCargoMap("OutputCargos", outs));
+            if (r["input_types"] is JToken intypes && intypes.Type != JTokenType.Null)
+                cfg.Value.Add(BuildCargoTypeMap("InputCargoTypes", intypes));
+            if (r["output_types"] is JToken outtypes && outtypes.Type != JTokenType.Null)
+                cfg.Value.Add(BuildCargoTypeMap("OutputCargoTypes", outtypes));
+            if (r["speed"] != null)
+                cfg.Value.Add(new FloatPropertyData(FName.FromString(dst, "ProductionSpeedMultiplier"))
+                    { Value = (float)r["speed"]! });
+            if (r["time_seconds"] != null)
+                cfg.Value.Add(new FloatPropertyData(FName.FromString(dst, "ProductionTimeSeconds"))
+                    { Value = (float)r["time_seconds"]! });
+            configs[i] = cfg;
+        }
+        return new ArrayPropertyData(FName.FromString(dst, "ProductionConfigs"))
+        {
+            ArrayType = FName.FromString(dst, "StructProperty"),
+            Value     = configs,
+        };
+    }
+
     private static byte[] MakeCStringExtras(string s)
     {
         var b = System.Text.Encoding.UTF8.GetBytes(s);
@@ -885,7 +1060,14 @@ internal static class Program
             //     RECURSE_REFS is false; in that case the cloned ref becomes
             //     null (FPackageIndex 0) and UE respawns ChildActor targets
             //     from the class archetype at runtime.
-            bool recurseRefs = !("1" == Environment.GetEnvironmentVariable("CLONE_NO_RECURSE_REFS"));
+            bool mainInject = (bool?)s["main_inject"] ?? false;
+            // Main-inject mode: src and dst are the same package, so refs to
+            // sibling actors (e.g. InputInventoryShare → other delivery
+            // points) stay valid via pass-through in RemapIdx. Recursing
+            // into them would duplicate them as new actors and conflict
+            // with the originals.
+            bool recurseRefs = !mainInject
+                && !("1" == Environment.GetEnvironmentVariable("CLONE_NO_RECURSE_REFS"));
             var cloneSet = new List<int> { srcIdx };
             var seen = new HashSet<int> { srcIdx };
             void AddRefsFromProp(PropertyData p)
@@ -959,6 +1141,12 @@ internal static class Program
                 importRemap[zero] = dstIdx;
                 return dstIdx;
             }
+            // For main-injection src and dst are the same package — imports
+            // are identical so pass them through (avoids creating duplicate
+            // import entries). Export refs still go through idxMap; refs to
+            // sibling actors we didn't clone get nulled rather than pointing
+            // at source-side runtime state.
+            bool srcEqDst = ((bool?)s["main_inject"] ?? false);
             int RemapIdx(int i)
             {
                 if (i == 0) return 0;
@@ -966,8 +1154,10 @@ internal static class Program
                 {
                     if (idxMap.TryGetValue(i, out var mapped)) return mapped;
                     if (i - 1 < src.Exports.Count && src.Exports[i - 1] is LevelExport) return dstLevelNum;
+                    if (srcEqDst) return i;  // sibling persistent-level actor — keep ref valid
                     return 0;
                 }
+                if (srcEqDst) return i;
                 return RemapImport(i);
             }
             // UAssetAPI's PropertyData.Clone() is MemberwiseClone → shallow.
@@ -1174,7 +1364,6 @@ internal static class Program
             // table instead. When injecting into the main map this blob is
             // what UE's mission/save subsystems use to key the actor — clone
             // missed it entirely, so the new actor was anonymous.
-            bool mainInject = (bool?)s["main_inject"] ?? false;
             if (mainInject && newActor != null)
             {
                 string label = newActor.ObjectName.ToString();
@@ -1191,6 +1380,112 @@ internal static class Program
                 Console.WriteLine($"  Synthesized {newActor.Extras.Length}b actor-metadata Extras for {label}");
             }
 
+            // Optional in-game label override. The source actor's PointName
+            // bytes inside its RawData carry the displayed name (e.g. vanilla
+            // CornFarm_2 reads "NamwonCornFarm"). Byte-replace the matching
+            // ASCII run with our custom label, zero-padded to the same length
+            // — UE reads the FString to its declared length, displays up to
+            // first null. Longer labels need full FString resize (TODO).
+            string? customLabel = (string?)s["actor_label"];
+            if (!string.IsNullOrEmpty(customLabel) && newActor is NormalExport neLbl)
+            {
+                // NormalExport path: locate PointName (StructPropertyData of
+                // type MTTextByTexts) and rewrite its Texts array to contain
+                // a single TextProperty with HistoryType=None +
+                // CultureInvariantString = our label. MoreTuning's trick —
+                // bypasses the StringTable lookup and displays the inline
+                // string verbatim.
+                EnsureName(dst, "PointName");
+                EnsureName(dst, "MTTextByTexts");
+                EnsureName(dst, "Texts");
+                EnsureName(dst, "TextProperty");
+                StructPropertyData? pn = null;
+                foreach (var p in neLbl.Data)
+                    if (p is StructPropertyData sp && p.Name.ToString() == "PointName")
+                    { pn = sp; break; }
+                if (pn != null && pn.Value != null)
+                {
+                    foreach (var inner in pn.Value)
+                    {
+                        if (inner is ArrayPropertyData ap && inner.Name.ToString() == "Texts")
+                        {
+                            var txt = new TextPropertyData(FName.FromString(dst, "Texts"))
+                            {
+                                HistoryType = TextHistoryType.None,
+                                CultureInvariantString = new FString(customLabel),
+                                Flags = ETextFlag.CultureInvariant,
+                            };
+                            ap.Value = new PropertyData[] { txt };
+                            ap.ArrayType = FName.FromString(dst, "TextProperty");
+                            Console.WriteLine($"  Patched PointName -> '{customLabel}'");
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    Console.Error.WriteLine($"  actor_label: PointName not found on NormalExport actor");
+                }
+            }
+            else if (!string.IsNullOrEmpty(customLabel) && newActor is RawExport rawAct
+                && srcActor.Extras != null && srcActor.Extras.Length >= 8)
+            {
+                int strLen = BitConverter.ToInt32(srcActor.Extras, 4);
+                if (strLen > 0 && 8 + strLen <= srcActor.Extras.Length)
+                {
+                    var srcLabelBytes = new byte[strLen - 1]; // drop null
+                    Array.Copy(srcActor.Extras, 8, srcLabelBytes, 0, strLen - 1);
+                    var newLabelBytes = System.Text.Encoding.ASCII.GetBytes(customLabel);
+                    if (newLabelBytes.Length > srcLabelBytes.Length)
+                    {
+                        Console.Error.WriteLine(
+                            $"  actor_label '{customLabel}' ({newLabelBytes.Length}) longer than source max ({srcLabelBytes.Length}) — skipped");
+                    }
+                    else
+                    {
+                        // Pad to match source label length so downstream
+                        // bytes stay aligned.
+                        var padded = new byte[srcLabelBytes.Length];
+                        Array.Copy(newLabelBytes, padded, newLabelBytes.Length);
+                        int pos = IndexOfSeq(rawAct.Data!, srcLabelBytes);
+                        if (pos >= 0)
+                        {
+                            Array.Copy(padded, 0, rawAct.Data!, pos, padded.Length);
+                            Console.WriteLine($"  Patched actor label '{System.Text.Encoding.ASCII.GetString(srcLabelBytes)}' -> '{customLabel}'");
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"  actor_label: source label bytes not found in cloned RawData");
+                        }
+                        // Also rewrite the synthesized Extras so save-game
+                        // metadata matches the displayed label.
+                        if (newActor.Extras != null && newActor.Extras.Length >= 8)
+                        {
+                            int extStrLen = BitConverter.ToInt32(newActor.Extras, 4);
+                            if (extStrLen > 0 && 8 + extStrLen <= newActor.Extras.Length)
+                            {
+                                var extPad = new byte[extStrLen - 1];
+                                int copyN = Math.Min(newLabelBytes.Length, extPad.Length);
+                                Array.Copy(newLabelBytes, extPad, copyN);
+                                Array.Copy(extPad, 0, newActor.Extras, 8, extPad.Length);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Per-instance ProductionConfigs override. Spec field is a JSON
+            // array of {inputs:{Name:Count}, outputs:{Name:Count}, speed:f,
+            // time_seconds:f}. Whether MT honors instance overrides for this
+            // BP property is an empirical question — first user of this code
+            // path tells us.
+            var recipes = (JArray?)s["production_recipes"];
+            if (recipes != null && recipes.Count > 0 && newActor is NormalExport neAct)
+            {
+                neAct.Data.Add(BuildProductionConfigs(recipes, dst));
+                Console.WriteLine($"  Added {recipes.Count} production_recipe override(s) on {newActor.ObjectName}");
+            }
+
             Console.WriteLine($"  [{idx}] cloned '{srcActorName}' -> #{newActorNum} ({srcChildren.Count} children, {dst.Imports.Count} imports total)");
 
             int? slot = (int?)s["slot"];
@@ -1200,14 +1495,16 @@ internal static class Program
             }
             else if (dst.Exports[dstLevelIdx] is UAssetAPI.ExportTypes.LevelExport lvlForSlot)
             {
-                // No explicit slot: for vanilla-cell injections (where the
-                // cell already has real actors in every used slot and we just
-                // want to add one more), find an already-null slot and use
-                // it. That keeps Actors.Count invariant so the level body
-                // layout UE validates against stays intact.
+                // No explicit slot: find an already-null slot in the level's
+                // Actors list. Track slots reserved earlier in THIS batch so
+                // multiple main-injected entries don't all pick the same one
+                // (replace ops fire at end of batch, in-memory list still
+                // shows them as null until then).
                 int openSlot = -1;
+                var reserved = new HashSet<int>(replaceOps.Select(o => o.slot));
                 for (int i = 0; i < lvlForSlot.Actors.Count; i++)
-                    if (lvlForSlot.Actors[i].Index == 0) { openSlot = i; break; }
+                    if (lvlForSlot.Actors[i].Index == 0 && !reserved.Contains(i))
+                    { openSlot = i; break; }
                 if (openSlot >= 0)
                 {
                     replaceOps.Add((openSlot, newActorNum));
@@ -1215,7 +1512,23 @@ internal static class Program
                 }
                 else
                 {
-                    Console.Error.WriteLine("    [auto-slot] WARNING: no empty Actors slot; actor will not spawn");
+                    // No null slot left — append a new one. Grows
+                    // Actors.Count + level body size by 4 bytes.
+                    int appendedSlot = AppendActorSlotInLevel(dst, dstPath, newActorNum);
+                    if (appendedSlot >= 0)
+                    {
+                        // Reserve via replaceOps so a later sibling in this
+                        // batch doesn't try to overwrite the same slot we
+                        // just appended (the body it reads will reflect the
+                        // grown count once we re-load typed actors).
+                        if (dst.Exports[dstLevelIdx] is LevelExport typedLvlAdd)
+                            typedLvlAdd.Actors.Add(new FPackageIndex(newActorNum));
+                        Console.WriteLine($"    [auto-slot] appended new Actors[{appendedSlot}]");
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("    [auto-slot] WARNING: append failed; actor will not spawn");
+                    }
                 }
             }
         }
@@ -1946,6 +2259,88 @@ internal static class Program
     // Replace the Nth entry in PersistentLevel.Actors with newActorIdx, keeping
     // the Actors list length (and therefore the body size + per-actor metadata
     // layout) unchanged.
+    // Append a new entry to the level's Actors list. Grows the level body by
+    // 4 bytes (one FPackageIndex), increments the int32 count. UAssetAPI's
+    // main Write recalculates SerialOffsets for subsequent exports based on
+    // the new body length so the package layout stays consistent.
+    // Returns the new slot index, or -1 on failure.
+    private static int AppendActorSlotInLevel(UAsset asset, string originalPath, int newActorIdx)
+    {
+        int lvlIdx = -1;
+        for (int i = 0; i < asset.Exports.Count; i++)
+            if (asset.Exports[i] is LevelExport) { lvlIdx = i; break; }
+        if (lvlIdx < 0)
+            for (int i = 0; i < asset.Exports.Count; i++)
+                if (asset.Exports[i].ObjectName.ToString() == "PersistentLevel") { lvlIdx = i; break; }
+        if (lvlIdx < 0) { Console.Error.WriteLine("  No PersistentLevel"); return -1; }
+        var lvl = asset.Exports[lvlIdx];
+
+        byte[] bodyIn;
+        if (lvl is RawExport alreadyRaw && alreadyRaw.Data != null && alreadyRaw.Data.Length > 0)
+            bodyIn = alreadyRaw.Data;
+        else
+        {
+            byte[] umapBytes = File.ReadAllBytes(originalPath);
+            string uexpPath = Path.ChangeExtension(originalPath, ".uexp");
+            byte[] uexpBytes = File.Exists(uexpPath) ? File.ReadAllBytes(uexpPath) : Array.Empty<byte>();
+            long off = lvl.SerialOffset;
+            long sz  = lvl.SerialSize;
+            bodyIn = new byte[sz];
+            if (off >= umapBytes.Length)
+                Array.Copy(uexpBytes, off - umapBytes.Length, bodyIn, 0, sz);
+            else
+                Array.Copy(umapBytes, off, bodyIn, 0, sz);
+        }
+
+        int expected = (lvl is LevelExport tlvl) ? tlvl.Actors.Count : -1;
+        byte[] marker = new byte[] { 7, 0, 0, 0, (byte)'u', (byte)'n', (byte)'r', (byte)'e', (byte)'a', (byte)'l', 0 };
+        int urlOff = IndexOfSeq(bodyIn, marker);
+        if (urlOff < 0) { Console.Error.WriteLine("  URL marker not found"); return -1; }
+        int countOff = -1, count = 0;
+        if (expected >= 0)
+        {
+            int probe = urlOff - 4 - expected * 4;
+            if (probe >= 4 && BitConverter.ToInt32(bodyIn, probe) == expected)
+            { countOff = probe; count = expected; }
+        }
+        if (countOff < 0)
+        {
+            for (int probe = urlOff - 4; probe >= 4; probe -= 4)
+            {
+                int c = BitConverter.ToInt32(bodyIn, probe);
+                if (c > 0 && probe + 4 + c * 4 == urlOff && c > count) { countOff = probe; count = c; }
+            }
+        }
+        if (countOff < 0) { Console.Error.WriteLine("  Actors count not located"); return -1; }
+
+        // Insert 4 bytes at urlOff for the new slot, bump count by 1.
+        var bodyOut = new byte[bodyIn.Length + 4];
+        Array.Copy(bodyIn, 0, bodyOut, 0, urlOff);
+        BitConverter.GetBytes(newActorIdx).CopyTo(bodyOut, urlOff);
+        Array.Copy(bodyIn, urlOff, bodyOut, urlOff + 4, bodyIn.Length - urlOff);
+        BitConverter.GetBytes(count + 1).CopyTo(bodyOut, countOff);
+        int newSlot = count;
+        Console.WriteLine($"  Appended Actors[{newSlot}]: 0 -> {newActorIdx} (count {count} -> {count + 1})");
+
+        if (lvl is RawExport raw)
+        {
+            raw.Data = bodyOut;
+            raw.SerialSize = bodyOut.Length;
+        }
+        else
+        {
+            if (lvl is LevelExport typedLvl)
+                typedLvl.Actors.Add(new FPackageIndex(newActorIdx));
+            var newRaw = new RawExport { Data = bodyOut, Asset = asset };
+            CopyExportHeader(from: lvl, to: newRaw);
+            newRaw.Extras = Array.Empty<byte>();
+            newRaw.SerialSize = bodyOut.Length;
+            newRaw.CreateBeforeSerializationDependencies.Add(new FPackageIndex(newActorIdx));
+            asset.Exports[lvlIdx] = newRaw;
+        }
+        return newSlot;
+    }
+
     private static void ReplaceActorSlotInLevel(UAsset asset, string originalPath, int slotIdx, int newActorIdx)
     {
         int lvlIdx = -1;
@@ -2073,6 +2468,9 @@ internal static class Program
                 Console.WriteLine($"  LevelExport.Actors.Count={lvl.Actors.Count}");
                 Console.WriteLine($"  first 10 actors: {string.Join(",", lvl.Actors.Take(10).Select(a => a.Index))}");
                 Console.WriteLine($"  last 5 actors: {string.Join(",", lvl.Actors.Skip(Math.Max(0, lvl.Actors.Count-5)).Select(a => a.Index))}");
+                int nullCount = lvl.Actors.Count(a => a.Index == 0);
+                var nullIdxs = Enumerable.Range(0, lvl.Actors.Count).Where(i => lvl.Actors[i].Index == 0).Take(20).ToList();
+                Console.WriteLine($"  null slots: {nullCount} (first 20 indices: {string.Join(",", nullIdxs)})");
                 if (f.TryGetValue("contains", out var containsStr) && int.TryParse(containsStr, out var containsIdx))
                 {
                     bool has = lvl.Actors.Any(a => a.Index == containsIdx);

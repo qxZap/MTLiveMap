@@ -1,0 +1,37 @@
+{
+  "_source_class": "Export_Harbor_C",
+  "label": "Export_Harbor",
+  "recipes": [
+    {
+      "inputs": {
+        "lHBeam_6m": 1
+      },
+      "time_seconds": 600.0
+    },
+    {
+      "inputs": {
+        "SteelCoil_10t": 1
+      },
+      "time_seconds": 1200.0
+    },
+    {
+      "inputs": {
+        "Transformer_20MVA": 1
+      },
+      "time_seconds": 1200.0
+    },
+    {
+      "inputs": {
+        "Transformer_50MVA": 1
+      },
+      "time_seconds": 1200.0
+    },
+    {
+      "inputs": {
+        "ToyBoxes": 1
+      },
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}
