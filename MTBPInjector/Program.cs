@@ -2548,8 +2548,14 @@ internal static class Program
             if (e is NormalExport ne)
             {
                 Console.WriteLine($"  Data.Count={ne.Data.Count} ObjectGuid={ne.ObjectGuid}");
+                bool deep = f.ContainsKey("deep");
                 foreach (var p in ne.Data)
                 {
+                    if (deep)
+                    {
+                        DumpField(p, "    ");
+                        continue;
+                    }
                     string valStr = p switch
                     {
                         UAssetAPI.PropertyTypes.Structs.VectorPropertyData vp => $" = ({vp.Value.X},{vp.Value.Y},{vp.Value.Z})",
