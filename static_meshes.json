@@ -38209,19 +38209,6 @@
                 "ScaleZ": 2.0
             },
             {
-                "asset_path": "/Game/DC/Actors/DeliveryPoint_TransformerFarm.DeliveryPoint_TransformerFarm",
-                "asset_key": "DeliveryPoint_TransformerFarm",
-                "X": 472972.14,
-                "Y": -319458.17000000004,
-                "Z": 329.65000000000146,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": 0.0,
-                "ScaleX": 1.0,
-                "ScaleY": 1.0,
-                "ScaleZ": 1.0
-            },
-            {
                 "asset_path": "/Game/DC/Actors/DeliveryPoint_TransformerFarm.DeliveryPoint_TransformerFarm2",
                 "asset_key": "DeliveryPoint_TransformerFarm2",
                 "X": -427203.0,
@@ -38234,6 +38221,19 @@
                 "ScaleY": 1.0,
                 "ScaleZ": 1.0,
                 "world_coords": true
+            },
+            {
+                "asset_path": "/Game/DC/Actors/DeliveryPoint_TransformerFarm.DeliveryPoint_TransformerFarm",
+                "asset_key": "DeliveryPoint_TransformerFarm",
+                "X": 472972.14,
+                "Y": -319458.17000000004,
+                "Z": 329.65000000000146,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0
             }
         ],
         "foliage": []

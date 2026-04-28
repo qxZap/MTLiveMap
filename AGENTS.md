@@ -1014,6 +1014,29 @@ that cannot fire — MT looks up by name with no error handling. Always
 copy from the catalog above (or dump `Cargos.uasset` fresh if the
 game has been updated).
 
+## DEFINITIVE: Map Markers Don't Render For Injected Delivery Points
+
+**Confirmed empirically**: deploy a single injected DP at the exact
+world coords of a previously-working spot — no marker. Earlier
+"TF has marker, TF2 doesn't" reads were misleading: the marker on TF
+was a NEARBY VANILLA delivery point's icon overlapping TF's location.
+
+The marker registry lives in cooked C++ / WP runtime hash data baked
+at the studio's cook step. None of the inspected assets
+(`MapIcons.uasset`, `MTDeliverySystemConfigActor.Config`,
+`MotorTownNavigation_1` blob — that one is just the AI navmesh) carry
+the per-class registration that would let us add our `Mod*_C` clones.
+
+Consequence for the framework:
+- Custom DPs spawn cleanly, accept/give cargo, register as mission
+  endpoints, appear in the offer list.
+- They DO NOT show on the world map.
+- Placing one near a vanilla DP makes the vanilla DP's marker appear
+  to "belong to" our DP — easy to mistake.
+
+Unblocking needs UE editor + cook step, runtime memory patching, or
+UE4SS-mediated registration — outside the static-`.uasset` scope.
+
 ## Marker / Icon Mutation (Pending)
 
 `MTDeliveryPoint`-derived BPs have NO marker/color/icon properties on

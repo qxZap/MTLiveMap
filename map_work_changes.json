@@ -39752,15 +39752,6 @@
     },
     "delivery_points": [
         {
-            "X": -39030.86,
-            "Y": -196310.17,
-            "Z": -21850.35,
-            "Pitch": 0.0,
-            "Roll": 0.0,
-            "Yaw": 0.0,
-            "delivery_key": "TransformerFarm"
-        },
-        {
             "X": -427203.0,
             "Y": 113098.0,
             "Z": -21360.0,
@@ -39768,6 +39759,15 @@
             "Roll": 0.0,
             "Yaw": 0.0,
             "delivery_key": "TransformerFarm2"
+        },
+        {
+            "X": -39030.86,
+            "Y": -196310.17,
+            "Z": -21850.35,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 0.0,
+            "delivery_key": "TransformerFarm"
         }
     ]
 }
