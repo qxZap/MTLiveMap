@@ -1484,6 +1484,50 @@ internal static class Program
                 Console.WriteLine($"  Synthesized {newActor.Extras.Length}b actor-metadata Extras for {label}");
             }
 
+            // Regenerate per-actor identity GUIDs so multiple clones don't
+            // collide in MT's save-game / marker-registry tables. Vanilla
+            // delivery points key save state + map markers by
+            // DeliveryPointGuid; sharing one across clones means only one
+            // actor "exists" to those subsystems.
+            //
+            // CRITICAL: GUIDs MUST be deterministic across deploys.
+            // Random GUIDs caused the player's save (keyed by GUID-from-
+            // first-run) to mismatch the GUID-from-second-run, crashing
+            // load. Hash the actor's stable identity (target class name
+            // when present, otherwise ObjectName) into the GUID.
+            if (mainInject && newActor is NormalExport guidExp)
+            {
+                string seedKey = !string.IsNullOrEmpty(tgtClass)
+                    ? tgtClass
+                    : newActor.ObjectName.ToString();
+                Guid SeedGuid(string subKey)
+                {
+                    using var sha = System.Security.Cryptography.SHA1.Create();
+                    var bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(
+                        "MTLiveMap-DPGuid|" + seedKey + "|" + subKey));
+                    var g = new byte[16];
+                    Array.Copy(bytes, g, 16);
+                    return new Guid(g);
+                }
+                guidExp.ObjectGuid = SeedGuid("ObjectGuid");
+                int patched = 0;
+                foreach (var p in guidExp.Data)
+                {
+                    string nm = p.Name.ToString();
+                    if ((nm == "DeliveryPointGuid" || nm.EndsWith("Guid"))
+                        && p is StructPropertyData spg
+                        && spg.Value.Count > 0
+                        && spg.Value[0] is UAssetAPI.PropertyTypes.Structs.GuidPropertyData gp)
+                    {
+                        gp.Value = SeedGuid(nm);
+                        patched++;
+                        Console.WriteLine($"  Regenerated {nm} GUID on {newActor.ObjectName} (deterministic)");
+                    }
+                }
+                if (patched == 0)
+                    Console.WriteLine($"  (no Guid struct properties found on actor — skipped GUID regen)");
+            }
+
             // Optional in-game label override. The source actor's PointName
             // bytes inside its RawData carry the displayed name (e.g. vanilla
             // CornFarm_2 reads "NamwonCornFarm"). Byte-replace the matching
