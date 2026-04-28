@@ -1014,6 +1014,50 @@ that cannot fire — MT looks up by name with no error handling. Always
 copy from the catalog above (or dump `Cargos.uasset` fresh if the
 game has been updated).
 
+## DEFINITIVE: Per-Actor Identity GUIDs Must Be Deterministic
+
+Vanilla `MTDeliveryPoint`s carry a `DeliveryPointGuid` struct property
+that MT's save system + map-marker registry both key by. Naive cloning
+copies the GUID verbatim, so multiple clones collide — only one
+"exists" to the save system → no production persistence + flaky
+markers.
+
+Regenerating with `Guid.NewGuid()` per deploy fixes the collision but
+breaks save compatibility: the player's save references the GUID
+written on first deploy; second deploy mints a different one; the
+loader can't find the actor → crash on subsequent boot.
+
+Fix: deterministic GUIDs derived from a stable seed —
+`SHA1("MTLiveMap-DPGuid|" + target_class | field_name)`. Same seed
+across deploys, unique per (entry, field). Markers stick, production
+persists, saves remain valid. Implemented in `MutateBpCdo` /
+CloneBatch's actor-clone block in `MTBPInjector/Program.cs`.
+
+Note: changing a delivery point's `key` in `delivery_points.json`
+changes its derived `target_class`, which changes its GUID — same
+effect as renaming an entity in any save-keyed system. Existing saves
+will lose state for that actor. Don't rename keys casually.
+
+## Template-Based Delivery Point Sources
+
+`bp_registry._TEMPLATES` maps a short `template` name → vanilla
+`(source_class, source_actor)` pair the framework knows how to clone
+end-to-end. Currently only `farm` (Farm_Corn_C/CornFarm_2) is
+validated — heavier classes (`Container_ExportImport_C`, `ComonDrop_C`,
+`Factory_*`) crashed cell-streaming or save-game in earlier tests
+because of transitive component dependencies our cloner doesn't
+fully reconstruct.
+
+Adding a new template requires verifying:
+1. Cloned actor spawns without crash
+2. Both interact + mission offers register
+3. Save state persists across reload
+4. Multiple instances coexist
+
+Per-entry `source_class` + `source_actor` fields in
+`delivery_points.json` allow experimental clones without modifying
+the registry — useful for one-off testing.
+
 ## DEFINITIVE: Map Markers Don't Render For Injected Delivery Points
 
 **Confirmed empirically**: deploy a single injected DP at the exact

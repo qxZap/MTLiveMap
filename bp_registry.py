@@ -121,8 +121,19 @@ _DP_BP_FOLDER = "Objects/Mission/Delivery/DeliveryPoint"
 # overrides via CDO mutation, and clones cleanly through the persistent-level
 # inject path. Per-entry override is intentionally NOT exposed in
 # delivery_points.json — keeps the JSON purely user-intent.
-_DEFAULT_SOURCE_CLASS = "Farm_Corn_C"
-_DEFAULT_SOURCE_ACTOR = "CornFarm_2"
+# Known-good vanilla delivery-point templates the framework can clone.
+# Each entry pairs a BP class with a specific vanilla instance whose
+# byte layout cloning has been verified end-to-end. Adding a new entry
+# requires testing — some MTDeliveryPoint subclasses (e.g. Container_-
+# ExportImport_C, ComonDrop_C, Factory_*) have transitive dependencies
+# that crashed cell-streaming or save-game persistence in our tests.
+# `farm` is the proven default.
+_TEMPLATES: dict[str, tuple[str, str]] = {
+    # template_key      -> (source_class,           source_actor)
+    "farm":               ("Farm_Corn_C",           "CornFarm_2"),
+}
+_DEFAULT_TEMPLATE = "farm"
+_DEFAULT_SOURCE_CLASS, _DEFAULT_SOURCE_ACTOR = _TEMPLATES[_DEFAULT_TEMPLATE]
 
 # Cargo / cargo-type allowlists pulled from CargoImport so we can validate
 # recipe entries at registry-load time and surface bad data with a clear
@@ -165,10 +176,17 @@ def _derive_actor_label(key: str, max_len: int = 14) -> str:
 
 def _expand_dp_entry(key: str, cfg: dict) -> dict | None:
     """Materialize a delivery_points.json entry as a REGISTRY-shaped dict.
-    The JSON only carries user intent (recipes, optional label, optional
-    visuals). Cloning machinery (source_class, target_class, paths) is
-    auto-derived from the entry key."""
-    src_class = _DEFAULT_SOURCE_CLASS
+    The JSON carries user intent (label, recipes, optional visuals) plus
+    an OPTIONAL `template` field. Templates pick a vanilla source class
+    + source actor; `farm` is the default. Direct overrides via
+    `source_class` + `source_actor` are honored for experimental cases."""
+    template = cfg.get("template", _DEFAULT_TEMPLATE)
+    if template not in _TEMPLATES:
+        print(f"  [delivery_points] '{key}': unknown template '{template}', falling back to '{_DEFAULT_TEMPLATE}'", file=_sys.stderr)
+        template = _DEFAULT_TEMPLATE
+    tpl_src_class, tpl_src_actor = _TEMPLATES[template]
+    src_class = cfg.get("source_class", tpl_src_class)
+    src_actor = cfg.get("source_actor", tpl_src_actor)
     src_short = src_class[:-2] if src_class.endswith("_C") else src_class
     src_uasset = GAME_CONTENT / _DP_BP_FOLDER / (src_short + ".uasset")
     tgt_class, tgt_path = _derive_target_class(key, src_class)
@@ -179,7 +197,7 @@ def _expand_dp_entry(key: str, cfg: dict) -> dict | None:
         "bp_path":          f"/Game/{_DP_BP_FOLDER}/{src_short}",
         "bp_class":         src_class,
         "source_umap":      JEJU_MAIN,
-        "source_actor":     _DEFAULT_SOURCE_ACTOR,
+        "source_actor":     src_actor,
         "preload_bp":       [src_uasset, mod_uasset],
         "inject_into_main": True,
         "target_bp_class":  tgt_class,
