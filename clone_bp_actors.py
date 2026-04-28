@@ -177,7 +177,51 @@ def prepare_mod_bp_class(tpl: dict) -> bool:
 # over) and enough actor slots to host dozens of injected BP clones in a
 # single cell: 35 slots. Clones replace existing Actors-list entries so the
 # PersistentLevel body layout stays the size UE's ULevel::Serialize expects.
-TEMPLATE_CELL = "0V18V8JBXKXUL8YILWZKCSMB4"
+# Vanilla WP cell used as the byte-clone template for newly-registered
+# mod cells. The chosen cell needs:
+#   - a LevelExport with at least 1 Actors slot we can replace
+#   - small enough that copying it per delivery point is cheap
+#   - no DataLayers in its main-map registration (those gate streaming)
+# `0V18V8JBXKXUL8YILWZKCSMB4` was hand-picked and meets all three.
+# `auto_pick_template_cell()` falls back to scanning the `_Generated_`
+# folder if the preferred cell is missing (e.g. game update renamed it).
+_PREFERRED_TEMPLATE_CELL = "0V18V8JBXKXUL8YILWZKCSMB4"
+_TEMPLATE_CACHE = Path(__file__).with_suffix(".template_cache")
+
+def auto_pick_template_cell() -> str:
+    """Return a usable vanilla WP cell name. Order:
+       1. Cached result from a prior auto-pick.
+       2. The preferred (hand-picked) cell if its .umap still exists.
+       3. First scanned cell in size band [4000, 7000] bytes whose byte
+          signature begins with a UE5 .umap magic (0xC1832A9E little-endian).
+       4. Hardcoded preferred name (will fail later if missing — let it).
+    """
+    if _TEMPLATE_CACHE.exists():
+        cached = _TEMPLATE_CACHE.read_text(encoding="utf-8").strip()
+        if cached and (CELLS_DIR / f"{cached}.umap").exists():
+            return cached
+    pref = CELLS_DIR / f"{_PREFERRED_TEMPLATE_CELL}.umap"
+    if pref.exists():
+        _TEMPLATE_CACHE.write_text(_PREFERRED_TEMPLATE_CELL, encoding="utf-8")
+        return _PREFERRED_TEMPLATE_CELL
+    # Scan: small UE5 .umap files in the _Generated_ folder.
+    print(f"  [template-cell] preferred '{_PREFERRED_TEMPLATE_CELL}' missing; scanning...", file=sys.stderr)
+    UE5_UMAP_MAGIC = b"\x9e\x2a\x83\xc1"
+    for p in sorted(CELLS_DIR.glob("*.umap")):
+        sz = p.stat().st_size
+        if not (4000 <= sz <= 7000): continue
+        with open(p, "rb") as f:
+            head = f.read(4)
+        if head != UE5_UMAP_MAGIC: continue
+        name = p.stem
+        print(f"  [template-cell] picked '{name}' ({sz}b)", file=sys.stderr)
+        _TEMPLATE_CACHE.write_text(name, encoding="utf-8")
+        return name
+    print(f"  [template-cell] WARNING: no candidate found, falling back to '{_PREFERRED_TEMPLATE_CELL}'", file=sys.stderr)
+    return _PREFERRED_TEMPLATE_CELL
+
+
+TEMPLATE_CELL = auto_pick_template_cell()
 
 
 def _pick_owner(hits: list[dict]) -> str | None:

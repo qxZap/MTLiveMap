@@ -62,3 +62,6 @@ uassetgui_out.txt
 # RE-UE4SS and MotorTownMods (reference clones, not part of this mod)
 RE-UE4SS/
 MotorTownMods/
+
+# Auto-picker cache for vanilla WP template cell — local to each clone
+clone_bp_actors.template_cache
