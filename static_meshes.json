@@ -38220,6 +38220,20 @@
                 "ScaleX": 1.0,
                 "ScaleY": 1.0,
                 "ScaleZ": 1.0
+            },
+            {
+                "asset_path": "/Game/DC/Actors/DeliveryPoint_TransformerFarm.DeliveryPoint_TransformerFarm2",
+                "asset_key": "DeliveryPoint_TransformerFarm2",
+                "X": -427203.0,
+                "Y": 113098.0,
+                "Z": -21360.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0,
+                "ScaleX": 1.0,
+                "ScaleY": 1.0,
+                "ScaleZ": 1.0,
+                "world_coords": true
             }
         ],
         "foliage": []

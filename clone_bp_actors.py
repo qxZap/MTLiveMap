@@ -26,6 +26,85 @@ from bp_registry import REGISTRY, CELLS_DIR, JEJU_MAIN, template_for_class
 MAPPINGS = r"D:\MT\MotorTown718P1.usmap"
 INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
 MOD_CONTENT_ROOT = Path("MapChangeTest_P/MotorTown/Content")
+VANILLA_CARGOS  = Path(r"D:\MT\Output\Exports\MotorTown\Content\DataAsset\Cargos.uasset")
+MOD_CARGOS      = MOD_CONTENT_ROOT / "DataAsset" / "Cargos.uasset"
+
+
+def boosted_cargo_name(source: str, mult: float) -> str:
+    """Deterministic name for a payment-boosted clone of a cargo. Format:
+       <Source>_x<int_part>_<frac_part_truncated_to_1_digit>
+       e.g. CornPallet_x2_5 / lHBeam_6m_x10_0. Decimal point becomes
+       underscore so the name is a valid FName / table key."""
+    return f"{source}_x{mult:.1f}".replace(".", "_")
+
+
+def materialize_boosted_cargos(entries: list[dict]) -> tuple[bool, dict]:
+    """Build the mod's Cargos.uasset:
+       1) Collect every IN-PLACE multiplier from delivery_points.json's
+          top-level `cargo_payment_overrides` map ({Cargo: float}). These
+          bump the existing row's PaymentPer1Km + BasePayment without
+          adding rows — safe and works alongside vanilla missions because
+          the cargo name doesn't change.
+       2) Collect every DEEP-CLONE request from a recipe's `boost` field
+          (kept for forward-compat; current crash from row-append is why
+          we prefer in-place overrides). Returns substitution map for
+          recipe outputs."""
+    spec: list[dict] = []
+    sub: dict[tuple[str, float], str] = {}
+
+    # Pull top-level cargo_payment_overrides from delivery_points.json.
+    dp_path = Path("delivery_points.json")
+    if dp_path.exists():
+        try:
+            dp_cfg = json.loads(dp_path.read_text(encoding="utf-8"))
+            overrides = dp_cfg.get("cargo_payment_overrides") or {}
+            for cargo, mult in overrides.items():
+                if cargo.startswith("_"): continue   # skip _doc-style entries
+                spec.append({"source": cargo, "payment_multiplier": float(mult)})
+        except Exception as e:
+            print(f"  delivery_points.json overrides parse error: {e}", file=sys.stderr)
+
+    # Per-recipe boost ⇒ deep-clone (architecturally fragile but kept).
+    for e in entries:
+        tpl = REGISTRY.get(e.get("asset_key", ""))
+        if not tpl: continue
+        for r in tpl.get("production_recipes", []) or []:
+            boost = r.get("boost")
+            if not boost: continue
+            for cargo in (r.get("outputs") or {}).keys():
+                tgt = boosted_cargo_name(cargo, float(boost))
+                sub[(cargo, float(boost))] = tgt
+                spec.append({"source": cargo, "target": tgt, "payment_multiplier": float(boost)})
+
+    if not spec:
+        # No active overrides — wipe any stale mod Cargos.uasset from a prior
+        # run so vanilla cargo prices apply unmodified.
+        for ext in (".uasset", ".uexp"):
+            p = MOD_CARGOS.with_suffix(ext)
+            if p.exists():
+                p.unlink()
+                print(f"  cleaned stale {p.name}")
+        return True, {}
+    import tempfile
+    MOD_CARGOS.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+        json.dump(spec, tf); spec_path = tf.name
+    try:
+        r = subprocess.run([
+            str(INJECTOR), "mutate-cargos",
+            "--mappings",   MAPPINGS,
+            "--src-uasset", str(VANILLA_CARGOS),
+            "--dst-uasset", str(MOD_CARGOS),
+            "--spec",       spec_path,
+        ], capture_output=True, text=True)
+    finally:
+        try: os.unlink(spec_path)
+        except OSError: pass
+    if r.returncode != 0:
+        print(r.stdout); print(r.stderr, file=sys.stderr); return False, {}
+    for line in r.stdout.splitlines():
+        if line.strip(): print(f"  {line}")
+    return True, sub
 
 
 def prepare_mod_bp_class(tpl: dict) -> bool:
@@ -224,8 +303,26 @@ def main():
         if isinstance(group, list):
             entries.extend(group)
 
+    # Slim delivery_points section — placement data + delivery_key only.
+    # The actual config (label, recipes, marker/icon, storage cap) lives in
+    # delivery_points.json and was loaded into REGISTRY at import time.
+    for dp in cfg.get("delivery_points", []) or []:
+        dp_key = dp.get("delivery_key")
+        if not dp_key:
+            print(f"  delivery_points entry missing delivery_key — skipped"); continue
+        reg_key = f"DeliveryPoint_{dp_key}"
+        if reg_key not in REGISTRY:
+            print(f"  delivery_points: '{dp_key}' not in delivery_points.json — skipped")
+            continue
+        entries.append({
+            "X": dp.get("X"), "Y": dp.get("Y"), "Z": dp.get("Z"),
+            "Pitch": dp.get("Pitch", 0.0), "Roll": dp.get("Roll", 0.0), "Yaw": dp.get("Yaw", 0.0),
+            "asset_key": reg_key,
+            "blueprint_class": REGISTRY[reg_key]["bp_class"],
+        })
+
     if not entries:
-        print("No blueprint_actors entries.")
+        print("No blueprint_actors / delivery_points entries.")
         return 0
 
     gen_dir = Path(args.gen_dir)
@@ -260,6 +357,30 @@ def main():
             return cls in _skip or any(k in cls for k in _skip)
         entries = [e for e in entries if not _match(e)]
         print(f"  [debug] BP_SKIP={sorted(_skip)} — {before} -> {len(entries)} entries")
+
+    # Materialize boosted cargo rows (deep-clones in mod's Cargos.uasset
+    # with PaymentPer1Km × multiplier). Substitutes output names in each
+    # affected recipe in-place so the mutate-bp-cdo step downstream
+    # references the boosted cargos.
+    ok, boost_map = materialize_boosted_cargos(entries)
+    if not ok: return 1
+    if boost_map:
+        # Strip 'boost' + rewrite outputs by the boost map. Mutates each
+        # tpl's production_recipes list in place — the registry entry is
+        # the same Python dict the rest of the pipeline hands to
+        # mutate-bp-cdo.
+        for e in entries:
+            tpl = REGISTRY.get(e.get("asset_key", ""))
+            if not tpl: continue
+            for r in tpl.get("production_recipes", []) or []:
+                boost = r.pop("boost", None)
+                if not boost: continue
+                outs = r.get("outputs") or {}
+                if outs:
+                    r["outputs"] = {
+                        boost_map.get((src, float(boost)), src): cnt
+                        for src, cnt in outs.items()
+                    }
 
     # First pass: resolve/create destination cell per entry, group entries by
     # cell. Second pass: run ONE clone-batch call per cell (all clones into
@@ -387,6 +508,21 @@ def main():
         if tpl_entry.get("inject_into_main"):
             print(f"  [{i}] {bp_class} @ ({e['X']}, {e['Y']}, {e['Z']}) -> MAIN persistent level")
             grouped.setdefault(MAIN_LEVEL_KEY, []).append((e, tpl_entry, False, None))
+            # WP-coverage shadow: a persistent-level actor only renders when
+            # WP streams the area containing its coords. Vanilla cells cover
+            # most of Jeju but custom-island / outside-bounds coords aren't
+            # streamed unless we register a mod cell there. Reuse the same
+            # spiral the parking pipeline uses (auto-dedup by tile).
+            if resolved_cells[i] is None:
+                home = (int(e["X"] // 12800), int(e["Y"] // 12800))
+                if home not in registered_tiles:
+                    cx = (home[0] + 0.5) * 12800.0
+                    cy = (home[1] + 0.5) * 12800.0
+                    new_cell = make_cell_name(f"shadow_{home}")
+                    print(f"        [shadow-cell] queuing WP cell '{new_cell}' at tile {home} so the persistent-level actor at ({e['X']}, {e['Y']}) gets streamed")
+                    pending_cells.append(cell_spec(new_cell, cx, cy, gen_dir))
+                    registered_tiles[home] = new_cell
+                    seeded.add(new_cell)
             continue
 
         cell, needs_create = pick_cell_for_entry(e, i)

@@ -39747,18 +39747,27 @@
                 "blueprint_path": "/Game/Objects/ParkingSpace/Interaction_ParkingSpace_Small",
                 "blueprint_class": "Interaction_ParkingSpace_Small_C",
                 "asset_key": "ParkingSmall"
-            },
-            {
-                "X": -39030.86,
-                "Y": -196310.17,
-                "Z": -21850.35,
-                "Pitch": 0.0,
-                "Roll": 0.0,
-                "Yaw": 0.0,
-                "blueprint_path": "/Game/Objects/Mission/Delivery/DeliveryPoint/Farm_Corn",
-                "blueprint_class": "Farm_Corn_C",
-                "asset_key": "DeliveryPoint_TransformerFarm"
             }
         ]
-    }
+    },
+    "delivery_points": [
+        {
+            "X": -39030.86,
+            "Y": -196310.17,
+            "Z": -21850.35,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 0.0,
+            "delivery_key": "TransformerFarm"
+        },
+        {
+            "X": -427203.0,
+            "Y": 113098.0,
+            "Z": -21360.0,
+            "Pitch": 0.0,
+            "Roll": 0.0,
+            "Yaw": 0.0,
+            "delivery_key": "TransformerFarm2"
+        }
+    ]
 }

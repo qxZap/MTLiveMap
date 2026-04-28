@@ -45,6 +45,7 @@ internal static class Program
                 "register-cells-batch" => RegisterCellsBatch(args.Skip(1).ToArray()),
                 "register-and-clone" => RegisterAndClone(args.Skip(1).ToArray()),
                 "mutate-bp-cdo" => MutateBpCdo(args.Skip(1).ToArray()),
+                "mutate-cargos" => MutateCargos(args.Skip(1).ToArray()),
                 _ => Fail($"Unknown command: {args[0]}"),
             };
         }
@@ -626,6 +627,104 @@ internal static class Program
         }
     }
 
+    // Append boosted cargo rows to a copy of vanilla Cargos.uasset.
+    // Each spec entry deep-clones a source row, renames it, and multiplies
+    // PaymentPer1Km. The cloned rows ship in the mod's pak under the same
+    // /Game/DataAsset/Cargos path so MT's mission system picks them up
+    // alongside vanilla cargos. Spec format:
+    //   [{"source":"CornPallet","target":"CornPallet_x2_5","payment_multiplier":2.5}]
+    //
+    // Args:
+    //   --src-uasset <vanilla Cargos.uasset>
+    //   --dst-uasset <mod   Cargos.uasset>
+    //   --spec       <JSON array path>
+    //   --mappings   <usmap>
+    private static int MutateCargos(string[] args)
+    {
+        var f = ParseFlags(args);
+        var mappings = LoadMappings(f["mappings"]);
+        string srcPath = f["src-uasset"];
+        string dstPath = f["dst-uasset"];
+        var spec = JArray.Parse(File.ReadAllText(f["spec"]));
+
+        var asset = new UAsset(srcPath, EngineVer, mappings);
+        UAssetAPI.ExportTypes.DataTableExport? table = null;
+        foreach (var e in asset.Exports)
+            if (e is UAssetAPI.ExportTypes.DataTableExport dte) { table = dte; break; }
+        if (table == null) { Console.Error.WriteLine("  No DataTableExport in Cargos.uasset"); return 1; }
+
+        // Index existing rows by name so we can both find sources and skip
+        // duplicate target inserts (idempotent re-runs).
+        var existingRows = new Dictionary<string, StructPropertyData>(StringComparer.OrdinalIgnoreCase);
+        foreach (var r in table.Table.Data)
+            existingRows[r.Name.ToString()] = r;
+
+        // Recursive deep clone of PropertyData (UAssetAPI's Clone is shallow
+        // for nested struct/array values).
+        PropertyData DeepClone(PropertyData p)
+        {
+            var c = (PropertyData)p.Clone();
+            if (c is StructPropertyData scp && scp.Value != null)
+                scp.Value = scp.Value.Select(DeepClone).ToList();
+            else if (c is ArrayPropertyData acp && acp.Value != null)
+                acp.Value = acp.Value.Select(DeepClone).ToArray();
+            else if (c is MapPropertyData mcp && mcp.Value != null)
+            {
+                var newMap = new UAssetAPI.UnrealTypes.TMap<PropertyData, PropertyData>();
+                foreach (var kv in mcp.Value)
+                    newMap.Add(DeepClone(kv.Key), DeepClone(kv.Value));
+                mcp.Value = newMap;
+            }
+            return c;
+        }
+
+        // Helper: scale PaymentPer1Km + BasePayment on a row in-place.
+        void Boost(StructPropertyData row, float mult, string label)
+        {
+            foreach (var p in row.Value)
+            {
+                if (p.Name.ToString() == "PaymentPer1Km" && p is FloatPropertyData fp)
+                    fp.Value *= mult;
+                else if (p.Name.ToString() == "BasePayment" && p is Int64PropertyData ip)
+                    ip.Value = (long)(ip.Value * mult);
+            }
+            Console.WriteLine($"  ×{mult:0.##} {label}");
+        }
+
+        int added = 0, boosted = 0, skipped = 0;
+        foreach (var entry in spec)
+        {
+            string source  = (string)entry["source"]!;
+            string? target = (string?)entry["target"];
+            float mult     = (float)entry["payment_multiplier"]!;
+            if (!existingRows.TryGetValue(source, out var srcRow))
+            {
+                Console.Error.WriteLine($"  source cargo '{source}' not found in Cargos table");
+                continue;
+            }
+            // No target ⇒ IN-PLACE boost on the existing row. Safer than
+            // appending new rows (which broke the table layout earlier);
+            // mutates only the two payment fields, no schema change.
+            if (string.IsNullOrEmpty(target))
+            {
+                Boost(srcRow, mult, source); boosted++; continue;
+            }
+            if (existingRows.ContainsKey(target)) { skipped++; continue; }
+            var newRow = (StructPropertyData)DeepClone(srcRow);
+            EnsureName(asset, target);
+            newRow.Name = FName.FromString(asset, target);
+            Boost(newRow, mult, $"+cargo {target} (clone of {source})");
+            table.Table.Data.Add(newRow);
+            existingRows[target] = newRow;
+            added++;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(dstPath)!);
+        asset.Write(dstPath);
+        Console.WriteLine($"  Wrote {dstPath} ({added} new, {boosted} in-place, {skipped} dedup)");
+        return 0;
+    }
+
     // Build a mod-shipped BP class from a vanilla BP source: load the source
     // (where UAssetAPI has its schema in mappings, so the CDO parses as
     // NormalExport), mutate the CDO's ProductionConfigs to the supplied
@@ -680,6 +779,11 @@ internal static class Program
         else               { cdo.Data.Add(newProd);       Console.WriteLine($"  Added ProductionConfigs to {cdoName}"); }
 
         Directory.CreateDirectory(Path.GetDirectoryName(dstUasset)!);
+        // Regenerate PackageGuid so multiple byte-clones of the same source
+        // BP don't share an identity — UE's loader treats same-GUID
+        // packages as duplicates and silently drops all but the first,
+        // which is why a 2nd cloned delivery point would fail to spawn.
+        asset.PackageGuid = Guid.NewGuid();
         // Save to dst path first so UAssetAPI handles offsets cleanly. Then
         // byte-rename the source class in both .uasset and .uexp.
         asset.Write(dstUasset);

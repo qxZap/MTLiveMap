@@ -1067,3 +1067,22 @@ the source class (`Farm_Corn` = 9 chars → `Mod` + 6 hash chars).
 Recipe with NO `inputs` / `input_types` = timed background production.
 `import_cargo_data.py` dumps every vanilla delivery-point class as a
 ready-to-paste example under `CargoImport/delivery_points/`.
+
+## Output Storage Cap (Pending)
+
+Empirically a cloned delivery point caps each output cargo at ~100 units.
+That cap is NOT in `MTProductionConfig` and NOT on any vanilla BP CDO —
+it lives in a separate per-(DeliveryPoint, Cargo) actor of class
+`MTDeliveryPointInventoryRatio` (one in vanilla Jeju at export 27825+,
+~26 bytes each, props: `DeliveryPoint`, `CargoKey`, `bInputInventory`,
+`CreationMethod`).
+
+To raise/lower the cap per delivery point we'd need to spawn
+matching `MTDeliveryPointInventoryRatio` instances tied to the cloned
+actor — same persistent-level inject mechanism, but the numeric cap
+field name isn't yet identified (parsed Data showed only the four
+listed above; Serial/Extras likely carry a float ratio we haven't
+located yet).
+
+`delivery_points.json` `output_storage_cap` field is plumbed through
+`bp_registry` for future use; mutation pending.

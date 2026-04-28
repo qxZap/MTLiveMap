@@ -124,6 +124,19 @@ _DP_BP_FOLDER = "Objects/Mission/Delivery/DeliveryPoint"
 _DEFAULT_SOURCE_CLASS = "Farm_Corn_C"
 _DEFAULT_SOURCE_ACTOR = "CornFarm_2"
 
+# Cargo / cargo-type allowlists pulled from CargoImport so we can validate
+# recipe entries at registry-load time and surface bad data with a clear
+# log line instead of a silent in-game no-op.
+_CARGO_NAMES_PATH = _Path("CargoImport/cargos/cargo_names.txt")
+_CARGO_TYPES_PATH = _Path("CargoImport/cargos/types.txt")
+
+def _load_set(path: _Path) -> set[str]:
+    if not path.exists(): return set()
+    return {line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
+
+_VALID_CARGO_NAMES = _load_set(_CARGO_NAMES_PATH)
+_VALID_CARGO_TYPES = _load_set(_CARGO_TYPES_PATH)
+
 
 def _derive_target_class(key: str, source_class: str) -> tuple[str, str]:
     """Generate a unique mod BP class name for a delivery point key.
@@ -175,12 +188,42 @@ def _expand_dp_entry(key: str, cfg: dict) -> dict | None:
     }
     recipes = cfg.get("recipes") or cfg.get("production_recipes")
     if recipes:
-        entry["production_recipes"] = recipes
-    # Future visuals: marker_color / icon — pass through for downstream code
-    # (not yet wired into MT property mutation).
-    for k in ("marker_color", "icon"):
+        entry["production_recipes"] = _validate_recipes(key, recipes)
+    # Reserved fields propagated for future mutation — see AGENTS.md
+    # 'Marker / Icon Mutation (Pending)' / 'InventoryRatio (Pending)'.
+    for k in ("marker_color", "icon", "output_storage_cap"):
         if k in cfg: entry[k] = cfg[k]
     return entry
+
+
+def _validate_recipes(key: str, recipes: list) -> list:
+    """Drop unknown cargo names / types from each recipe and log them.
+    Loaded set may be empty if the user hasn't run import_cargo_data.py
+    yet — in that case we skip validation rather than reject everything."""
+    if not _VALID_CARGO_NAMES and not _VALID_CARGO_TYPES:
+        return recipes
+    cleaned = []
+    for i, r in enumerate(recipes):
+        if not isinstance(r, dict):
+            cleaned.append(r); continue
+        out = {k: v for k, v in r.items() if not k.startswith("_")}
+        for field in ("inputs", "outputs"):
+            m = out.get(field)
+            if not isinstance(m, dict): continue
+            bad = [n for n in m if n not in _VALID_CARGO_NAMES]
+            for n in bad:
+                print(f"  [delivery_points] {key} recipe[{i}].{field}: unknown cargo '{n}' — dropped", file=_sys.stderr)
+                m.pop(n)
+        for field in ("input_types", "output_types"):
+            v = out.get(field)
+            if isinstance(v, list):
+                out[field] = [t for t in v if t in _VALID_CARGO_TYPES or print(
+                    f"  [delivery_points] {key} recipe[{i}].{field}: unknown type '{t}' — dropped", file=_sys.stderr)]
+            elif isinstance(v, dict):
+                out[field] = {t: c for t, c in v.items() if t in _VALID_CARGO_TYPES or print(
+                    f"  [delivery_points] {key} recipe[{i}].{field}: unknown type '{t}' — dropped", file=_sys.stderr)}
+        cleaned.append(out)
+    return cleaned
 
 
 def _load_delivery_points():

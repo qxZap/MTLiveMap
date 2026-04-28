@@ -139,8 +139,20 @@ def main():
 
     imported = []
     parking = []
+    delivery = []
     skipped = 0
     copied_paths = set()
+    # Pull current delivery_points.json so each placed instance includes the
+    # full config inline. Makes map_work_changes.json self-describing — no
+    # need to cross-reference a separate file at deploy time.
+    dp_cfg_path = os.path.join(script_dir, "delivery_points.json")
+    dp_cfg: dict = {}
+    if os.path.exists(dp_cfg_path):
+        try:
+            with open(dp_cfg_path, "r", encoding="utf-8") as f:
+                dp_cfg = json.load(f)
+        except Exception as e:
+            print(f"  warning: delivery_points.json parse error: {e}")
 
     for group_name, items in src.get("static_meshes", {}).items():
         if not isinstance(items, list):
@@ -161,17 +173,44 @@ def main():
                 copy_asset_to_mod(rel_path, script_dir)
                 copied_paths.add(rel_path)
 
+            # Scene-export coords from ue.py are editor-local — apply the
+            # global OFFSETs to get world coords. Hand-authored entries can
+            # opt out via "world_coords": true (then X/Y/Z/Pitch/Roll/Yaw
+            # are taken verbatim).
+            world = bool(entry.get("world_coords", False))
+            ox, oy, oz = (0, 0, 0) if world else (OFFSET_X, OFFSET_Y, OFFSET_Z)
+            op, orr, oy_ = (0, 0, 0) if world else (OFFSET_PITCH, OFFSET_ROLL, OFFSET_YAW)
             base_entry = {
-                "X": round(float(entry.get("X", 0)) + OFFSET_X, 4),
-                "Y": round(float(entry.get("Y", 0)) + OFFSET_Y, 4),
-                "Z": round(float(entry.get("Z", 0)) + OFFSET_Z, 4),
-                "Pitch": round(float(entry.get("Pitch", 0)) + OFFSET_PITCH, 4),
-                "Roll": round(float(entry.get("Roll", 0)) + OFFSET_ROLL, 4),
-                "Yaw": round(float(entry.get("Yaw", 0)) + OFFSET_YAW, 4),
+                "X": round(float(entry.get("X", 0)) + ox, 4),
+                "Y": round(float(entry.get("Y", 0)) + oy, 4),
+                "Z": round(float(entry.get("Z", 0)) + oz, 4),
+                "Pitch": round(float(entry.get("Pitch", 0)) + op, 4),
+                "Roll": round(float(entry.get("Roll", 0)) + orr, 4),
+                "Yaw": round(float(entry.get("Yaw", 0)) + oy_, 4),
             }
 
             key = entry.get("asset_key")
-            if key in PARKING_KEYS:
+            # Accept either prefix form: DeliveryPoint_<KEY> or
+            # Delivery_Point_<KEY> (the scene-side underscore separator
+            # differs by author preference).
+            dp_key = None
+            if isinstance(key, str):
+                for prefix in ("DeliveryPoint_", "Delivery_Point_"):
+                    if key.startswith(prefix):
+                        dp_key = key[len(prefix):]
+                        break
+            if dp_key is not None:
+                # Slim entry — only the placement data + the key reference.
+                # The actual delivery-point config (label, recipes,
+                # marker/icon, storage cap) stays in delivery_points.json;
+                # placeholder skipped if its key is missing there.
+                if dp_key not in dp_cfg:
+                    print(f"  delivery: '{dp_key}' not found in delivery_points.json — placeholder skipped")
+                else:
+                    dp_entry = dict(base_entry)
+                    dp_entry["delivery_key"] = dp_key
+                    delivery.append(dp_entry)
+            elif key in PARKING_KEYS:
                 base_entry.update(BP_CLASS_FROM_KEY[key])
                 # Carry the registry key through so clone_bp_actors can look
                 # up the exact entry — multiple entries may share the same
@@ -190,11 +229,12 @@ def main():
     # Always clear and set — never append
     dst.setdefault("static_meshes", {})[TARGET_GROUP] = imported
     dst.setdefault("blueprint_actors", {})[TARGET_GROUP] = parking
+    dst["delivery_points"] = delivery
 
     with open(dst_path, "w", encoding="utf-8") as f:
         json.dump(dst, f, indent=4, ensure_ascii=False)
 
-    print(f"Imported {len(imported)} meshes + {len(parking)} parking lots, skipped {skipped}")
+    print(f"Imported {len(imported)} meshes + {len(parking)} parking lots + {len(delivery)} delivery points, skipped {skipped}")
     print(f"Offsets: X={OFFSET_X}, Y={OFFSET_Y}, Z={OFFSET_Z}")
     print(f"Target: {TARGET_GROUP} (cleared and set)")
 
