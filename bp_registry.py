@@ -148,6 +148,29 @@ def _load_set(path: _Path) -> set[str]:
 _VALID_CARGO_NAMES = _load_set(_CARGO_NAMES_PATH)
 _VALID_CARGO_TYPES = _load_set(_CARGO_TYPES_PATH)
 
+# Direct boosted-cargo name pattern: '<vanilla_cargo>x<int>' or
+# '<vanilla_cargo>x<int>p<frac>' (e.g. Fuelx5, CornPalletx2p5). Used in
+# delivery_points.json recipes to reference a boosted variant by name
+# without the `boosted` magic key, e.g. `outputs: {"Fuelx5": 1}`.
+# clone_bp_actors.detect_boosted_cargo_refs() scans recipes for these
+# names, auto-creates the row in Cargos_01.uasset, and lets the recipe
+# reference flow through unchanged.
+import re as _re
+_BOOSTED_CARGO_RE = _re.compile(r"^(?P<base>.+?)x(?P<intpart>\d+)(?:p(?P<fracpart>\d+))?$")
+
+def parse_boosted_name(name: str) -> tuple[str, float] | None:
+    """Return (base_cargo, multiplier) if name matches the boosted pattern
+    AND the base is a known vanilla cargo. Returns None for plain names
+    or names whose base isn't a real cargo (treats them as typos)."""
+    m = _BOOSTED_CARGO_RE.match(name)
+    if not m: return None
+    base = m.group("base")
+    if _VALID_CARGO_NAMES and base not in _VALID_CARGO_NAMES: return None
+    mult = float(m.group("intpart"))
+    if m.group("fracpart"):
+        mult += float(m.group("fracpart")) / (10 ** len(m.group("fracpart")))
+    return (base, mult)
+
 
 def _derive_target_class(key: str, source_class: str) -> tuple[str, str]:
     """Generate a unique mod BP class name for a delivery point key.
@@ -228,7 +251,16 @@ def _validate_recipes(key: str, recipes: list) -> list:
         for field in ("inputs", "outputs"):
             m = out.get(field)
             if not isinstance(m, dict): continue
-            bad = [n for n in m if n not in _VALID_CARGO_NAMES]
+            # Magic keys / generated names are kept:
+            #  - 'boosted'           magic key for the side-wide boost
+            #  - '<cargo>x<N>[p<F>]' direct boosted-variant cargo name
+            #                        (auto-cloned in Cargos_01.uasset)
+            bad = [
+                n for n in m
+                if n != "boosted"
+                and n not in _VALID_CARGO_NAMES
+                and parse_boosted_name(n) is None
+            ]
             for n in bad:
                 print(f"  [delivery_points] {key} recipe[{i}].{field}: unknown cargo '{n}' — dropped", file=_sys.stderr)
                 m.pop(n)
@@ -252,6 +284,11 @@ def _load_delivery_points():
         print(f"  [delivery_points.json] parse error: {e}", file=_sys.stderr); return
     for name, dp in cfg.items():
         if name.startswith("_"): continue   # skip _doc, _comment etc.
+        # Top-level config knobs (include_pickups, cargo_payment_overrides,
+        # cargo_base_overrides, ...) coexist with DP entries — they're
+        # consumed by clone_bp_actors directly. Only dict values are DPs.
+        if not isinstance(dp, dict): continue
+        if name in ("cargo_payment_overrides", "cargo_base_overrides", "cargo_spawn_overrides", "cargo_sqrt_overrides"): continue
         # Scene placeholder convention: DeliveryPoint_<key>
         REGISTRY[f"DeliveryPoint_{name}"] = _expand_dp_entry(name, dp)
 

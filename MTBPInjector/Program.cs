@@ -46,6 +46,7 @@ internal static class Program
                 "register-and-clone" => RegisterAndClone(args.Skip(1).ToArray()),
                 "mutate-bp-cdo" => MutateBpCdo(args.Skip(1).ToArray()),
                 "mutate-cargos" => MutateCargos(args.Skip(1).ToArray()),
+                "dump-cargo-row" => DumpCargoRow(args.Skip(1).ToArray()),
                 _ => Fail($"Unknown command: {args[0]}"),
             };
         }
@@ -294,6 +295,8 @@ internal static class Program
                 Console.WriteLine($"{indent}{field.Name}: \"{np.Value}\""); break;
             case UAssetAPI.PropertyTypes.Objects.IntPropertyData ip:
                 Console.WriteLine($"{indent}{field.Name}: {ip.Value}"); break;
+            case UAssetAPI.PropertyTypes.Objects.Int64PropertyData i64:
+                Console.WriteLine($"{indent}{field.Name}: {i64.Value}"); break;
             case UAssetAPI.PropertyTypes.Objects.FloatPropertyData fp:
                 Console.WriteLine($"{indent}{field.Name}: {fp.Value}"); break;
             case UAssetAPI.PropertyTypes.Objects.DoublePropertyData dp:
@@ -304,6 +307,11 @@ internal static class Program
                 Console.WriteLine($"{indent}{field.Name}: -> {op.Value?.Index}"); break;
             case UAssetAPI.PropertyTypes.Objects.SoftObjectPropertyData sop:
                 Console.WriteLine($"{indent}{field.Name}: <SoftObject>"); break;
+            case UAssetAPI.PropertyTypes.Objects.TextPropertyData tp:
+                Console.WriteLine($"{indent}{field.Name}: Text hist={tp.HistoryType} flags={tp.Flags} ns={tp.Namespace} val={tp.Value} table={tp.TableId} cinv={tp.CultureInvariantString}");
+                break;
+            case UAssetAPI.PropertyTypes.Objects.StrPropertyData sp:
+                Console.WriteLine($"{indent}{field.Name}: \"{sp.Value}\""); break;
             case UAssetAPI.PropertyTypes.Objects.MapPropertyData mp:
                 Console.WriteLine($"{indent}{field.Name}: Map key={mp.KeyType} value={mp.ValueType} entries={mp.Value?.Count ?? 0}");
                 if (mp.Value != null)
@@ -627,6 +635,91 @@ internal static class Program
         }
     }
 
+    // Diagnostic: dump one row of a Cargos DataTable in detail. Use to
+    // compare the field shape of a row produced by a working mod (e.g.
+    // OversizedCargos) against our cloned row, to spot missing imports
+    // / string-table refs / namespaces that explain blank UI labels.
+    //   --uasset <Cargos.uasset> --row <RowName>  [--imports] [--names]
+    //   --mappings <usmap>
+    private static int DumpCargoRow(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        Console.WriteLine($"== {f["uasset"]} ==");
+        Console.WriteLine($"NameMap entries: {asset.GetNameMapIndexList().Count}");
+        Console.WriteLine($"Imports: {asset.Imports.Count}");
+        if (f.ContainsKey("imports"))
+            for (int i = 0; i < asset.Imports.Count; i++)
+            {
+                var im = asset.Imports[i];
+                Console.WriteLine($"  -{i+1}: {im.ObjectName} (class={im.ClassName} pkg={im.ClassPackage} outer={im.OuterIndex.Index})");
+            }
+        if (f.ContainsKey("names"))
+        {
+            var names = asset.GetNameMapIndexList();
+            for (int i = 0; i < names.Count; i++)
+                Console.WriteLine($"  N{i}: {names[i]}");
+        }
+        UAssetAPI.ExportTypes.DataTableExport? table = null;
+        foreach (var e in asset.Exports)
+            if (e is UAssetAPI.ExportTypes.DataTableExport dte) { table = dte; break; }
+        if (table == null) { Console.Error.WriteLine("  No DataTableExport"); return 1; }
+        string rowName = f.GetValueOrDefault("row", "");
+        StructPropertyData? row = null;
+        if (string.IsNullOrEmpty(rowName) && table.Table.Data.Count > 0)
+            row = table.Table.Data[0];
+        else
+            foreach (var r in table.Table.Data)
+                if (string.Equals(r.Name.ToString(), rowName, StringComparison.OrdinalIgnoreCase))
+                { row = r; break; }
+        if (row == null) { Console.Error.WriteLine($"  Row '{rowName}' not found"); return 1; }
+        Console.WriteLine($"-- Row '{row.Name}' ({row.Value.Count} fields) --");
+        if (f.ContainsKey("rawtext"))
+        {
+            // Re-serialize the Name + Name2 properties using THIS asset's
+            // context so we can byte-compare two assets without UAssetAPI's
+            // dump abstraction hiding subtle differences (NameMap indices,
+            // FString encoding, terminator length).
+            foreach (var p in row.Value)
+            {
+                if (p.Name.ToString() != "Name" && p.Name.ToString() != "Name2") continue;
+                using var ms = new MemoryStream();
+                using var w = new AssetBinaryWriter(ms, asset);
+                p.Write(w, true);
+                var bytes = ms.ToArray();
+                Console.WriteLine($"  {p.Name} ({bytes.Length} bytes):");
+                for (int i = 0; i < bytes.Length; i += 16)
+                {
+                    int n = Math.Min(16, bytes.Length - i);
+                    var hex = new System.Text.StringBuilder();
+                    var asc = new System.Text.StringBuilder();
+                    for (int j = 0; j < n; j++)
+                    {
+                        hex.Append(bytes[i + j].ToString("x2")).Append(' ');
+                        byte b = bytes[i + j];
+                        asc.Append(b >= 0x20 && b < 0x7f ? (char)b : '.');
+                    }
+                    Console.WriteLine($"    {i:x4}  {hex,-48}  {asc}");
+                }
+            }
+            return 0;
+        }
+        if (f.ContainsKey("json"))
+        {
+            var settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.Auto,
+                Formatting = Formatting.Indented
+            };
+            Console.WriteLine(JsonConvert.SerializeObject(row, settings));
+        }
+        else
+        {
+            foreach (var p in row.Value) DumpField(p, "  ");
+        }
+        return 0;
+    }
+
     // Append boosted cargo rows to a copy of vanilla Cargos.uasset.
     // Each spec entry deep-clones a source row, renames it, and multiplies
     // PaymentPer1Km. The cloned rows ship in the mod's pak under the same
@@ -691,29 +784,141 @@ internal static class Program
             Console.WriteLine($"  ×{mult:0.##} {label}");
         }
 
-        int added = 0, boosted = 0, skipped = 0;
+        // Helper: hard-set BasePayment to an absolute value. Runs AFTER any
+        // multiplier-based boost so the override wins (crucial for offroad
+        // routes where PaymentPer1Km scaling is meaningless and the player
+        // gets paid almost entirely from BasePayment).
+        void SetBase(StructPropertyData row, long basePay, string label)
+        {
+            foreach (var p in row.Value)
+            {
+                if (p.Name.ToString() == "BasePayment" && p is Int64PropertyData ip)
+                {
+                    ip.Value = basePay;
+                    Console.WriteLine($"  base={basePay} {label}");
+                    return;
+                }
+            }
+        }
+
+        // Helper: hard-set SpawnProbability on a row. SpawnProbability
+        // controls how often MT's mission generator picks the cargo for
+        // random delivery missions. Setting to 0 keeps the cargo loadable
+        // and explicit recipes work, but the cargo never appears in
+        // ambient/random missions — useful for boosted variants where we
+        // want the high payout limited to the explicit producer-consumer
+        // pair, not generated against safety-net vanilla DPs.
+        void SetSpawnProbability(StructPropertyData row, int prob, string label)
+        {
+            foreach (var p in row.Value)
+            {
+                if (p.Name.ToString() == "SpawnProbability" && p is IntPropertyData ip)
+                {
+                    ip.Value = prob;
+                    Console.WriteLine($"  spawn={prob} {label}");
+                    return;
+                }
+            }
+        }
+
+        // Helper: set PaymentSqrtRatio. MT scales the payment by a
+        // sqrt-based curve (likely sqrt of distance or weight). Default
+        // is 1.0 — values above 1 amplify the curve, below 1 flatten it.
+        // Useful for taming the payout on boosted variants without
+        // touching BasePayment / PaymentPer1Km.
+        void SetSqrtRatio(StructPropertyData row, float ratio, string label)
+        {
+            foreach (var p in row.Value)
+            {
+                if (p.Name.ToString() == "PaymentSqrtRatio" && p is FloatPropertyData fp)
+                {
+                    fp.Value = ratio;
+                    Console.WriteLine($"  sqrt={ratio:0.##} {label}");
+                    return;
+                }
+            }
+        }
+
+        void SetDisplayName(StructPropertyData row, string sourceKey)
+        {
+            EnsureName(asset, "Texts");
+            EnsureName(asset, "TextProperty");
+            // Reuse vanilla's StringTableEntry pointing at the source
+            // cargo's key. Inline FText (None / Base history) renders
+            // blank in MT's mission UI; shipping a modified vanilla
+            // StringTable crashes on world load. Until a separate-path
+            // StringTable is wired up, the boosted row shows the source
+            // cargo's localized name (e.g. Fuelx5 -> "Fuel").
+            EnsureName(asset, "/Game/DataAsset/StringTables/Cargo.Cargo");
+            var tableId = FName.FromString(asset, "/Game/DataAsset/StringTables/Cargo.Cargo");
+            foreach (var p in row.Value)
+            {
+                if (p.Name.ToString() == "Name" && p is TextPropertyData tp)
+                {
+                    tp.HistoryType = TextHistoryType.StringTableEntry;
+                    tp.Flags = 0;
+                    tp.Namespace = null;
+                    tp.TableId = tableId;
+                    tp.Value = new FString(sourceKey);
+                    tp.CultureInvariantString = null;
+                    tp.SourceFmt = null; tp.Arguments = null; tp.ArgumentsData = null;
+                }
+                else if (p.Name.ToString() == "Name2" && p is StructPropertyData sp && sp.Value != null)
+                {
+                    // Vanilla rows leave Name2.Texts empty — match that.
+                    foreach (var inner in sp.Value)
+                    {
+                        if (inner is ArrayPropertyData ap && inner.Name.ToString() == "Texts")
+                        {
+                            ap.Value = Array.Empty<PropertyData>();
+                            ap.ArrayType = FName.FromString(asset, "TextProperty");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        int added = 0, boosted = 0, skipped = 0, baseSet = 0;
         foreach (var entry in spec)
         {
             string source  = (string)entry["source"]!;
             string? target = (string?)entry["target"];
-            float mult     = (float)entry["payment_multiplier"]!;
+            float mult     = entry["payment_multiplier"] != null ? (float)entry["payment_multiplier"]! : 1.0f;
+            long? basePay  = entry["base_payment"]?.Type == JTokenType.Integer
+                ? (long?)(long)entry["base_payment"]! : null;
+            int? spawnProb = entry["spawn_probability"]?.Type == JTokenType.Integer
+                ? (int?)(int)entry["spawn_probability"]! : null;
+            float? sqrtRatio = entry["sqrt_ratio"] != null
+                && (entry["sqrt_ratio"]!.Type == JTokenType.Float
+                    || entry["sqrt_ratio"]!.Type == JTokenType.Integer)
+                ? (float?)(float)entry["sqrt_ratio"]! : null;
             if (!existingRows.TryGetValue(source, out var srcRow))
             {
                 Console.Error.WriteLine($"  source cargo '{source}' not found in Cargos table");
                 continue;
             }
-            // No target ⇒ IN-PLACE boost on the existing row. Safer than
-            // appending new rows (which broke the table layout earlier);
-            // mutates only the two payment fields, no schema change.
+            // No target ⇒ IN-PLACE on the existing row. Apply multiplier
+            // first (if > 1), then absolute base override (if any). Safer
+            // than appending new rows for in-place edits — mutates only
+            // payment fields, no schema change.
             if (string.IsNullOrEmpty(target))
             {
-                Boost(srcRow, mult, source); boosted++; continue;
+                if (mult != 1.0f) { Boost(srcRow, mult, source); boosted++; }
+                if (basePay.HasValue) { SetBase(srcRow, basePay.Value, source); baseSet++; }
+                if (spawnProb.HasValue) SetSpawnProbability(srcRow, spawnProb.Value, source);
+                if (sqrtRatio.HasValue) SetSqrtRatio(srcRow, sqrtRatio.Value, source);
+                continue;
             }
             if (existingRows.ContainsKey(target)) { skipped++; continue; }
             var newRow = (StructPropertyData)DeepClone(srcRow);
             EnsureName(asset, target);
             newRow.Name = FName.FromString(asset, target);
-            Boost(newRow, mult, $"+cargo {target} (clone of {source})");
+            SetDisplayName(newRow, source);
+            if (mult != 1.0f) Boost(newRow, mult, $"+cargo {target} (clone of {source})");
+            if (basePay.HasValue) SetBase(newRow, basePay.Value, target);
+            if (spawnProb.HasValue) SetSpawnProbability(newRow, spawnProb.Value, target);
+            if (sqrtRatio.HasValue) SetSqrtRatio(newRow, sqrtRatio.Value, target);
             table.Table.Data.Add(newRow);
             existingRows[target] = newRow;
             added++;
@@ -721,7 +926,7 @@ internal static class Program
 
         Directory.CreateDirectory(Path.GetDirectoryName(dstPath)!);
         asset.Write(dstPath);
-        Console.WriteLine($"  Wrote {dstPath} ({added} new, {boosted} in-place, {skipped} dedup)");
+        Console.WriteLine($"  Wrote {dstPath} ({added} new, {boosted} in-place boosted, {baseSet} base-set, {skipped} dedup)");
         return 0;
     }
 
@@ -775,15 +980,47 @@ internal static class Program
         int existing = -1;
         for (int i = 0; i < cdo.Data.Count; i++)
             if (cdo.Data[i].Name.ToString() == "ProductionConfigs") { existing = i; break; }
-        if (existing >= 0) { cdo.Data[existing] = newProd; Console.WriteLine($"  Replaced ProductionConfigs on {cdoName}"); }
-        else               { cdo.Data.Add(newProd);       Console.WriteLine($"  Added ProductionConfigs to {cdoName}"); }
+
+        bool appendMode = f.ContainsKey("append-recipes");
+        if (appendMode && existing >= 0
+            && cdo.Data[existing] is ArrayPropertyData prevArr
+            && prevArr.Value != null)
+        {
+            // Concatenate vanilla + new recipes so the modified DP keeps
+            // its original recipes AND also accepts/produces the boosted
+            // variants. Used when mod-overriding vanilla DPs to flow
+            // boosted-clone cargos through their normal mission graph.
+            var combined = new PropertyData[prevArr.Value.Length + newProd.Value.Length];
+            Array.Copy(prevArr.Value, 0, combined, 0, prevArr.Value.Length);
+            Array.Copy(newProd.Value, 0, combined, prevArr.Value.Length, newProd.Value.Length);
+            // Re-number array entries (Name field is the index).
+            for (int i = 0; i < combined.Length; i++)
+                if (combined[i] is StructPropertyData spd)
+                    spd.Name = FName.FromString(asset, i.ToString());
+            prevArr.Value = combined;
+            Console.WriteLine($"  Appended {newProd.Value.Length} recipe(s) to {cdoName} (kept {prevArr.Value.Length - newProd.Value.Length} vanilla)");
+        }
+        else if (existing >= 0)
+        {
+            cdo.Data[existing] = newProd;
+            Console.WriteLine($"  Replaced ProductionConfigs on {cdoName}");
+        }
+        else
+        {
+            cdo.Data.Add(newProd);
+            Console.WriteLine($"  Added ProductionConfigs to {cdoName}");
+        }
 
         Directory.CreateDirectory(Path.GetDirectoryName(dstUasset)!);
         // Regenerate PackageGuid so multiple byte-clones of the same source
         // BP don't share an identity — UE's loader treats same-GUID
         // packages as duplicates and silently drops all but the first,
         // which is why a 2nd cloned delivery point would fail to spawn.
-        asset.PackageGuid = Guid.NewGuid();
+        // EXCEPTION: when we're shipping a mod-override of a vanilla DP
+        // (src-class == dst-class), keep the original PackageGuid so the
+        // pak override semantics stay intact.
+        if (srcClass != dstClass)
+            asset.PackageGuid = Guid.NewGuid();
         // Save to dst path first so UAssetAPI handles offsets cleanly. Then
         // byte-rename the source class in both .uasset and .uexp.
         asset.Write(dstUasset);

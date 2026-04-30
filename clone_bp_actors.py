@@ -21,90 +21,271 @@ import subprocess
 import sys
 from pathlib import Path
 
-from bp_registry import REGISTRY, CELLS_DIR, JEJU_MAIN, template_for_class
+from bp_registry import REGISTRY, CELLS_DIR, JEJU_MAIN, GAME_CONTENT, template_for_class, parse_boosted_name
 
 MAPPINGS = r"D:\MT\MotorTown718P1.usmap"
 INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
 MOD_CONTENT_ROOT = Path("MapChangeTest_P/MotorTown/Content")
-VANILLA_CARGOS  = Path(r"D:\MT\Output\Exports\MotorTown\Content\DataAsset\Cargos.uasset")
-MOD_CARGOS      = MOD_CONTENT_ROOT / "DataAsset" / "Cargos.uasset"
+VANILLA_CARGOS_01 = Path(r"D:\MT\Output\Exports\MotorTown\Content\DataAsset\Cargos_01.uasset")
+MOD_CARGOS        = MOD_CONTENT_ROOT / "DataAsset" / "Cargos.uasset"
+MOD_CARGOS_01     = MOD_CONTENT_ROOT / "DataAsset" / "Cargos_01.uasset"
 
 
 def boosted_cargo_name(source: str, mult: float) -> str:
-    """Deterministic name for a payment-boosted clone of a cargo. Format:
-       <Source>_x<int_part>_<frac_part_truncated_to_1_digit>
-       e.g. CornPallet_x2_5 / lHBeam_6m_x10_0. Decimal point becomes
-       underscore so the name is a valid FName / table key."""
-    return f"{source}_x{mult:.1f}".replace(".", "_")
+    """Deterministic name for a payment-boosted clone of a cargo.
+       Whole multipliers: '<Source>x<N>' (e.g. Fuelx5).
+       Fractional:        '<Source>x<int>p<frac>' (e.g. CornPalletx2p5).
+       Critically NO trailing '_<digit>': UE's FName parser treats
+       'Fuel_x5_0' as base='Fuel_x5_' + instance number 0 (or 1 in
+       internal +1 form), which breaks DataTable row-name lookups in
+       MT's cargo registry — observed as the cargo rendering blank in
+       the mission UI even with a correctly-shaped Name TextProperty."""
+    if mult == int(mult):
+        return f"{source}x{int(mult)}"
+    return f"{source}x{int(mult)}p{int(round((mult - int(mult)) * 10))}"
 
 
-def materialize_boosted_cargos(entries: list[dict]) -> tuple[bool, dict]:
-    """Build the mod's Cargos.uasset:
-       1) Collect every IN-PLACE multiplier from delivery_points.json's
-          top-level `cargo_payment_overrides` map ({Cargo: float}). These
-          bump the existing row's PaymentPer1Km + BasePayment without
-          adding rows — safe and works alongside vanilla missions because
-          the cargo name doesn't change.
-       2) Collect every DEEP-CLONE request from a recipe's `boost` field
-          (kept for forward-compat; current crash from row-append is why
-          we prefer in-place overrides). Returns substitution map for
-          recipe outputs."""
+_BOOSTED_KEY = "boosted"
+
+
+def expand_boosted_in_recipes(entries: list[dict]) -> dict[tuple[str, float], str]:
+    """Walk every recipe in REGISTRY for the supplied entries. Each recipe's
+    `inputs` / `outputs` cargo dict may include the magic key `"boosted": N`
+    (numeric multiplier). When present, clone every NAMED cargo entry in
+    THAT side of the recipe into a boosted-variant entry with same count
+    and apply ONLY to that recipe.
+
+    Example — `outputs: {"Fuel": 1, "boosted": 5}` becomes
+              `outputs: {"Fuel": 1, "Fuelx5": 1}`.
+
+    Returns a global boost_map (cargo, mult) -> boosted_name covering every
+    boosted reference seen across all entries — used downstream to populate
+    Cargos_01.uasset with the actual cargo rows.
+
+    Mutates REGISTRY recipe dicts in-place (the same dicts mutate-bp-cdo
+    will receive), so the rewritten recipe is what ships in the BP CDO.
+    Per-recipe scope means TF2 producing boosted Fuel does NOT cause TF1
+    or any other DP to also produce it — only DPs that opt in via the
+    `boosted` key participate."""
+    boost_map: dict[tuple[str, float], str] = {}
+    seen_entries: set[str] = set()
+    for e in entries:
+        key = e.get("asset_key", "")
+        if key in seen_entries: continue
+        seen_entries.add(key)
+        tpl = REGISTRY.get(key)
+        if not tpl: continue
+        for r in tpl.get("production_recipes", []) or []:
+            if not isinstance(r, dict): continue
+            for slot in ("inputs", "outputs"):
+                m = r.get(slot)
+                if not isinstance(m, dict): continue
+                # Direct boosted-name references like {"Fuelx5": 1}: each
+                # such name is kept verbatim in the recipe AND registered
+                # in boost_map so its row gets created in Cargos_01.uasset.
+                # Lets users write boosted cargos by name without the
+                # `boosted` magic key.
+                for cargo in list(m.keys()):
+                    parsed = parse_boosted_name(cargo)
+                    if parsed is not None:
+                        boost_map[parsed] = cargo
+                # `boosted: <mult>` magic key on this side: clone every
+                # NAMED cargo on the SAME side into a boosted variant
+                # entry with same count.
+                if _BOOSTED_KEY in m:
+                    mult = float(m.pop(_BOOSTED_KEY))
+                    additions: dict[str, int] = {}
+                    for cargo, count in list(m.items()):
+                        # Skip already-boosted entries (avoid double-x).
+                        if parse_boosted_name(cargo) is not None: continue
+                        tgt = boosted_cargo_name(cargo, mult)
+                        additions[tgt] = count
+                        boost_map[(cargo, mult)] = tgt
+                    m.update(additions)
+    return boost_map
+
+
+def materialize_boosted_cargos(boost_map: dict[tuple[str, float], str]) -> bool:
+    """Write a boosted clone-row into the mod's Cargos_01.uasset for every
+    (source, mult) pair the recipes asked for. Vanilla cargo prices stay
+    unchanged — we add NEW rows, never mutate existing ones.
+
+    Two top-level JSON knobs are also honored as explicit GLOBAL overrides:
+      - cargo_payment_overrides: {Cargo: mult}  — multiplies PaymentPer1Km
+        AND BasePayment of the named row in place. Cargo name unchanged,
+        so vanilla missions see the new rate too.
+      - cargo_base_overrides: {Cargo: int}      — sets BasePayment to an
+        absolute value (post-multiplier when both apply). Critical for
+        offroad routes where PaymentPer1Km doesn't help — base payment
+        is what the player actually earns. Targets boosted variants
+        (e.g. 'Fuelx2': 100000) or vanilla rows (e.g. 'Fuel': 5000)."""
     spec: list[dict] = []
-    sub: dict[tuple[str, float], str] = {}
 
-    # Pull top-level cargo_payment_overrides from delivery_points.json.
+    base_overrides: dict[str, int] = {}
+    spawn_overrides: dict[str, int] = {}
+    sqrt_overrides: dict[str, float] = {}
     dp_path = Path("delivery_points.json")
     if dp_path.exists():
         try:
             dp_cfg = json.loads(dp_path.read_text(encoding="utf-8"))
-            overrides = dp_cfg.get("cargo_payment_overrides") or {}
-            for cargo, mult in overrides.items():
-                if cargo.startswith("_"): continue   # skip _doc-style entries
+            for cargo, mult in (dp_cfg.get("cargo_payment_overrides") or {}).items():
+                if cargo.startswith("_"): continue
                 spec.append({"source": cargo, "payment_multiplier": float(mult)})
+            for cargo, base in (dp_cfg.get("cargo_base_overrides") or {}).items():
+                if cargo.startswith("_"): continue
+                base_overrides[cargo] = int(base)
+            for cargo, prob in (dp_cfg.get("cargo_spawn_overrides") or {}).items():
+                if cargo.startswith("_"): continue
+                spawn_overrides[cargo] = int(prob)
+            for cargo, ratio in (dp_cfg.get("cargo_sqrt_overrides") or {}).items():
+                if cargo.startswith("_"): continue
+                sqrt_overrides[cargo] = float(ratio)
         except Exception as e:
             print(f"  delivery_points.json overrides parse error: {e}", file=sys.stderr)
 
-    # Per-recipe boost ⇒ deep-clone (architecturally fragile but kept).
-    for e in entries:
-        tpl = REGISTRY.get(e.get("asset_key", ""))
-        if not tpl: continue
-        for r in tpl.get("production_recipes", []) or []:
-            boost = r.get("boost")
-            if not boost: continue
-            for cargo in (r.get("outputs") or {}).keys():
-                tgt = boosted_cargo_name(cargo, float(boost))
-                sub[(cargo, float(boost))] = tgt
-                spec.append({"source": cargo, "target": tgt, "payment_multiplier": float(boost)})
+    def _attach(entry: dict, cargo_name: str) -> dict:
+        if cargo_name in base_overrides:
+            entry["base_payment"] = base_overrides.pop(cargo_name)
+        if cargo_name in spawn_overrides:
+            entry["spawn_probability"] = spawn_overrides.pop(cargo_name)
+        if cargo_name in sqrt_overrides:
+            entry["sqrt_ratio"] = sqrt_overrides.pop(cargo_name)
+        return entry
 
+    seen: set[tuple[str, float]] = set()
+    for (src, mult), tgt in boost_map.items():
+        key = (src, mult)
+        if key in seen: continue
+        seen.add(key)
+        spec.append(_attach({"source": src, "target": tgt, "payment_multiplier": mult}, tgt))
+    # Any remaining override (name NOT in boost_map) → in-place mutation on
+    # either the source row (vanilla cargo) or a previously-existing
+    # boosted row. Lookup happens server-side via row name match.
+    leftover = set(base_overrides) | set(spawn_overrides) | set(sqrt_overrides)
+    for cargo in leftover:
+        spec.append(_attach({"source": cargo}, cargo))
+
+    # Wipe any stale mod-shipped cargo assets from prior runs. Cargos.uasset
+    # and StringTables/Cargo.uasset both crashed MT on world load when
+    # shipped (re-serialized bytes likely fail a UE asset-registry hash).
+    # Only Cargos_01.uasset is safe to ship — that's where boosted rows go.
+    stale_paths = [
+        MOD_CARGOS.with_suffix(".uasset"),
+        MOD_CARGOS.with_suffix(".uexp"),
+        MOD_CONTENT_ROOT / "DataAsset" / "StringTables" / "Cargo.uasset",
+        MOD_CONTENT_ROOT / "DataAsset" / "StringTables" / "Cargo.uexp",
+    ]
     if not spec:
-        # No active overrides — wipe any stale mod Cargos.uasset from a prior
-        # run so vanilla cargo prices apply unmodified.
-        for ext in (".uasset", ".uexp"):
-            p = MOD_CARGOS.with_suffix(ext)
+        stale_paths += [MOD_CARGOS_01.with_suffix(".uasset"),
+                        MOD_CARGOS_01.with_suffix(".uexp")]
+        for p in stale_paths:
             if p.exists():
                 p.unlink()
                 print(f"  cleaned stale {p.name}")
-        return True, {}
+        return True
+    for p in stale_paths:
+        if p.exists(): p.unlink()
+
     import tempfile
-    MOD_CARGOS.parent.mkdir(parents=True, exist_ok=True)
+    MOD_CARGOS_01.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
         json.dump(spec, tf); spec_path = tf.name
     try:
         r = subprocess.run([
             str(INJECTOR), "mutate-cargos",
             "--mappings",   MAPPINGS,
-            "--src-uasset", str(VANILLA_CARGOS),
-            "--dst-uasset", str(MOD_CARGOS),
+            "--src-uasset", str(VANILLA_CARGOS_01),
+            "--dst-uasset", str(MOD_CARGOS_01),
             "--spec",       spec_path,
         ], capture_output=True, text=True)
+        if r.returncode != 0:
+            print(r.stdout); print(r.stderr, file=sys.stderr); return False
+        for line in r.stdout.splitlines():
+            if line.strip(): print(f"  {line}")
     finally:
         try: os.unlink(spec_path)
         except OSError: pass
-    if r.returncode != 0:
-        print(r.stdout); print(r.stderr, file=sys.stderr); return False, {}
-    for line in r.stdout.splitlines():
-        if line.strip(): print(f"  {line}")
-    return True, sub
+    return True
+
+
+def inject_boosted_into_vanilla_dps(boost_map: dict[tuple[str, float], str],
+                                    only_classes: set[str] | None = None) -> bool:
+    """Add the boosted cargo variant to vanilla DPs that CONSUME the
+    source cargo, so deliveries land somewhere besides the per-recipe
+    consumer. Producers stay vanilla — only DPs that opted in via
+    `boosted` (e.g. TF2) generate the boosted variant.
+
+    Why: shipping boosted cargo rows that no vanilla DP references
+    crashes MT on world load. Adding the boosted variant to vanilla
+    Fuel-consumers' `inputs` map fixes the crash and gives the player
+    real destinations for boosted deliveries.
+
+    If `only_classes` is provided (e.g. {'Farm_Cabbage_C', 'Farm_Hemp_C'}),
+    inject only into those specific BP classes — minimal-coverage mode
+    used when include_pickups=false but at least one safety-net vanilla
+    consumer is needed to satisfy MT's mission registry."""
+    if not boost_map:
+        return True
+    import copy, tempfile
+    examples_dir = Path("CargoImport/delivery_points")
+    if not examples_dir.exists():
+        print(f"  [boost] {examples_dir} missing — run import_cargo_data.py first", file=sys.stderr)
+        return False
+    dp_folder_rel = Path("Objects/Mission/Delivery/DeliveryPoint")
+    src_root = GAME_CONTENT
+    dst_root = MOD_CONTENT_ROOT
+    affected = 0
+    for ex_path in sorted(examples_dir.glob("*.example.json")):
+        try:
+            ex = json.loads(ex_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        cls = ex.get("_source_class")
+        recipes = ex.get("recipes") or []
+        if not cls or not recipes:
+            continue
+        if only_classes is not None and cls not in only_classes:
+            continue
+        full_recipes = copy.deepcopy(recipes)
+        any_change = False
+        for nr in full_recipes:
+            if not isinstance(nr, dict): continue
+            m = nr.get("inputs")
+            if not isinstance(m, dict): continue
+            for (src, mult), tgt in boost_map.items():
+                if src not in m: continue
+                m[tgt] = m[src]
+                any_change = True
+        if not any_change:
+            continue
+        short = cls[:-2] if cls.endswith("_C") else cls
+        src_uasset = src_root / dp_folder_rel / f"{short}.uasset"
+        dst_uasset = dst_root / dp_folder_rel / f"{short}.uasset"
+        if not src_uasset.exists():
+            print(f"  [boost] vanilla {src_uasset.name} missing — skipped", file=sys.stderr)
+            continue
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+            json.dump(full_recipes, tf); spec_path = tf.name
+        try:
+            r = subprocess.run([
+                str(INJECTOR), "mutate-bp-cdo",
+                "--mappings",   MAPPINGS,
+                "--src-uasset", str(src_uasset),
+                "--dst-uasset", str(dst_uasset),
+                "--src-class",  cls,
+                "--dst-class",  cls,
+                "--recipes",    spec_path,
+            ], capture_output=True, text=True)
+        finally:
+            try: os.unlink(spec_path)
+            except OSError: pass
+        if r.returncode != 0:
+            print(r.stdout); print(r.stderr, file=sys.stderr); return False
+        for line in r.stdout.splitlines():
+            if line.strip(): print(f"    {line}")
+        affected += 1
+    print(f"  [boost] modified {affected} vanilla DP(s) to flow boosted cargo")
+    return True
 
 
 def prepare_mod_bp_class(tpl: dict) -> bool:
@@ -402,29 +583,35 @@ def main():
         entries = [e for e in entries if not _match(e)]
         print(f"  [debug] BP_SKIP={sorted(_skip)} — {before} -> {len(entries)} entries")
 
-    # Materialize boosted cargo rows (deep-clones in mod's Cargos.uasset
-    # with PaymentPer1Km × multiplier). Substitutes output names in each
-    # affected recipe in-place so the mutate-bp-cdo step downstream
-    # references the boosted cargos.
-    ok, boost_map = materialize_boosted_cargos(entries)
-    if not ok: return 1
-    if boost_map:
-        # Strip 'boost' + rewrite outputs by the boost map. Mutates each
-        # tpl's production_recipes list in place — the registry entry is
-        # the same Python dict the rest of the pipeline hands to
-        # mutate-bp-cdo.
-        for e in entries:
-            tpl = REGISTRY.get(e.get("asset_key", ""))
-            if not tpl: continue
-            for r in tpl.get("production_recipes", []) or []:
-                boost = r.pop("boost", None)
-                if not boost: continue
-                outs = r.get("outputs") or {}
-                if outs:
-                    r["outputs"] = {
-                        boost_map.get((src, float(boost)), src): cnt
-                        for src, cnt in outs.items()
-                    }
+    # Per-recipe `boosted: <mult>` magic key OR direct boosted-name
+    # references like `Fuelx2` → expand inputs/outputs in-place and
+    # collect (source, mult) -> boosted_name for cargo-row creation.
+    # Top-level `include_pickups` flag (default true) controls whether
+    # vanilla DPs that consume the source cargo also accept the boosted
+    # variant (wholesale input injection). Set false to keep the boosted
+    # variant scoped strictly to the per-recipe DPs that opted in.
+    boost_map = expand_boosted_in_recipes(entries)
+    if not materialize_boosted_cargos(boost_map): return 1
+    include_pickups = True
+    safety_net: list[str] = []
+    dp_path = Path("delivery_points.json")
+    if dp_path.exists():
+        try:
+            cfg = json.loads(dp_path.read_text(encoding="utf-8"))
+            include_pickups = bool(cfg.get("include_pickups", True))
+            safety_net = list(cfg.get("boost_safety_dps") or [])
+        except Exception: pass
+    if include_pickups:
+        if not inject_boosted_into_vanilla_dps(boost_map): return 1
+    elif boost_map:
+        # Minimal-coverage mode: inject boosted variant into a hand-picked
+        # subset of vanilla DPs. Required because shipping a boosted cargo
+        # with NO vanilla consumers crashes MT on world load. Default list
+        # if empty: two low-traffic farms so the player rarely encounters
+        # the boosted variant outside the explicit per-recipe consumer.
+        only = set(safety_net) if safety_net else {"Farm_Cabbage_C", "Farm_Hemp_C"}
+        print(f"  [boost] include_pickups=false — safety-net injection into {sorted(only)}")
+        if not inject_boosted_into_vanilla_dps(boost_map, only_classes=only): return 1
 
     # First pass: resolve/create destination cell per entry, group entries by
     # cell. Second pass: run ONE clone-batch call per cell (all clones into

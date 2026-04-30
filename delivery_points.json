@@ -1,6 +1,17 @@
 {
+  "include_pickups": false,
   "cargo_payment_overrides": {
-    "_": "Per-cargo PaymentPer1Km + BasePayment in-place multiplier on the mod's Cargos.uasset. Currently DISABLED — even an in-place mutation of an existing row crashed the game on load. Likely UAssetAPI's re-serialization of Cargos.uasset isn't producing a byte-perfect package; needs deeper investigation before re-enabling. Add cargo entries here ONLY when the mutation path is verified safe."
+    "_": "Per-cargo PaymentPer1Km + BasePayment in-place multiplier. Mutates the existing cargo row — the cargo NAME stays the same, so vanilla missions also get the boost. Use sparingly; this is a global price knob, not a per-DP boost."
+  },
+  "cargo_base_overrides": {
+    "_": "Sets BasePayment to an ABSOLUTE value on the named cargo row (post-multiplier when boost also applies). Targets vanilla rows (e.g. 'Fuel': 5000) or boosted variants (e.g. 'Fuelx2': 100000). Critical for offroad routes — PaymentPer1Km only matters when MT's road-distance calc finds a marked road; offroad routes earn almost entirely from BasePayment.",
+    "Fuelx2": 100000
+  },
+  "cargo_spawn_overrides": {
+    "_": "Sets SpawnProbability on the named cargo row. 0 hides the cargo from MT's random/ambient mission generator (in theory — empirical effect on boosted variants was inconclusive). Targets vanilla rows or boosted variants. No auto-default; only takes effect when explicitly listed."
+  },
+  "cargo_sqrt_overrides": {
+    "_": "Sets PaymentSqrtRatio on the named cargo row (default 1.0). MT scales delivery payment by a sqrt-based curve; values < 1 flatten the curve (lower payouts on long routes), > 1 amplify it. Useful for taming runaway boosted-cargo payouts without touching BasePayment / PaymentPer1Km."
   },
   "_doc": {
     "purpose": "Per-name delivery-point configuration. Scene placeholders named DeliveryPoint_<KEY> resolve to the entry under <KEY> here. Missing entries are logged and ignored.",
@@ -15,7 +26,9 @@
       "recipes":       "List of production configs. See _example below for every supported field.",
       "marker_color":  "RESERVED. Hex color for the world-map marker. Pipeline propagates the value but MTBPInjector mutation is not yet wired (see AGENTS.md 'Marker / Icon Mutation (Pending)').",
       "icon":          "RESERVED. /Game/... path for the marker icon. Same plumbing status as marker_color.",
-      "output_storage_cap": "RESERVED. Per-cargo max storage on this delivery point (vanilla default ~100). Lives on a separate MTDeliveryPointInventoryRatio actor, not on the BP CDO — needs targeted mutation. Pipeline propagates the value but MTBPInjector mutation pending."
+      "output_storage_cap": "RESERVED. Per-cargo max storage on this delivery point (vanilla default ~100). Lives on a separate MTDeliveryPointInventoryRatio actor, not on the BP CDO — needs targeted mutation. Pipeline propagates the value but MTBPInjector mutation pending.",
+      "include_pickups":  "TOP-LEVEL bool (default true). When true, every vanilla DP that consumes a source cargo also accepts the boosted variant (input-only wholesale injection). When false, only a SAFETY-NET subset of vanilla DPs is touched (see `boost_safety_dps`). Going below the safety net crashes MT on world load — the boosted cargo seems to need at least minimal vanilla mission-graph coverage.",
+      "boost_safety_dps": "TOP-LEVEL list of vanilla DP class names (e.g. ['Farm_Cabbage_C', 'Farm_Hemp_C']) that ALWAYS get the boosted variant added to inputs even when include_pickups=false. Defaults to two low-traffic farms when omitted. Empty list NOT supported — leaving zero vanilla consumers crashes the game."
     },
     "recipe_fields": {
       "inputs":        "{Cargo: Count} — specific cargo names from cargos/cargo_names.txt.",
@@ -24,7 +37,8 @@
       "output_types":  "[Type] OR {Type: Count} — same shape as input_types.",
       "speed":         "Float — ProductionSpeedMultiplier (1.0 default; 5.0 = 500%).",
       "time_seconds":  "Float — ProductionTimeSeconds for one production cycle.",
-      "boost":         "Float — payment-per-km multiplier applied to every named output in this recipe. The framework deep-clones each output cargo in mod's Cargos.uasset with the multiplied PaymentPer1Km + BasePayment, gives it a deterministic name (<Source>_x<N_M>), and substitutes recipe outputs accordingly. Players see what looks like the original cargo but earn boosted pay."
+      "boosted":       "Magic key inside an inputs/outputs cargo dict. Value is the per-km payment multiplier. For every NAMED cargo on the same side, the framework clones a boosted variant in Cargos_01.uasset (named '<Source>x<N>', e.g. Fuelx2) with PaymentPer1Km and BasePayment ×N, and adds it to THIS recipe alongside the source at the same count. Per-recipe — only DPs that opt in produce/accept the boosted variant. Side-effect: every vanilla DP that CONSUMES the source cargo also accepts the boosted variant (input-only wholesale). Required to avoid a world-load crash that fires when a boosted cargo has zero vanilla consumers. Combine with top-level cargo_base_overrides[<boosted_name>] to also hard-set BasePayment for offroad-friendly payouts.",
+      "direct_boosted":"Alternative to the `boosted` key: name the boosted cargo directly, e.g. `outputs: {\"Fuelx2\": 1}`. Pattern `<vanilla_cargo>x<int>` or `<cargo>x<int>p<frac>` (Fuelx2p5 = 2.5x) auto-creates the row at the implied multiplier. Use this when you want ONLY the boosted variant on a side (e.g. TF2 outputs Fuelx2 only, with no vanilla Fuel). Display label falls back to the source cargo's localized name — Fuelx2 currently shows as 'Fuel' in the mission UI; a separate-path StringTable for distinct labels is pending."
     }
   },
   "TransformerFarm2": {
@@ -33,16 +47,11 @@
     "icon":         "/Game/Objects/Mission/Delivery/DeliveryPoint/ConstructionSite",
     "recipes": [
       {
-        "_": "Accepts Fuel; produces CornPallet for a fast cycle.",
-        "inputs":       {"Fuel": 1},
+        "_": "TF2 is the consumer side of the A/B test. Accepts BOTH vanilla Fuel and boosted Fuelx2 — both produce CornBox. Players can deliver either cargo here and compare the payouts (Fuel = vanilla 300/km + vanilla base; Fuelx2 = 600/km + 100k base from cargo_base_overrides). With include_pickups=false, this is the ONLY in-world destination for Fuelx2.",
+        "inputs":       {"Fuel": 1, "Fuelx2": 1},
         "outputs":      {"CornBox": 1},
         "speed":        5.0,
         "time_seconds": 30.0
-      },
-      {
-        "_": "Timer-only background production — no inputs, just outputs over time.",
-        "outputs":      {"CornBox": 1},
-        "time_seconds": 6.0
       }
     ]
   },
@@ -53,14 +62,19 @@
     "output_storage_cap":  5000,
     "recipes": [
       {
-        "_": "Multi-cargo input + multi-cargo output, custom speed + time. Outputs pay 2.5x via deep-cloned Cargos.uasset rows.",
+        "_": "TF1 spawns Fuelx2 out of thin air on a timer (no inputs needed). With include_pickups=false, this is the only in-world source of Fuelx2. Players pick up here and deliver to TF2 for the boosted payout.",
+        "outputs":      {"Fuelx2": 1},
+        "time_seconds": 30.0
+      },
+      {
+        "_": "Multi-cargo input + multi-cargo output, custom speed + time.",
         "inputs":       {"Transformer_50MVA": 1, "CrudeOil": 2},
         "outputs":      {"CornBox": 3, "WoodPlank_14ft_5t": 1},
         "speed":        5.0,
         "time_seconds": 30.0
       },
       {
-        "_": "Multi-cargo input + multi-cargo output, custom speed + time. Outputs pay 2.5x via deep-cloned Cargos.uasset rows.",
+        "_": "Multi-cargo input + multi-cargo output, custom speed + time.",
         "inputs":       {"CornBox": 1, "CrudeOil": 2},
         "outputs":      {"CornBox": 3, "WoodPlank_14ft_5t": 1},
         "speed":        5.0,

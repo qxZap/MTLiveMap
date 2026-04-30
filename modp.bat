@@ -3,11 +3,14 @@ setlocal
 
 set "MODNAME=%~1"
 set "PAKFILE=%MODNAME%.pak"
-rem Deployed pak gets a ZZZ_ prefix so UE's alphabetical _P pak load order
-rem puts our changes (Cargos.uasset, Jeju_World.umap) AFTER any other
-rem _P paks that might modify the same files. Folder name stays as the
-rem build directory; the rename is purely at deploy time.
-set "DEPLOY_NAME=ZZZ_%MODNAME%"
+rem Deployed pak gets a "zzzz_" lowercase prefix so UE's alphabetical
+rem pak load order puts our changes (Cargos.uasset, Jeju_World.umap)
+rem AFTER every other Cargos-overriding pak in the user's load order —
+rem including ZZZ_qxZap_..._A.pak and zzProxysOversizeCargo_A.pak.
+rem Empirically Cargos was being shadowed by zzProxys until our prefix
+rem sorted strictly later. UE 5.5 pak sort is case-insensitive ASCII
+rem ascending; "zzzz" beats "zzpr"/"zzqx" because at char 3 'z'>'p'/'q'.
+set "DEPLOY_NAME=zzzz_%MODNAME%"
 set "DEPLOY_PAK=%DEPLOY_NAME%.pak"
 set "PAKDIR=D:\SteamLibrary\steamapps\common\Motor Town\MotorTown\Content\Paks"
 
