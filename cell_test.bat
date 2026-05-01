@@ -12,7 +12,8 @@ if errorlevel 1 exit /b 1
 
 set "BEFORE="
 if exist "%UMAP%" for %%F in ("%UMAP%") do set "BEFORE=%%~tF"
-start /B UAssetGUI.exe fromjson Jeju_World.json "%UMAP%" VER_UE5_5 MotorTown718P1
+if not defined MTLM_MAPPINGS_TAG set "MTLM_MAPPINGS_TAG=MotorTown718P1"
+start /B UAssetGUI.exe fromjson Jeju_World.json "%UMAP%" VER_UE5_5 %MTLM_MAPPINGS_TAG%
 :wait_main
 timeout /t 1 /nobreak >nul
 if not exist "%UMAP%" goto wait_main

@@ -31,9 +31,9 @@ from __future__ import annotations
 import json, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
-GAME_CONTENT = Path(r"D:\MT\Output\Exports\MotorTown\Content")
-MAPPINGS     = r"D:\MT\MotorTown718P1.usmap"
-UASSETGUI    = "UAssetGUI.exe"
+from mt_paths import GAME_CONTENT, MAPPINGS, MAPPINGS_TAG  # validates env vars at import
+MAPPINGS  = str(MAPPINGS)
+UASSETGUI = "UAssetGUI.exe"
 
 CARGOS_UASSET    = GAME_CONTENT / "DataAsset" / "Cargos.uasset"
 DELIVERY_FOLDER  = GAME_CONTENT / "Objects" / "Mission" / "Delivery" / "DeliveryPoint"
@@ -44,7 +44,7 @@ def to_json(uasset: Path, dst: Path) -> bool:
     """UAssetGUI tojson is async — wait for the file to be (re)written."""
     if dst.exists(): dst.unlink()
     proc = subprocess.Popen(
-        [UASSETGUI, "tojson", str(uasset), str(dst), "VER_UE5_5", "MotorTown718P1"],
+        [UASSETGUI, "tojson", str(uasset), str(dst), "VER_UE5_5", MAPPINGS_TAG],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
     import time

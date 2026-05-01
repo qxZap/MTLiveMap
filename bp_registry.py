@@ -26,10 +26,7 @@ Adding a new BP actor type:
 from __future__ import annotations
 from pathlib import Path
 
-
-GAME_CONTENT = Path(r"D:\MT\Output\Exports\MotorTown\Content")
-CELLS_DIR = GAME_CONTENT / "Maps" / "Jeju" / "Jeju_World" / "_Generated_"
-JEJU_MAIN = GAME_CONTENT / "Maps" / "Jeju" / "Jeju_World.umap"
+from mt_paths import GAME_CONTENT, CELLS_DIR, JEJU_MAIN
 
 
 # asset_key -> template definition

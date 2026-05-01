@@ -53,8 +53,10 @@ import shutil
 # ---------------------------------------------------------------------------
 # Asset file paths (for copying missing mesh assets into the mod pak)
 # ---------------------------------------------------------------------------
-GAME_CONTENT = r"D:\MT\Output\Exports\MotorTown\Content"
-COOKED_CONTENT = r"C:\Users\Milea\Documents\Unreal Projects\MTMapAddon\Saved\Cooked\Windows\MTMapAddon\Content"
+from mt_paths import GAME_CONTENT as _GAME_CONTENT
+GAME_CONTENT = str(_GAME_CONTENT)
+import os as _os
+COOKED_CONTENT = _os.environ.get("MTLM_COOKED_CONTENT", "")  # optional editor-cooked path
 MOD_CONTENT = r"MapChangeTest_P\MotorTown\Content"
 
 

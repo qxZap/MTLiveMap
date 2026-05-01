@@ -1,10 +1,77 @@
 @echo off
 setlocal enabledelayedexpansion
 
+rem ============================================================================
+rem  USER-EDITABLE PATHS  --  edit ONCE, every script picks these up via env.
+rem ============================================================================
+rem  MTLM_GAME_CONTENT  -- folder of the EXTRACTED vanilla MotorTown content.
+rem                       Must end with '\MotorTown\Content' and contain
+rem                       DataAsset\, Maps\Jeju\, Objects\Mission\Delivery\,
+rem                       etc. Get it by extracting the game's pak with FModel.
+rem
+rem  MTLM_MAPPINGS      -- absolute path to the .usmap file matching the
+rem                       installed Motor Town version (e.g. MotorTown718P1.usmap).
+rem                       Generated with UnrealMappingsDumper / Dumper-7 / etc.
+rem
+rem  MTLM_MAPPINGS_TAG  -- engine tag UAssetGUI uses with the .usmap. Must match
+rem                       the .usmap filename minus the extension.
+rem
+rem  MTLM_GAME_PAKDIR   -- the game's Paks folder where the deployed mod lands.
+rem                       Right-click MT in Steam -> Manage -> Browse local files.
+rem
+rem  MTLM_REPO_ROOT     -- absolute path of THIS repo checkout. Used by ue.py
+rem                       inside the editor to know where to write static_meshes.json.
+rem  MTLM_COOKED_CONTENT -- OPTIONAL. UE editor's cooked output for THIS mod's
+rem                       Unreal project. Only needed if you author meshes in
+rem                       editor and refresh them via import_meshes.py. Leave
+rem                       blank if you don't have a UE editor project.
+rem ============================================================================
+if not defined MTLM_GAME_CONTENT  set "MTLM_GAME_CONTENT=D:\MT\Output\Exports\MotorTown\Content"
+if not defined MTLM_MAPPINGS      set "MTLM_MAPPINGS=D:\MT\MotorTown718P1.usmap"
+if not defined MTLM_MAPPINGS_TAG  set "MTLM_MAPPINGS_TAG=MotorTown718P1"
+if not defined MTLM_GAME_PAKDIR   set "MTLM_GAME_PAKDIR=D:\SteamLibrary\steamapps\common\Motor Town\MotorTown\Content\Paks"
+if not defined MTLM_REPO_ROOT     set "MTLM_REPO_ROOT=%~dp0"
+if not defined MTLM_COOKED_CONTENT set "MTLM_COOKED_CONTENT="
+
+rem -- Validate the required paths exist; bail with a useful message otherwise.
+set "VALIDATION_FAILED=0"
+if not exist "%MTLM_GAME_CONTENT%\DataAsset\Cargos.uasset" (
+    echo.
+    echo [fulltest] ERROR: MTLM_GAME_CONTENT does not point at the extracted MT content.
+    echo            Looking for "%MTLM_GAME_CONTENT%\DataAsset\Cargos.uasset" — not found.
+    echo            Extract the game's pak with FModel and set MTLM_GAME_CONTENT to
+    echo            the resulting MotorTown\Content directory. Edit the top of
+    echo            fulltest.bat or set the env var in your shell.
+    set "VALIDATION_FAILED=1"
+)
+if not exist "%MTLM_MAPPINGS%" (
+    echo.
+    echo [fulltest] ERROR: MTLM_MAPPINGS does not point at a .usmap file.
+    echo            Looking for "%MTLM_MAPPINGS%" — not found.
+    echo            Generate or download a .usmap matching your MT install
+    echo            ^(UnrealMappingsDumper / Dumper-7^) and set the path in
+    echo            fulltest.bat or your shell.
+    set "VALIDATION_FAILED=1"
+)
+if not exist "%MTLM_GAME_PAKDIR%" (
+    echo.
+    echo [fulltest] ERROR: MTLM_GAME_PAKDIR does not point at the game's Paks folder.
+    echo            Looking for "%MTLM_GAME_PAKDIR%" — not found.
+    echo            Browse the game in Steam ^(Manage -^> Browse local files^),
+    echo            drill into MotorTown\Content\Paks, and paste that path.
+    set "VALIDATION_FAILED=1"
+)
+if "%VALIDATION_FAILED%"=="1" (
+    echo.
+    echo Aborting — fix the paths above before re-running. See README.md.
+    exit /b 2
+)
+
+rem ----- Mod-side derived paths (don't edit unless you rename the mod folder).
 set "UMAP=MapChangeTest_P\MotorTown\Content\Maps\Jeju\Jeju_World.umap"
 set "GENDIR=MapChangeTest_P\MotorTown\Content\Maps\Jeju\Jeju_World\_Generated_"
 set "INJECTOR=MTBPInjector\bin\Release\net8.0\MTBPInjector.exe"
-set "VANILLA_MAP=D:\MT\Output\Exports\MotorTown\Content\Maps\Jeju\Jeju_World.umap"
+set "VANILLA_MAP=%MTLM_GAME_CONTENT%\Maps\Jeju\Jeju_World.umap"
 set "CACHE_JSON=Jeju_Worldaa.json"
 
 rem ---- Per-step gating. Each step can be skipped independently. Set STEP_X
@@ -88,7 +155,7 @@ if "%PULL_MAP%"=="1" (
         echo   Extract the game's cooked content there first.
         exit /b 1
     )
-    call :wait_write "%CACHE_JSON%" tojson "%VANILLA_MAP%" "%CACHE_JSON%" VER_UE5_5 MotorTown718P1
+    call :wait_write "%CACHE_JSON%" tojson "%VANILLA_MAP%" "%CACHE_JSON%" VER_UE5_5 %MTLM_MAPPINGS_TAG%
     if errorlevel 1 exit /b 1
     echo [%TIME%] Cached %CACHE_JSON%. You can now run fulltest.bat normally.
     endlocal
@@ -138,7 +205,7 @@ if "%STEP_CONVERT%"=="1" (
 
 if "%STEP_MAP%"=="1" (
     echo [%TIME%] [4/6] UAssetGUI fromjson -^> Jeju_World.umap...
-    call :wait_write "%UMAP%" fromjson Jeju_World.json "%UMAP%" VER_UE5_5 MotorTown718P1
+    call :wait_write "%UMAP%" fromjson Jeju_World.json "%UMAP%" VER_UE5_5 %MTLM_MAPPINGS_TAG%
     if errorlevel 1 exit /b 1
     echo   Main umap ready.
 ) else ( echo [%TIME%] [4/6] skipped )

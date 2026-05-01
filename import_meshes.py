@@ -13,10 +13,16 @@ import os
 import shutil
 
 # ---------------------------------------------------------------------------
-# Paths
+# Paths — pulled from env (see mt_paths.py and fulltest.bat)
 # ---------------------------------------------------------------------------
-GAME_CONTENT = r"D:\MT\Output\Exports\MotorTown\Content"
-COOKED_CONTENT = r"C:\Users\Milea\Documents\Unreal Projects\MTMapAddon\Saved\Cooked\Windows\MTMapAddon\Content"
+from mt_paths import GAME_CONTENT as _GAME_CONTENT
+GAME_CONTENT = str(_GAME_CONTENT)
+# COOKED_CONTENT is the UE editor's cooked output for THIS mod's Unreal
+# project (where editor-cooked .uasset/.ubulk files land before they're
+# copied into the mod tree). Optional — only needed when authoring meshes
+# in-editor and re-running import_meshes.py to refresh them. Set the env
+# var MTLM_COOKED_CONTENT if you use this path; otherwise leave unset.
+COOKED_CONTENT = os.environ.get("MTLM_COOKED_CONTENT", "")
 MOD_CONTENT = r"MapChangeTest_P\MotorTown\Content"
 
 # ---------------------------------------------------------------------------
@@ -101,7 +107,12 @@ def copy_asset_to_mod(relative_path, script_dir):
     if os.path.exists(game_file):
         return  # exists in game, no need to copy
 
-    # Try cooked content as source
+    # Asset isn't in extracted vanilla content — try the user's editor
+    # cooked output. Only relevant when authoring meshes in UE; vanilla-
+    # only mods never hit this path.
+    if not COOKED_CONTENT:
+        print(f"  Warning: asset not in game and MTLM_COOKED_CONTENT unset — skipping {relative_path}")
+        return
     cooked_file = os.path.join(COOKED_CONTENT, relative_path + ".uasset")
     if not os.path.exists(cooked_file):
         print(f"  Warning: asset not found in game or cooked: {relative_path}")

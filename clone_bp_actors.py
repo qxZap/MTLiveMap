@@ -21,12 +21,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from bp_registry import REGISTRY, CELLS_DIR, JEJU_MAIN, GAME_CONTENT, template_for_class, parse_boosted_name
+from bp_registry import REGISTRY, template_for_class, parse_boosted_name
+from mt_paths import GAME_CONTENT, CELLS_DIR, JEJU_MAIN, MAPPINGS, VANILLA_CARGOS_01
 
-MAPPINGS = r"D:\MT\MotorTown718P1.usmap"
+MAPPINGS = str(MAPPINGS)
 INJECTOR = Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
 MOD_CONTENT_ROOT = Path("MapChangeTest_P/MotorTown/Content")
-VANILLA_CARGOS_01 = Path(r"D:\MT\Output\Exports\MotorTown\Content\DataAsset\Cargos_01.uasset")
 MOD_CARGOS        = MOD_CONTENT_ROOT / "DataAsset" / "Cargos.uasset"
 MOD_CARGOS_01     = MOD_CONTENT_ROOT / "DataAsset" / "Cargos_01.uasset"
 
