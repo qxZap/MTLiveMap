@@ -240,7 +240,14 @@ def main():
     # Always clear and set — never append
     dst.setdefault("static_meshes", {})[TARGET_GROUP] = imported
     dst.setdefault("blueprint_actors", {})[TARGET_GROUP] = parking
-    dst["delivery_points"] = delivery
+    # Preserve hand-authored comment entries (dicts whose keys all start
+    # with '_') across import_meshes runs. Anyone editing the file by
+    # hand to annotate a placement keeps those notes after the next pull.
+    prior_comments = [
+        x for x in (dst.get("delivery_points") or [])
+        if isinstance(x, dict) and x and all(k.startswith("_") for k in x.keys())
+    ]
+    dst["delivery_points"] = prior_comments + delivery
 
     with open(dst_path, "w", encoding="utf-8") as f:
         json.dump(dst, f, indent=4, ensure_ascii=False)

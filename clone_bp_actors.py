@@ -426,6 +426,12 @@ def main():
     # The actual config (label, recipes, marker/icon, storage cap) lives in
     # delivery_points.json and was loaded into REGISTRY at import time.
     for dp in cfg.get("delivery_points", []) or []:
+        if not isinstance(dp, dict): continue
+        # Pure-comment entries: every key starts with '_' (e.g. just a
+        # standalone {"_comment": "Noksan dock test rig"}). Silently
+        # skipped so authors can annotate the list inline.
+        if dp and all(k.startswith("_") for k in dp.keys()):
+            continue
         dp_key = dp.get("delivery_key")
         if not dp_key:
             print(f"  delivery_points entry missing delivery_key — skipped"); continue

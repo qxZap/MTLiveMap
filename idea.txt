@@ -1,104 +1,86 @@
-# Industrial Outpost: The Resource Gateway
-
+# Icebound Outpost: The Frozen Trade Hub
 ## Overview
-This document outlines a specialized industrial outpost concept designed to integrate with Motor Town's existing economy as a producer/trader rather than a self-sufficient entity. The outpost focuses on extracting and processing specific resources to create valuable trade goods for export, while importing necessities it cannot produce locally. This creates meaningful cargo routes both to and from the island, fitting naturally into Motor Town's interconnected world.
+A harsh, snow-covered industrial outpost where only the outer coastal rim is exposed dirt—everything else lies beneath deep permafrost. The island survives not by self-sufficiency but by **mining frozen resources from beneath the ice** and **processing them for trade** with the main map. Its extreme climate makes it poor and dependent, constantly needing imports of food and supplies while exporting processed minerals and fuel to pay for survival. Two clear cargo flows: ore and fuel north, food and goods south.
 
 ---
+### 🌍 Phase I: Local Resource Extraction (Frozen Wealth Below)
+The island's value comes from mineral wealth hidden beneath the permafrost, plus accessible coastal gas seeps. Only the dirt rim allows basic surface access.
 
-### 🏭 Core Concept: The Specialized Producer
-Rather than attempting self-sufficiency (which contradicts Motor Town's trading-post nature), the island functions as a **resource gateway** - extracting raw materials from its unique environment, processing them into higher-value goods, and exporting these products to earn income for importing essential supplies the island cannot produce.
+*   **Resource 1: Iron Ore Veins**: Dense deposits mined from snow-covered boreholes. *Location:* Northern Ice Fields (subsurface).
+*   **Resource 2: Permafrost Methane**: Gas trapped in the frozen ground, venting at the southern dirt rim. *Location:* Southern Gas Seeps (dirt rim).
+*   **Resource 3: Silica Gravel**: Purer-than-average sand found along the exposed coastal rim. *Location:* Coastal Strip (dirt rim).
+*   **Resource 4: Limestone Shelf**: Accessible rocky outcrops along the western dirt shore. *Location:* Western Rocky Shore (dirt).
 
-This creates two clear cargo flows:
-1. **Export Chain**: Local Resources → Processing → Finished Goods → (Export to Main Map)
-2. **Import Chain**: (Import from Main Map) → Essential Supplies → Local Consumption/Production Support
-
----
-
-### 🌍 Phase I: Local Resource Extraction (The Island's Advantage)
-The island's value comes from access to specific raw materials that are either scarce or more efficiently obtained here than elsewhere on the map.
-
-*   **Resource 1: High-Purity Silica Sand**: Exceptionally pure sand deposits ideal for glass and advanced ceramics. *Location:* Northern Quarries.
-*   **Resource 2: Rare Timber Stands**: Slow-growth, dense hardwoods with exceptional strength. *Location:* Interior Forest Reserves.
-*   **Resource 3: Mineral-Rich Clay Deposits**: Unique clay formations suitable for specialty ceramics and refractory materials. *Location:* Eastern Basin.
-*   **Resource 4: Natural Gas Seeps**: Accessible, low-pressure gas sources suitable for localized energy production. *Location:* Southern Coastal Seeps.
-
-*Note: These resources are not found in such concentration or purity elsewhere on the main map, giving the island its trade advantage.*
+*Note: Everything north of the dirt rim is frozen solid. Mining requires drilling through permafrost.**
 
 ---
+### ⚙️ Phase II: Processing (The Only Industry)
+Raw frozen materials are heated, melted, and refined locally to create tradeable goods. All facilities sit on the dirt rim for access.
 
-### ⚙️ Phase II: Processing & Value Addition (The Island's Industry)
-Raw materials are processed locally to increase their value before export, creating jobs and justifying the infrastructure investment.
+*   **From Iron Ore**: Smelted into **Steel Ingots** and **Iron Rebar**. *Facility:* Forge & Smelter (dirt rim, west).
+*   **From Methane**: Bottled as **Fuel Canisters** for export. *Facility:* Gas Compression Station (dirt rim, south).
+*   **From Silica Gravel**: Washed and processed into **Glass Sheets**. *Facility:* Glassworks (dirt rim, east).
+*   **From Limestone**: Burned into **Quicklime** for cement and soil amendment. *Facility:* Lime Kiln (dirt rim, south).
 
-*   **From Silica Sand**: Processed into **Float Glass Sheets** and **Silica Refractory Bricks**. *Facility:* Glassworks & Ceramics Plant.
-*   **From Rare Timber**: Milled into **Precision Lumber** and **Laminated Beams**. *Facility:* Advanced Sawmill & Lamination Plant.
-*   **From Mineral Clay**: Fired into **Engineering Ceramics** and **Decorative Tiles**. *Facility:* Kiln Complex.
-*   **From Natural Gas**: Used to power processing facilities directly or converted to **Compressed Gas Canisters** for portable fuel. *Facility:* Gas Compression Plant.
-
-*The key principle: Increase value through local processing before export.*
+*The dirt rim is sacred—all facilities cluster here where the ground is solid.*
 
 ---
-
-### 📦 Phase III: Export Economy (Connecting to the Main Map)
-The processed goods become the island's primary exports, shipped to locations on the main map where they command premium prices due to their quality or specificity.
+### 📦 Phase III: Export (Paying for Survival)
+The island's processed goods travel to the main map in exchange for everything it cannot grow or make.
 
 *   **Primary Exports:**
-    - Float Glass Sheets → Used in high-end construction and vehicle windows (main map)
-    - Precision Lumber → Used in furniture making and specialty construction (main map)
-    - Engineering Ceramics → Used in industrial kilns and high-heat applications (main map)
-    - Compressed Gas Canisters → Used for welding, heating, and remote operations (main map)
-
-*   **Export Infrastructure:**
-    - Dedicated cargo marshalling yards near the shore
-    - Specialized loading docks for different cargo types
-    - Route markers showing optimal paths to main map delivery points
+    - **Steel Ingots** → Main Map factories (construction, vehicle manufacturing)
+    - **Fuel Canisters** → Main Map gas stations and workshops
+    - **Glass Sheets** → Main Map construction and vehicle windows
+    - **Quicklime** → Main Map cement plants and farms (soil amendment)
+*   **Export Route:** Dirt rim facilities → Loading Dock → Boat/Ferry to Main Map
 
 ---
-
-### 🛒 Phase IV: Import Economy (Sustaining the Outpost)
-To sustain operations and quality of life, the island imports goods it cannot efficiently produce locally. This creates the vital return cargo flow.
+### 🛒 Phase IV: Import (The Lifeline)
+The island cannot grow food. Everything organic, plus machinery and luxuries, must be purchased through exports.
 
 *   **Primary Imports:**
-    - **Foodstuffs**: Fresh produce, meat, and staples (cannot be grown in sufficient quantity due to terrain/focus on industry)
-    - **Vehicle & Machinery Parts**: Complex components requiring specialized factories elsewhere
-    - **Luxury & Consumer Goods**: Electronics, clothing, entertainment items for workers
-    - **Basic Construction Materials**: Common lumber, concrete, and rebar for local maintenance (sometimes cheaper to import than produce)
-    - **Specialized Chemicals**: Catalysts, solvents, and additives for processing facilities
+    - **Foodstuffs**: Bread, rice, canned meat, vegetables (main map farms)
+    - **Parts & Machinery**: Drill bits, engine components, lubricant (main map factories)
+    - **Construction Materials**: Standard lumber, concrete mix, rebar (main map bulk yards)
+    - **Luxury Goods**: Cigarettes, coffee, alcohol, warm clothing (main map shops)
+    - **Chemicals**: Flux agents, solvents for processing (main map chemical plants)
 
-*   **Import Infrastructure:**
-    - Central receiving warehouse with cold storage for perishables
-    - Distribution network to residential and industrial zones
-    - Waste processing for recyclable materials (some exported as scrap)
+*   **Import Route:** Main Map → Boat/Ferry → Loading Dock → Central Warehouse → Distribution
 
 ---
-
 ### 🔄 Cargo Flow Summary: The Vital Exchange
 **Outbound (Island → Main Map):**
-1.  Northern Quarries → Glassworks → Float Glass Sheets → Main Map Construction Sites
-2.  Interior Forests → Sawmill → Precision Lumber → Main Map Furniture Factories
-3.  Eastern Basin → Kiln Complex → Engineering Ceramics → Main Map Industrial Zones
-4.  Southern Seeps → Gas Plant → Compressed Canisters → Main Map Workshops/Depots
+1.  Northern Ice Fields → Drill → Iron Ore → Forge & Smelter → Steel Ingots → Loading Dock → Main Map
+2.  Southern Gas Seeps → Compression → Fuel Canisters → Loading Dock → Main Map Gas Stations
+3.  Coastal Strip → Glassworks → Glass Sheets → Loading Dock → Main Map Construction
+4.  Western Shore → Lime Kiln → Quicklime → Loading Dock → Main Map Farms/Cement Plants
 
 **Inbound (Main Map → Island):**
-1.  Main Map Farms → Food Distributors → Island Residential Zones
-2.  Main Map Factories → Parts Warehouse → Island Maintenance Facilities
-3.  Main Map Trade Ports → Consumer Goods Depot → Island Retail Centers
-4.  Main Map Bulk Yards → Construction Materials Yard → Island Construction Sites
-5.  Main Map Chemical Plants → Specialized Storage → Island Processing Plants
+1.  Main Map Farms → Food Shipment → Island Food Warehouse → Residential Zones
+2.  Main Map Factories → Parts Shipment → Island Maintenance Shop
+3.  Main Map Shops → Goods Shipment → Island Retail Store
+4.  Main Map Bulk Yards → Materials Shipment → Island Construction Sites
+5.  Main Map Chemical Plants → Chemicals Shipment → Island Processing Plants
 
-**Key Economic Insight:** The island's prosperity depends on maintaining a positive trade balance - the value of its processed exports must exceed the cost of its essential imports. This creates gameplay pressure to:
-- Optimize processing efficiency and yield
-- Secure reliable export contracts
-- Manage import costs through smart purchasing
-- Potentially develop niche products for higher margins
+**Key Insight:** The island is poor. Profit margins are thin. One bad season—one collapsed export price, one missed shipment—and the outpost struggles. This creates constant, high-stakes gameplay around maintaining the cargo flow.
 
 ---
+### 🗺️ Terrain Map: The Dirt Rim
+```
+         SNOW (Permafrost - untrafficable)
+    +-----------------------------+
+    |                             |
+    |    SNOW INTERIOR            |
+    |    (Mining by drill only)    |
+    |         +---+               |
+    |             | DIRT RIM      |
+    |    ~~~~~~~~~~~~            |
+    |    (Roads, facilities,     |
+    |     housing cluster       |
+    |     here only)            |
+    +-----------------------------+
+         WATER (Docks, ferry)
+```
 
-### 🗺️ Logistics Integration: Natural Map Connections
-Unlike a self-sufficient metropolis (which would feel isolated), this outpost is designed to create organic traffic patterns:
-
-*   **Primary Trade Routes:** Well-defended roads connecting the outpost's marshalling yards to existing highway networks on the main map, creating natural convoys and potential for player interaction (escorts, bandits, etc.)
-*   **Specialized Cargo Handling:** Different export/import types use appropriate vehicles (flatbeds for lumber, tankers for gas, boxcars for manufactured goods), encouraging fleet specialization
-*   **Economic Signals:** Fluctuating demand on the main map affects prices for the island's exports, creating dynamic pricing and adaptation gameplay
-*   **Growth Potential:** Successful trade enables gradual expansion - new processing lines, improved facilities, or diversification into related industries
-
-This concept maintains Motor Town's core identity as a game about transportation, trade, and interconnected economies while adding a meaningful industrial specialization that creates purposeful cargo routes in both directions.
+*Only the outer ring (dirt rim) is driveable. The interior is snow-covered permafrost—impassable without heavy equipment. All industry, housing, and roads sit on this narrow rim.*

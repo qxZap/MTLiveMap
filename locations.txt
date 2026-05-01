@@ -1,0 +1,63 @@
+# locations.txt - Icebound Outpost: The Frozen Trade Hub
+# All locations sit on the dirt rim only. Snow interior is untrafficable permafrost.
+#
+# EXTRACTION (Subsurface/Remote - Snow North)
+Ice Drill Site Alpha | Iron Ore (subsurface mined) | Drill parts, Fuel (for machinery), Electricity | Local (gas from south), Import (Drill parts)
+Ice Drill Site Beta | Iron Ore (subsurface mined) | Drill parts, Fuel (for machinery), Electricity | Local (gas from south), Import (Drill parts)
+#
+# EXTRACTION (Dirt Rim South/East/West)
+Southern Gas Seeps | Methane/Raw Natural Gas | Piping, Electricity | Local (seeps), Import (Piping)
+Coastal Silica Strip | Silica Gravel (exposed by tides) | Shovels, Wheelbarrows, Electricity | Local (gravel), Import (Tools)
+Western Rocky Shore | Limestone Rock (exposed shelf) | Jackhammers, Shovels, Electricity | Local (limestone), Import (Tools)
+#
+# PROCESSING (Dirt Rim - Clustered West/South/East)
+Forge & Smelter (West Rim) | Steel Ingots, Iron Rebar | Iron Ore, Methane (fuel for furnace), Flux Agent (imported), Electricity | Local (Ore from north drills, Gas from south), Import (Flux Agent)
+Gas Compression Station (South Rim) | Fuel Canisters | Methane (raw gas), Empty Canisters (imported), Electricity | Local (Gas from seeps), Import (Canisters)
+Glassworks (East Rim) | Glass Sheets, Glass Slabs | Silica Gravel, Methane (for furnace), Soda Ash (imported), Electricity | Local (Gravel, Gas), Import (Soda Ash)
+Lime Kiln (South-Central Rim) | Quicklime, Lime Powder | Limestone Rock, Methane (for kiln), Electricity | Local (Limestone, Gas), Import (None direct - all local)
+#
+# EXPORT INFRASTRUCTURE
+Main Loading Dock (South-Water) | Exported goods staged | Steel Ingots, Fuel Canisters, Glass Sheets, Quicklime | Local (from plants) | Ferry/Boat to Main Map
+#
+# IMPORT INFRASTRUCTURE
+Receiving Pier (South-Water) | Imported goods received | Food, Parts, Chemicals, Consumer Goods, Construction Materials | Import (all from Main Map)
+Central Warehouse (South Rim) | Stored goods for distribution | Food (Fresh produce, bread, rice, canned meat), Machinery Parts (Drill bits, engine components), Chemicals (Flux, solvents), Consumer Goods (Cigarettes, coffee, clothing), Construction Materials (Standard lumber, concrete mix, rebar) | Import (all from Main Map) | Distribution to Residential, Plants, Maintenance
+Cold Storage Locker (South Rim) | Preserved food | Food imports | Import (food from Main Map)
+#
+# CONSUMPTION / SUPPORT (Dirt Rim)
+Residential Barracks (North-Central Rim) | Workers housing | Food, Warm clothing (imported), Electricity, Fuel (for heating), Consumer Goods | Import (Food, Clothing, Goods), Local (Gas heating from south seeps)
+Retail / Supply Store (East Rim) | Sold consumer goods | Imports (from Main Map) | Import (from Main Map) | Sold to workers
+Maintenance Workshop (North-Central Rim) | Machinery repair | Machinery Parts, Lubricants, Tools, Electricity | Import (Parts, Lubricants, Tools), Local (Gas for power)
+Construction Site Alpha (West Rim) | Building expansion | Construction Materials (Standard lumber, concrete mix, rebar), Steel Ingots (local), Iron Rebar (local) | Import (Lumber, Concrete, Rebar), Local (Ingots, Rebar)
+#
+# UTILITY (Dirt Rim)
+Power Substation (South Rim) | Electricity (distributed) | Methane (from seeps), Electricity (backup grid connection) | Local (Gas primary), Import (Backup grid)
+Water Pump & Cistern (East Rim) | Potable water | Raw groundwater (via pump), Electricity | Local (Pump), Local (Electricity)
+Waste Heap (Southwest Rim) | Scrap metal, garbage | All waste from plants/Residential | Local (Self-generating) | Scrap exported to Main Map?
+#
+# INTERNAL DIRT RIM ROADS
+Rim Road (Full Loop) | Dirt road around island perimeter | - | Local (built) | Connects all dirt rim locations
+Dock Access Road (South) | Paved road | - | Local (built) | Connects Main Loading Dock to Rim Road
+Drill Access Road (North) | Gravel road | - | Local (built) | Connects Ice Drill Sites to Forge (north access to south plants)
+#
+# TERRAIN SUMMARY
+# Northern: SNOW - Ice Drill Sites Alpha/Beta mine Iron Ore (subsurface, requires drill). Ore transported south to Forge.
+# Southern: DIRT RIM - Gas Seeps, Processing Plants, Docks, Warehouse, Residential. Heart of the outpost.
+# Eastern: DIRT RIM - Glassworks, Retail Store, Water Pump. Export processing and trade.
+# Western: DIRT RIM - Forge & Smelter, Lime Kiln, Construction Site. Industrial core.
+# Interior: PERMAFROST - Untouched snow, untrafficable. Only accessible by heavy drill vehicles.
+# Water: DOCKS - Loading Dock (export) and Receiving Pier (import). Connection to Main Map.
+#
+# CARGO FLOW SUMMARY
+# EXPORTS (Island -> Main Map):
+#  Iron Ore -> Steel Ingots -> Main Map factories
+#  Methane -> Fuel Canisters -> Main Map gas stations
+#  Silica Gravel -> Glass Sheets -> Main Map construction
+#  Limestone -> Quicklime -> Main Map farms/cement plants
+# IMPORTS (Main Map -> Island):
+#  Food -> Residential Barracks (workers)
+#  Parts -> Maintenance Workshop (keep drills running)
+#  Chemicals -> Forge (flux agents), Glassworks (soda ash)
+#  Consumer Goods -> Retail Store -> Workers
+#  Construction Materials -> Construction Site (build new facilities)
+#  Empty Canisters -> Gas Compression (reused for exports)
