@@ -12,17 +12,65 @@
     "                will accept this cargo. MT crashes on world load if a",
     "                cargo has zero vanilla consumers. Pick destinations",
     "                whose payout leakage is acceptable.",
-    "6. Every other key on the entry is a UE cargo-row field name set",
-    "                verbatim — PaymentPer1Km, BasePayment, SpawnProbability,",
-    "                PaymentSqrtRatio, NumCargoMin, NumCargoMax, Fragile,",
-    "                bUseDamage, bAllowStacking, bTimer, BaseTimeSeconds, ...",
-    "                Run `python import_cargo_data.py` to extract a vanilla",
-    "                cargo dump under CargoImport/cargos/catalog.json — copy",
-    "                values 1:1 from there.",
+    "6. Every other key on the entry is a UE cargo-row field name. Field",
+    "                names are case-sensitive and must match the vanilla",
+    "                cargo struct exactly. Run `python import_cargo_data.py`",
+    "                to extract a vanilla cargo dump under",
+    "                CargoImport/cargos/catalog.json — copy values 1:1.",
     "7. Recipes (in DP entries below) reference cargos by name. Vanilla and",
     "                new_id values are both valid; unknown names get logged",
     "                and dropped at registry-load time."
   ],
+  "_NEW_CARGO_FIELDS": {
+    "_": "Reference of every cargo-row field that the framework can set verbatim on a new_cargos entry. Type column matches the underlying UE property class — use the matching JSON literal type when you set a value. Vanilla examples are from the Fuel row.",
+    "_payment": {
+      "PaymentPer1Km":                       "Float — per-km payout. Only fires when MT's road-distance calc finds a marked road; offroad runs ignore this. Vanilla Fuel: 300.",
+      "PaymentPer1KmMultiplierByMaxWeight":  "Float — per-km value scales with the cargo's max weight by this factor. Vanilla Fuel: 2.",
+      "PaymentSqrtRatio":                    "Float — sqrt-curve coefficient applied to the payout. 1.0 default; <1 flattens long-route payouts, >1 amplifies. Vanilla Fuel: 1.",
+      "PaymentSqrtRatioMinCapcity":          "Float — minimum capacity before the sqrt curve kicks in. Vanilla Fuel: 0.",
+      "BasePayment":                         "Int64 — flat base payout independent of distance. THE offroad lever — bump this to make missions worth running on dirt roads. Vanilla Fuel: 100.",
+      "ExportPrice":                         "Int — price when delivered to a Container_Export-style DP. Vanilla Fuel: 10.",
+      "ImportPrice":                         "Int — price MT charges when this cargo is imported into a region. Vanilla Fuel: 10.",
+      "MaxDamagePaymentMultiplier":          "Float — payout cap for fully-damaged cargo (0..1). Vanilla Fuel: 0.1.",
+      "DamageBonusMultiplier":               "Float — bonus multiplier for delivering with no damage. Vanilla Fuel: 0.",
+      "ManualLoadingPayment":                "Int64 — extra pay when the player manually loads the cargo vs using a forklift. Vanilla Fuel: 0."
+    },
+    "_mission_gen": {
+      "SpawnProbability":     "Int — random/ambient mission generator weight. Higher = more frequent. Vanilla Fuel: 10.",
+      "NumCargoMin":          "Int — minimum units per generated mission. Vanilla Fuel: 5.",
+      "NumCargoMax":          "Int — maximum units per generated mission. Vanilla Fuel: 20.",
+      "MinDeliveryDistance":  "Float — mission gen filter, minimum km between source and destination. Vanilla Fuel: 1.",
+      "MaxDeliveryDistance":  "Float — mission gen filter, maximum km. 0 = unlimited. Vanilla Fuel: 0."
+    },
+    "_physical": {
+      "VolumeSize":             "Int — capacity-units the cargo occupies on a trailer. Vanilla Fuel: 1.",
+      "bAllowStacking":         "Bool — multiple units share one trailer slot. Vanilla Fuel: false.",
+      "bUseDamage":             "Bool — cargo accumulates damage from rough driving / collisions. Vanilla Fuel: false.",
+      "Fragile":                "Int — damage sensitivity (higher = breaks easier). Vanilla Fuel: 0.",
+      "bHoldingOffsetUsingItemBounds": "Bool — render attachment offset uses the item's bounding box instead of a fixed pivot. Vanilla Fuel: false."
+    },
+    "_timer": {
+      "bTimer":                       "Bool — whether the cargo has a delivery time limit / bonus. Vanilla Fuel: false.",
+      "BaseTimeSeconds":              "Float — baseline seconds for the timer. Vanilla Fuel: 0.",
+      "TimerBySpeedKPH":              "Float — timer scales with the player's average speed in km/h. Vanilla Fuel: 0.",
+      "TimerByRoadSpeedLimitRatio":   "Float — timer scales with the road's speed limit (1.0 = match the limit). Vanilla Fuel: 0."
+    },
+    "_meta": {
+      "bDepcreated": "Bool — marks the cargo as legacy. May hide it from random mission gen depending on MT version. Vanilla Fuel: false."
+    },
+    "_NOT_supported_yet": {
+      "_":                "These exist on every cargo row but require array/struct/enum/object handling that the generic setter doesn't do. Touching them needs a one-off code path in MTBPInjector.MutateCargos.",
+      "CargoType":        "EnumProperty — single value (Box, Pallet, LiquidContainer, ...). Useful but not wired yet.",
+      "CargoSpaceTypes":  "Array<EnumProperty> — list of trailer-bay categories the cargo fits (Tanker, Container, Flatbed, ...).",
+      "WeightRange":      "Vector2D struct — (min, max) tonnage range.",
+      "InTimeTipRange":   "Vector2D struct — UI tooltip min/max for the timer feature.",
+      "GameplayTags":     "GameplayTagContainer — array of FName tags.",
+      "ActorClass":       "ObjectProperty — the BP that spawns when the cargo physicalizes. Inherited from copy_from; changing requires new-import resolution.",
+      "DumpCargoSurfaceMesh / DumpCargoSurfaceMaterial / DumpPileActorClass": "ObjectProperty — visuals for dump-truck pile rendering.",
+      "Colors":           "Array<StructProperty> — per-cargo color palette for paint variants.",
+      "CargoFlags":       "Int bitmask — opaque, intentionally not exposed (no documented bit meanings)."
+    }
+  },
   "new_cargos": [
     {
       "_": "Boosted Fuel — 2x per-km + 100k absolute base for offroad-friendly payouts. Used by TF1 (producer) and TF2 (consumer).",
