@@ -3,9 +3,9 @@ UE-side static-mesh + foliage exporter. Run from inside the Motor Town
 editor's Python console — it walks every level actor and writes a JSON
 the rest of the pipeline consumes.
 
-The output path is read from the environment variable MTLM_REPO_ROOT,
+The output path is read from the environment variable MTMI_REPO_ROOT,
 which fulltest.bat exports before kicking off the editor task. If you
-run this from the editor's Python console manually, set MTLM_REPO_ROOT
+run this from the editor's Python console manually, set MTMI_REPO_ROOT
 in your shell before launching the editor, OR edit the FALLBACK_OUTPUT
 constant below and re-save.
 
@@ -20,7 +20,7 @@ import json
 
 
 def _resolve_output_path():
-    repo_root = os.environ.get("MTLM_REPO_ROOT", "").strip().strip('"')
+    repo_root = os.environ.get("MTMI_REPO_ROOT", "").strip().strip('"')
     if repo_root:
         repo_dir = repo_root
     else:
@@ -29,14 +29,14 @@ def _resolve_output_path():
         FALLBACK_OUTPUT_DIR = "D:/MTLiveMap"
         repo_dir = FALLBACK_OUTPUT_DIR
         unreal.log_warning(
-            f"MTLM_REPO_ROOT not set — falling back to '{repo_dir}'. "
+            f"MTMI_REPO_ROOT not set — falling back to '{repo_dir}'. "
             "Set the env var or edit ue.py FALLBACK_OUTPUT_DIR for your machine."
         )
     if not os.path.isdir(repo_dir):
         unreal.log_error(
             f"\n[ue.py] Output directory does not exist: '{repo_dir}'\n"
-            f"  Either create it manually, set the env var MTLM_REPO_ROOT to\n"
-            f"  the absolute path of your MTLiveMap repo checkout, or edit\n"
+            f"  Either create it manually, set the env var MTMI_REPO_ROOT to\n"
+            f"  the absolute path of your MTMapInjector repo checkout, or edit\n"
             f"  the FALLBACK_OUTPUT_DIR constant at the top of ue.py.\n"
             f"  The exporter cannot write static_meshes.json without a target."
         )

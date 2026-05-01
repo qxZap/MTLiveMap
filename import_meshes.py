@@ -21,8 +21,8 @@ GAME_CONTENT = str(_GAME_CONTENT)
 # project (where editor-cooked .uasset/.ubulk files land before they're
 # copied into the mod tree). Optional — only needed when authoring meshes
 # in-editor and re-running import_meshes.py to refresh them. Set the env
-# var MTLM_COOKED_CONTENT if you use this path; otherwise leave unset.
-COOKED_CONTENT = os.environ.get("MTLM_COOKED_CONTENT", "")
+# var MTMI_COOKED_CONTENT if you use this path; otherwise leave unset.
+COOKED_CONTENT = os.environ.get("MTMI_COOKED_CONTENT", "")
 MOD_CONTENT = r"MapChangeTest_P\MotorTown\Content"
 
 # ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ def copy_asset_to_mod(relative_path, script_dir):
     # cooked output. Only relevant when authoring meshes in UE; vanilla-
     # only mods never hit this path.
     if not COOKED_CONTENT:
-        print(f"  Warning: asset not in game and MTLM_COOKED_CONTENT unset — skipping {relative_path}")
+        print(f"  Warning: asset not in game and MTMI_COOKED_CONTENT unset — skipping {relative_path}")
         return
     cooked_file = os.path.join(COOKED_CONTENT, relative_path + ".uasset")
     if not os.path.exists(cooked_file):

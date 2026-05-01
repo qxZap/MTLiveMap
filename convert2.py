@@ -56,7 +56,7 @@ import shutil
 from mt_paths import GAME_CONTENT as _GAME_CONTENT
 GAME_CONTENT = str(_GAME_CONTENT)
 import os as _os
-COOKED_CONTENT = _os.environ.get("MTLM_COOKED_CONTENT", "")  # optional editor-cooked path
+COOKED_CONTENT = _os.environ.get("MTMI_COOKED_CONTENT", "")  # optional editor-cooked path
 MOD_CONTENT = r"MapChangeTest_P\MotorTown\Content"
 
 
