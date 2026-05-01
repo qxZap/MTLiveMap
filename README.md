@@ -109,6 +109,11 @@ Selective stage flags: `--skip-meshes`, `--only-actors`, etc. Run
 
 ## delivery_points.json — the user-facing config
 
+> A heavily-commented reference copy lives in `delivery_points.example.json`.
+> If you want to start fresh, `cp delivery_points.example.json delivery_points.json`
+> and edit. The pipeline only ever reads `delivery_points.json`.
+
+
 This is the only file you edit for delivery-point work. Top-level
 structure:
 

@@ -803,6 +803,16 @@ internal static class Program
                         Console.WriteLine($"  {fieldName}={i64.Value} {label}");
                         return true;
                     case IntPropertyData ip:
+                        // Warn if a fractional JSON value is being silently
+                        // truncated to int — usually means the JSON has the
+                        // wrong type for this field (e.g. 0.5 on an Int
+                        // counter). Lossless casts (5, 5.0) stay quiet.
+                        if (value!.Type == JTokenType.Float)
+                        {
+                            double dv = (double)value!;
+                            if (dv != Math.Truncate(dv))
+                                Console.Error.WriteLine($"  WARN: field '{fieldName}' on {label} is Int — JSON value {dv} truncated to {(int)dv}");
+                        }
                         ip.Value = (int)value!;
                         Console.WriteLine($"  {fieldName}={ip.Value} {label}");
                         return true;
