@@ -1,5 +1,13 @@
 {
+  "_README_BOOST_CHAIN": [
+    "Why some 'remote' vanilla DPs still ship the boosted variant even when include_pickups=false:",
+    "MT validates its mission/cargo registry at world load. Shipping a boosted cargo (e.g. Fuelx2) that NO vanilla DP references crashes the game — empirically reproduced. The framework keeps a minimum vanilla mission-graph footprint by injecting the boosted variant into a SAFETY-NET subset of vanilla DPs (the consumers of the source cargo), even when include_pickups is off.",
+    "Practical implication: with include_pickups=false plus the default safety net, two vanilla DP classes (Farm_Cabbage_C and Farm_Hemp_C by default) silently accept the boosted variant alongside vanilla Fuel. Their world instances will accept Fuelx2 deliveries and pay out at the boosted rate — that's the chain cost of having Fuelx2 exist at all in this MT build.",
+    "Tunable via the top-level boost_safety_dps list: pick less-played destinations or DPs that already have a stricter recipe so the boost leakage is minimized. Setting boost_safety_dps to [] is NOT supported — you'll crash on world load.",
+    "If/when MT's load-time validation gets clearer, this constraint may be replaced by a single off-map placeholder DP. Until then, treat the safety-net leakage as the price of admission for any boosted cargo."
+  ],
   "include_pickups": false,
+  "boost_safety_dps": ["Farm_Cabbage_C", "Farm_Hemp_C"],
   "cargo_payment_overrides": {
     "_": "Per-cargo PaymentPer1Km + BasePayment in-place multiplier. Mutates the existing cargo row — the cargo NAME stays the same, so vanilla missions also get the boost. Use sparingly; this is a global price knob, not a per-DP boost."
   },
@@ -27,8 +35,8 @@
       "marker_color":  "RESERVED. Hex color for the world-map marker. Pipeline propagates the value but MTBPInjector mutation is not yet wired (see AGENTS.md 'Marker / Icon Mutation (Pending)').",
       "icon":          "RESERVED. /Game/... path for the marker icon. Same plumbing status as marker_color.",
       "output_storage_cap": "RESERVED. Per-cargo max storage on this delivery point (vanilla default ~100). Lives on a separate MTDeliveryPointInventoryRatio actor, not on the BP CDO — needs targeted mutation. Pipeline propagates the value but MTBPInjector mutation pending.",
-      "include_pickups":  "TOP-LEVEL bool (default true). When true, every vanilla DP that consumes a source cargo also accepts the boosted variant (input-only wholesale injection). When false, only a SAFETY-NET subset of vanilla DPs is touched (see `boost_safety_dps`). Going below the safety net crashes MT on world load — the boosted cargo seems to need at least minimal vanilla mission-graph coverage.",
-      "boost_safety_dps": "TOP-LEVEL list of vanilla DP class names (e.g. ['Farm_Cabbage_C', 'Farm_Hemp_C']) that ALWAYS get the boosted variant added to inputs even when include_pickups=false. Defaults to two low-traffic farms when omitted. Empty list NOT supported — leaving zero vanilla consumers crashes the game."
+      "include_pickups":  "TOP-LEVEL bool (default true). When true, EVERY vanilla DP that consumes a source cargo also accepts the boosted variant (input-only wholesale injection — the boost leaks into the entire mission graph). When false, ONLY a hand-picked SAFETY-NET subset is touched (see boost_safety_dps). The safety net is non-negotiable — leaving zero vanilla consumers crashes MT at world load because a boosted cargo with no in-world destination breaks the mission/cargo registry validation. See top-level _README_BOOST_CHAIN.",
+      "boost_safety_dps": "TOP-LEVEL list of vanilla DP class names that ALWAYS get the boosted variant added to inputs, regardless of include_pickups. These DPs will accept and pay out for the boosted variant in-game — pick destinations whose payout leakage is acceptable. Defaults to ['Farm_Cabbage_C', 'Farm_Hemp_C'] when the key is omitted (low-traffic farms). Empty list NOT supported — game will crash on world load."
     },
     "recipe_fields": {
       "inputs":        "{Cargo: Count} — specific cargo names from cargos/cargo_names.txt.",
@@ -37,7 +45,7 @@
       "output_types":  "[Type] OR {Type: Count} — same shape as input_types.",
       "speed":         "Float — ProductionSpeedMultiplier (1.0 default; 5.0 = 500%).",
       "time_seconds":  "Float — ProductionTimeSeconds for one production cycle.",
-      "boosted":       "Magic key inside an inputs/outputs cargo dict. Value is the per-km payment multiplier. For every NAMED cargo on the same side, the framework clones a boosted variant in Cargos_01.uasset (named '<Source>x<N>', e.g. Fuelx2) with PaymentPer1Km and BasePayment ×N, and adds it to THIS recipe alongside the source at the same count. Per-recipe — only DPs that opt in produce/accept the boosted variant. Side-effect: every vanilla DP that CONSUMES the source cargo also accepts the boosted variant (input-only wholesale). Required to avoid a world-load crash that fires when a boosted cargo has zero vanilla consumers. Combine with top-level cargo_base_overrides[<boosted_name>] to also hard-set BasePayment for offroad-friendly payouts.",
+      "boosted":       "Magic key inside an inputs/outputs cargo dict. Value is the per-km payment multiplier. For every NAMED cargo on the same side, the framework clones a boosted variant in Cargos_01.uasset (named '<Source>x<N>', e.g. Fuelx2) with PaymentPer1Km and BasePayment ×N, and adds it to THIS recipe alongside the source at the same count. Per-recipe — only DPs that opt in produce/accept the boosted variant. SIDE EFFECT (chain cost): the boost ALSO leaks into vanilla DPs via the safety-net injection — see top-level _README_BOOST_CHAIN. Set include_pickups=false + boost_safety_dps to a small list to minimize leakage; leakage cannot be reduced to zero. Combine with cargo_base_overrides[<boosted_name>] to hard-set BasePayment for offroad-friendly payouts.",
       "direct_boosted":"Alternative to the `boosted` key: name the boosted cargo directly, e.g. `outputs: {\"Fuelx2\": 1}`. Pattern `<vanilla_cargo>x<int>` or `<cargo>x<int>p<frac>` (Fuelx2p5 = 2.5x) auto-creates the row at the implied multiplier. Use this when you want ONLY the boosted variant on a side (e.g. TF2 outputs Fuelx2 only, with no vanilla Fuel). Display label falls back to the source cargo's localized name — Fuelx2 currently shows as 'Fuel' in the mission UI; a separate-path StringTable for distinct labels is pending."
     }
   },
