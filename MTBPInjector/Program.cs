@@ -771,72 +771,57 @@ internal static class Program
             return c;
         }
 
-        // Helper: scale PaymentPer1Km + BasePayment on a row in-place.
-        void Boost(StructPropertyData row, float mult, string label)
+        // Reserved keys in a spec entry — anything ELSE on the entry is
+        // treated as a row-field name to set verbatim. This lets the JSON
+        // mirror the actual cargo row schema instead of inventing a
+        // separate dialect for each setter.
+        var reservedKeys = new HashSet<string>(StringComparer.Ordinal)
         {
-            foreach (var p in row.Value)
-            {
-                if (p.Name.ToString() == "PaymentPer1Km" && p is FloatPropertyData fp)
-                    fp.Value *= mult;
-                else if (p.Name.ToString() == "BasePayment" && p is Int64PropertyData ip)
-                    ip.Value = (long)(ip.Value * mult);
-            }
-            Console.WriteLine($"  ×{mult:0.##} {label}");
-        }
+            "copy_from", "new_id", "display_source", "_"
+        };
 
-        // Helper: hard-set BasePayment to an absolute value. Runs AFTER any
-        // multiplier-based boost so the override wins (crucial for offroad
-        // routes where PaymentPer1Km scaling is meaningless and the player
-        // gets paid almost entirely from BasePayment).
-        void SetBase(StructPropertyData row, long basePay, string label)
+        // Generic per-field setter. Looks up `fieldName` on the row and
+        // assigns the JSON value into the matching property. Property-type
+        // dispatch on the actual UAssetAPI class — Float/Int/Int64/Bool/
+        // Name covers every editable cargo-row field. Unknown fields or
+        // fields that resolve to a complex struct (Vector2D, GameplayTags,
+        // ObjectProperty actor refs) are skipped with a warning so a typo
+        // is never silently ignored AND can never crash the writer.
+        bool SetField(StructPropertyData row, string fieldName, JToken value, string label)
         {
             foreach (var p in row.Value)
             {
-                if (p.Name.ToString() == "BasePayment" && p is Int64PropertyData ip)
+                if (p.Name.ToString() != fieldName) continue;
+                switch (p)
                 {
-                    ip.Value = basePay;
-                    Console.WriteLine($"  base={basePay} {label}");
-                    return;
+                    case FloatPropertyData fp:
+                        fp.Value = (float)value!;
+                        Console.WriteLine($"  {fieldName}={fp.Value} {label}");
+                        return true;
+                    case Int64PropertyData i64:
+                        i64.Value = (long)value!;
+                        Console.WriteLine($"  {fieldName}={i64.Value} {label}");
+                        return true;
+                    case IntPropertyData ip:
+                        ip.Value = (int)value!;
+                        Console.WriteLine($"  {fieldName}={ip.Value} {label}");
+                        return true;
+                    case BoolPropertyData bp:
+                        bp.Value = (bool)value!;
+                        Console.WriteLine($"  {fieldName}={bp.Value} {label}");
+                        return true;
+                    case NamePropertyData np:
+                        EnsureName(asset, (string)value!);
+                        np.Value = FName.FromString(asset, (string)value!);
+                        Console.WriteLine($"  {fieldName}={np.Value} {label}");
+                        return true;
+                    default:
+                        Console.Error.WriteLine($"  WARN: field '{fieldName}' on {label} is type {p.GetType().Name} — not supported by mutate-cargos generic setter");
+                        return false;
                 }
             }
-        }
-
-        // Helper: hard-set SpawnProbability on a row. SpawnProbability
-        // controls how often MT's mission generator picks the cargo for
-        // random delivery missions. Setting to 0 keeps the cargo loadable
-        // and explicit recipes work, but the cargo never appears in
-        // ambient/random missions — useful for boosted variants where we
-        // want the high payout limited to the explicit producer-consumer
-        // pair, not generated against safety-net vanilla DPs.
-        void SetSpawnProbability(StructPropertyData row, int prob, string label)
-        {
-            foreach (var p in row.Value)
-            {
-                if (p.Name.ToString() == "SpawnProbability" && p is IntPropertyData ip)
-                {
-                    ip.Value = prob;
-                    Console.WriteLine($"  spawn={prob} {label}");
-                    return;
-                }
-            }
-        }
-
-        // Helper: set PaymentSqrtRatio. MT scales the payment by a
-        // sqrt-based curve (likely sqrt of distance or weight). Default
-        // is 1.0 — values above 1 amplify the curve, below 1 flatten it.
-        // Useful for taming the payout on boosted variants without
-        // touching BasePayment / PaymentPer1Km.
-        void SetSqrtRatio(StructPropertyData row, float ratio, string label)
-        {
-            foreach (var p in row.Value)
-            {
-                if (p.Name.ToString() == "PaymentSqrtRatio" && p is FloatPropertyData fp)
-                {
-                    fp.Value = ratio;
-                    Console.WriteLine($"  sqrt={ratio:0.##} {label}");
-                    return;
-                }
-            }
+            Console.Error.WriteLine($"  WARN: field '{fieldName}' not found on {label}");
+            return false;
         }
 
         void SetDisplayName(StructPropertyData row, string sourceKey)
@@ -879,54 +864,46 @@ internal static class Program
             }
         }
 
-        int added = 0, boosted = 0, skipped = 0, baseSet = 0;
-        foreach (var entry in spec)
+        int added = 0, skipped = 0;
+        foreach (var entry in spec.Cast<JObject>())
         {
-            string source  = (string)entry["source"]!;
-            string? target = (string?)entry["target"];
-            float mult     = entry["payment_multiplier"] != null ? (float)entry["payment_multiplier"]! : 1.0f;
-            long? basePay  = entry["base_payment"]?.Type == JTokenType.Integer
-                ? (long?)(long)entry["base_payment"]! : null;
-            int? spawnProb = entry["spawn_probability"]?.Type == JTokenType.Integer
-                ? (int?)(int)entry["spawn_probability"]! : null;
-            float? sqrtRatio = entry["sqrt_ratio"] != null
-                && (entry["sqrt_ratio"]!.Type == JTokenType.Float
-                    || entry["sqrt_ratio"]!.Type == JTokenType.Integer)
-                ? (float?)(float)entry["sqrt_ratio"]! : null;
-            if (!existingRows.TryGetValue(source, out var srcRow))
+            string copyFrom = (string)entry["copy_from"]!;
+            string newId    = (string)entry["new_id"]!;
+            string displaySource = (string?)entry["display_source"] ?? copyFrom;
+            if (!existingRows.TryGetValue(copyFrom, out var srcRow))
             {
-                Console.Error.WriteLine($"  source cargo '{source}' not found in Cargos table");
+                Console.Error.WriteLine($"  copy_from '{copyFrom}' not found in Cargos table — skipped");
                 continue;
             }
-            // No target ⇒ IN-PLACE on the existing row. Apply multiplier
-            // first (if > 1), then absolute base override (if any). Safer
-            // than appending new rows for in-place edits — mutates only
-            // payment fields, no schema change.
-            if (string.IsNullOrEmpty(target))
+            if (existingRows.ContainsKey(newId))
             {
-                if (mult != 1.0f) { Boost(srcRow, mult, source); boosted++; }
-                if (basePay.HasValue) { SetBase(srcRow, basePay.Value, source); baseSet++; }
-                if (spawnProb.HasValue) SetSpawnProbability(srcRow, spawnProb.Value, source);
-                if (sqrtRatio.HasValue) SetSqrtRatio(srcRow, sqrtRatio.Value, source);
+                skipped++;
                 continue;
             }
-            if (existingRows.ContainsKey(target)) { skipped++; continue; }
             var newRow = (StructPropertyData)DeepClone(srcRow);
-            EnsureName(asset, target);
-            newRow.Name = FName.FromString(asset, target);
-            SetDisplayName(newRow, source);
-            if (mult != 1.0f) Boost(newRow, mult, $"+cargo {target} (clone of {source})");
-            if (basePay.HasValue) SetBase(newRow, basePay.Value, target);
-            if (spawnProb.HasValue) SetSpawnProbability(newRow, spawnProb.Value, target);
-            if (sqrtRatio.HasValue) SetSqrtRatio(newRow, sqrtRatio.Value, target);
+            EnsureName(asset, newId);
+            newRow.Name = FName.FromString(asset, newId);
+            SetDisplayName(newRow, displaySource);
+            string label = $"+cargo {newId} (clone of {copyFrom})";
+            Console.WriteLine($"  {label}");
+            // Iterate every non-reserved key on the entry as a row-field
+            // override. JSON keys must match the cargo row's UE field
+            // names exactly (PaymentPer1Km, BasePayment, SpawnProbability,
+            // PaymentSqrtRatio, bUseDamage, etc.) so the mod author writes
+            // values that map 1:1 to a vanilla-cargo dump.
+            foreach (var prop in entry.Properties())
+            {
+                if (reservedKeys.Contains(prop.Name)) continue;
+                SetField(newRow, prop.Name, prop.Value, newId);
+            }
             table.Table.Data.Add(newRow);
-            existingRows[target] = newRow;
+            existingRows[newId] = newRow;
             added++;
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(dstPath)!);
         asset.Write(dstPath);
-        Console.WriteLine($"  Wrote {dstPath} ({added} new, {boosted} in-place boosted, {baseSet} base-set, {skipped} dedup)");
+        Console.WriteLine($"  Wrote {dstPath} ({added} new, {skipped} dedup)");
         return 0;
     }
 
