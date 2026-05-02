@@ -113,19 +113,23 @@ Selective stage flags: `--skip-meshes`, `--only-actors`, etc. Run
 > If you want to start fresh, `cp delivery_points.example.json delivery_points.json`
 > and edit. The pipeline only ever reads `delivery_points.json`.
 
-
 This is the only file you edit for delivery-point work. Top-level
 structure:
 
 ```json
 {
-  "include_pickups": false,
-  "boost_safety_dps": ["Farm_Cabbage_C", "Farm_Hemp_C"],
-  "cargo_payment_overrides": { ... },
-  "cargo_base_overrides":    { "Fuelx2": 100000 },
-  "cargo_spawn_overrides":   { ... },
-  "cargo_sqrt_overrides":    { ... },
-  "_doc": { "...inline schema docs..." },
+  "new_cargos": [
+    {
+      "copy_from":         "Fuel",
+      "new_id":            "Fuelx2",
+      "display_source":    "Fuel",
+      "PaymentPer1Km":     600,
+      "BasePayment":       100000,
+      "SpawnProbability":  10,
+      "PaymentSqrtRatio":  1.0,
+      "safety_dps":        ["Farm_Cabbage_C", "Farm_Hemp_C"]
+    }
+  ],
 
   "MyDP": {
     "label": "My Delivery Point",
@@ -133,25 +137,50 @@ structure:
     "icon": "/Game/.../ConstructionSite",
     "recipes": [
       {
-        "inputs":  {"Fuel": 1, "boosted": 5},
+        "inputs":  {"Fuelx2": 1},
         "outputs": {"CornBox": 3},
-        "speed": 5.0, "time_seconds": 30.0
+        "speed": 5.0,
+        "time_seconds": 30.0
       }
     ]
   }
 }
 ```
 
-### Top-level knobs
+### `new_cargos` — adding custom cargo variants
 
-| Key | What it does |
-|-----|--------------|
-| `include_pickups` | When **true** (default), every vanilla DP that consumes a source cargo also accepts the boosted variant. When **false**, only the safety-net subset is touched. |
-| `boost_safety_dps` | List of vanilla DP class names that always accept the boosted variant. Required because shipping a boosted cargo with zero vanilla consumers crashes MT on world load. Default: `Farm_Cabbage_C`, `Farm_Hemp_C`. **Empty list crashes the game.** |
-| `cargo_payment_overrides` | `{Cargo: mult}` — multiplies `PaymentPer1Km` and `BasePayment` of an existing row in place. Cargo name unchanged, vanilla missions inherit the boost. |
-| `cargo_base_overrides` | `{Cargo: int}` — sets `BasePayment` to an absolute value. **Critical for offroad** routes where per-km pay doesn't fire. |
-| `cargo_spawn_overrides` | `{Cargo: int}` — sets `SpawnProbability` (random mission gen frequency). |
-| `cargo_sqrt_overrides` | `{Cargo: float}` — sets `PaymentSqrtRatio` (1.0 default; <1 flattens long-route payouts, >1 amplifies). |
+The single mechanism for adding new cargo rows to `Cargos_01.uasset`.
+Each entry clones a vanilla cargo row into a new id and applies
+arbitrary field overrides. Recipes (anywhere in this file or in the
+auto-injected vanilla safety-net DPs) reference the new cargo by
+`new_id`.
+
+| Key | Type | What it does |
+|-----|------|--------------|
+| `copy_from` | str | Vanilla cargo whose row gets cloned (template). |
+| `new_id` | str | The new row's name. Recipes reference this string. |
+| `display_source` | str (optional) | Existing cargo whose StringTable label your new cargo borrows in the mission UI. Defaults to `copy_from`. Custom display labels need a separate StringTable asset that's not yet wired up. |
+| `safety_dps` | list[str] | **Required.** Vanilla DP class names that will accept this cargo as input. MT crashes on world load if a cargo has zero vanilla consumers. Pick destinations whose payout leakage is acceptable. |
+| Any other key | matches UE field type | Cargo-row field name set verbatim — `PaymentPer1Km`, `BasePayment`, `SpawnProbability`, `PaymentSqrtRatio`, `NumCargoMin`, `NumCargoMax`, `Fragile`, `bUseDamage`, `bAllowStacking`, `bTimer`, `BaseTimeSeconds`, ... see the `_NEW_CARGO_FIELDS` block in `delivery_points.example.json` for the full list with vanilla defaults and types. Run `python import_cargo_data.py` to extract a vanilla cargo dump under `CargoImport/cargos/catalog.json` and copy values 1:1. |
+
+The setter dispatches on the actual UE property type
+(Float / Int / Int64 / Bool / Name). Unknown field names print a
+warning instead of silently failing. A fractional JSON value on an Int
+field also warns rather than truncating quietly.
+
+### The safety-net constraint
+
+Shipping a new cargo row whose `new_id` is referenced by ZERO vanilla
+DPs crashes MT on world load. The `safety_dps` list per cargo holds
+the minimum vanilla mission-graph footprint needed to keep the
+runtime registry consistent — those listed classes will accept the
+new cargo as input alongside their vanilla recipes.
+
+That coverage *will* generate paid missions for the new cargo at
+those vanilla DPs (the boost leakage). Pick low-traffic
+destinations, or set `BasePayment` / per-km values that make sense
+even when delivered to a random farm. `Farm_Cabbage_C` and
+`Farm_Hemp_C` are reasonable defaults.
 
 ### Per-DP fields
 
@@ -171,23 +200,14 @@ spaces, capped at 14 characters.
 
 | Field | What it does |
 |-------|--------------|
-| `inputs` | `{Cargo: Count}` — exact cargo names required as input. |
-| `outputs` | `{Cargo: Count}` — what the DP produces. |
+| `inputs` | `{Cargo: Count}` — exact cargo names required as input. Vanilla names from `cargos/cargo_names.txt` OR `new_id` values from the `new_cargos` list. |
+| `outputs` | `{Cargo: Count}` — what the DP produces. Same name space as `inputs`. |
 | `input_types`, `output_types` | `[Type]` or `{Type: Count}` — accept ANY cargo of the given `EDeliveryCargoType` enum value. Listed in `CargoImport/cargos/types.txt`. |
 | `speed` | `ProductionSpeedMultiplier` — 1.0 default, 5.0 = 500%. |
 | `time_seconds` | `ProductionTimeSeconds` for one cycle. |
-| `boosted` | **Magic key inside `inputs` or `outputs`.** Value is the per-km payment multiplier. The framework auto-clones every named cargo on the same side into a `<Source>x<N>` variant in `Cargos_01.uasset` (PaymentPer1Km × N, BasePayment × N) and adds it alongside the source at the same count. Combine with `cargo_base_overrides` for hard-set base pay. |
-| Direct boosted name | Reference a boosted cargo by name directly — e.g. `outputs: {"Fuelx2": 1}`. The pattern `<vanilla_cargo>x<int>[p<frac>]` (e.g. `Fuelx2`, `CornPalletx2p5`) auto-creates the row at the implied multiplier. Use when you want ONLY the boosted variant on a side. |
 
-### The boost chain
-
-Read the `_README_BOOST_CHAIN` block at the top of `delivery_points.json`
-for the full story. The short version: any boosted cargo you create must
-be referenced by at least one vanilla DP (the safety-net DPs in
-`boost_safety_dps`), or MT crashes on world load. The boost will leak into
-those vanilla DPs' missions — pick destinations whose payout leakage you
-can live with, and use `cargo_base_overrides` to keep boost values on the
-TF-side reasonable.
+A recipe with no `inputs`/`input_types` is timer-only — the DP
+produces its outputs on a clock without needing an inbound delivery.
 
 ---
 
@@ -197,7 +217,8 @@ TF-side reasonable.
 MTMapInjector/
 ├── README.md                  ← you are here
 ├── AGENTS.md                  ← deeper notes on UE5 internals + patterns
-├── delivery_points.json       ← user-facing DP config
+├── delivery_points.json       ← user-facing DP config (your working copy)
+├── delivery_points.example.json ← reference template with full inline docs
 ├── static_meshes.json         ← scene export (written by ue.py inside the editor)
 ├── map_work_changes.json      ← intermediate (mesh + marker placements)
 │
@@ -247,11 +268,12 @@ A required env var isn't set or doesn't resolve to an existing path. The
 error block names every missing variable, what it's for, and how to
 obtain it. Edit the top of `fulltest.bat` and re-run.
 
-**Game crashes on world load after enabling a boosted cargo.**
-Either `boost_safety_dps` is empty, or the cargo isn't referenced by any
-vanilla DP in your loaded mod set. Make sure `boost_safety_dps` is
-non-empty and the listed classes exist (the defaults `Farm_Cabbage_C` and
-`Farm_Hemp_C` always do).
+**Game crashes on world load after adding a `new_cargos` entry.**
+Its `safety_dps` list is empty, missing, or points at vanilla DP
+classes that aren't loaded. Set it to at least one valid class —
+`Farm_Cabbage_C` and `Farm_Hemp_C` are reliable defaults. Without
+vanilla DPs accepting the new cargo, MT's mission registry rejects
+the world during load.
 
 **`fulltest.bat` errors with `'X' is not recognized as an internal command`.**
 The .bat file got LF line endings somehow. Run `unix2dos fulltest.bat` (or
@@ -270,18 +292,31 @@ later in the alphabet, rename our pak's prefix in `modp.bat` to load
 after it.
 
 **Cargo display is blank.**
-Mod-shipped boosted rows reuse the source cargo's StringTable key, so
-`Fuelx5` shows as `Fuel` in the mission UI. A separate-path StringTable
-asset for distinct boosted labels is on the to-do list.
+You either omitted `display_source` (or set it to a name that has no
+StringTable entry). Set `display_source` to an existing vanilla cargo
+whose label you're happy borrowing — typically the same value as
+`copy_from`. Distinct labels per variant need a separate-path
+StringTable asset that isn't wired up yet.
+
+**Annotating placements.**
+Drop a `{"_comment": "..."}` (or any dict whose keys all start with
+`_`) anywhere in `map_work_changes.json["delivery_points"]`. The
+mesh importer preserves these across re-runs and the actor cloner
+silently ignores them.
 
 ---
 
 ## Status of features
 
 - Done: Delivery-point injection (per-recipe + auto-WP-cell registration).
-- Done: Boosted-cargo variants with per-km, base-pay, sqrt, and spawn knobs.
+- Done: Custom cargo variants via `new_cargos` — generic field setter
+  covers every Float / Int / Int64 / Bool field on the cargo row, with
+  per-cargo `safety_dps` for crash-free deployment.
 - Done: Parking / garage / gas pump scene markers.
 - Done: Pak load-order workaround (`zzzz_` prefix).
+- Done: Path centralization (`mt_paths.py` + `MTMI_*` env vars,
+  validation block at the top of `fulltest.bat`).
+- Done: `_comment` tolerance in `map_work_changes.json` delivery list.
 - Pending: Marker color and icon — propagated through the pipeline but not
   yet mutated into the game's marker actor (see AGENTS.md "Marker / Icon
   Mutation Pending").

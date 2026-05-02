@@ -1124,8 +1124,8 @@ the source class (`Farm_Corn` = 9 chars → `Mod` + 6 hash chars).
 
 | Field           | Type                         | Notes                                       |
 |-----------------|------------------------------|---------------------------------------------|
-| `inputs`        | `{Cargo: Count}` map         | Specific named cargos (see Cargos catalog). |
-| `outputs`       | `{Cargo: Count}` map         |                                             |
+| `inputs`        | `{Cargo: Count}` map         | Specific named cargos (vanilla OR `new_id` from `new_cargos`). |
+| `outputs`       | `{Cargo: Count}` map         | Same name space as `inputs`.                |
 | `input_types`   | `[Type, ...]` or `{Type:N}`  | EDeliveryCargoType filter (Wood, Log etc.). |
 | `output_types`  | `[Type, ...]` or `{Type:N}`  |                                             |
 | `speed`         | float                        | `ProductionSpeedMultiplier` (1.0 default).  |
@@ -1134,6 +1134,115 @@ the source class (`Farm_Corn` = 9 chars → `Mod` + 6 hash chars).
 Recipe with NO `inputs` / `input_types` = timed background production.
 `import_cargo_data.py` dumps every vanilla delivery-point class as a
 ready-to-paste example under `CargoImport/delivery_points/`.
+
+## Custom Cargos (`new_cargos`)
+
+Single mechanism for adding cargo rows to `Cargos_01.uasset`. Each
+entry clones a vanilla row by name, applies arbitrary field
+overrides, and registers a per-cargo `safety_dps` list for the
+runtime-registry workaround.
+
+```json
+"new_cargos": [
+  {
+    "copy_from":         "Fuel",
+    "new_id":            "Fuelx2",
+    "display_source":    "Fuel",
+    "PaymentPer1Km":     600,
+    "BasePayment":       100000,
+    "SpawnProbability":  10,
+    "PaymentSqrtRatio":  1.0,
+    "safety_dps":        ["Farm_Cabbage_C", "Farm_Hemp_C"]
+  }
+]
+```
+
+Reserved keys: `copy_from`, `new_id`, `display_source`, `safety_dps`,
+`_*`. Anything else is treated as a UE cargo-row field name and set
+verbatim by `MTBPInjector mutate-cargos`. The setter dispatches on
+the actual property type (Float / Int / Int64 / Bool / Name);
+unknown field names print a warning, fractional JSON on an Int field
+warns rather than truncating silently.
+
+### `Cargos_01.uasset`, NOT `Cargos.uasset`
+
+MT loads both `/Game/DataAsset/Cargos.uasset` and
+`/Game/DataAsset/Cargos_01.uasset`. Adding boosted rows to BOTH crashes
+on world load (likely a duplicate-row registration collision when MT
+merges the tables). Modifying just `Cargos.uasset` also crashes —
+re-serialized bytes appear to fail an asset-registry hash. Modifying
+`Cargos_01.uasset` only is the only stable path; that's where the
+framework writes new rows. The mod tree never ships `Cargos.uasset`.
+
+### Display labels via StringTable
+
+Each cloned row's `Name` TextProperty uses HistoryType=StringTableEntry
+pointing at `/Game/DataAsset/StringTables/Cargo.Cargo` with
+`Value = display_source`. The new row's display label is whatever
+that StringTable maps the source key to (e.g. Fuelx2's
+`display_source: "Fuel"` → "Fuel" in the mission UI).
+
+Inline FText (HistoryType=None or Base with a CultureInvariantString)
+rendered blank for cloned rows in this MT build, even when the bytes
+matched mod patterns we audited (ProxyOversizeCargo). Shipping a
+modified `StringTables/Cargo.uasset` crashes on world load. Distinct
+labels per variant need a SEPARATE-path StringTable asset
+(`/Game/DataAsset/StringTables/CargoBoosted.uasset` or similar) —
+not yet wired.
+
+### The safety-net constraint (world-load crash)
+
+Shipping a new cargo row that no in-world DP references (input or
+output) crashes MT on world load — empirically reproduced. The
+`safety_dps` list per `new_cargos` entry names vanilla DP classes
+that get the new cargo added to their `inputs` map (input-only
+wholesale injection driven by `inject_new_cargos_into_safety_dps`).
+
+Side effect: those vanilla DPs WILL accept the new cargo at their
+in-game instances and pay out at the boosted rate. Pick low-traffic
+destinations and tune `BasePayment` so the leakage is acceptable.
+`Farm_Cabbage_C` + `Farm_Hemp_C` are the documented defaults.
+
+The wholesale injection happens by deep-copying recipes from
+`CargoImport/delivery_points/<class>.example.json` (extracted by
+`import_cargo_data.py` at setup time), splicing the new cargo into
+the FIRST recipe with a non-empty `inputs` map, and shipping the
+modified DP CDO via `mutate-bp-cdo` (same path used for our own
+mod BPs).
+
+## Path Centralization (`mt_paths.py`)
+
+Every script imports `mt_paths` at the top — that module reads the
+`MTMI_*` environment variables (`MTMI_GAME_CONTENT`, `MTMI_MAPPINGS`,
+`MTMI_MAPPINGS_TAG`, `MTMI_GAME_PAKDIR`) and validates each. If any
+required path is missing or doesn't resolve to an existing file/dir,
+`mt_paths` writes a multi-line diagnostic to stderr explaining what
+each variable is, what the value should look like, and how to obtain
+the underlying content (FModel for the game extract,
+UnrealMappingsDumper for the .usmap, Steam Manage → Browse local
+files for the Paks folder), then exits with code 2.
+
+`fulltest.bat` declares the env vars at the top with prominent
+comments and validates them up front before running any step. Running
+a Python script standalone outside the `.bat` requires setting the
+vars in your shell first.
+
+Never re-introduce a hardcoded `D:\MT\...` path in any script.
+
+## Pak Load Order Workaround
+
+The mod deploys as `zzzz_MapChangeTest_P.pak` (lowercase prefix) so
+it sorts after every other Cargos-overriding pak in the user's load
+order — `ZZZ_qxZap_*_A.pak`, `zzProxysOversize*_A.pak`, etc.
+Empirically confirmed: with an uppercase `ZZZ_` prefix our
+`Cargos_01.uasset` was being shadowed by `zzProxys*` paks; switching
+to `zzzz_` fixed it.
+
+Note: only `_P.pak` paks load by default in this build of MT.
+`_A.pak` files in the user's Paks folder (the proxy mods) are
+inactive — disable suspicion of them as the override source if the
+user's setup is unusual. The deploy step is still in `modp.bat` and
+respects `MTMI_GAME_PAKDIR`.
 
 ## Output Storage Cap (Pending)
 

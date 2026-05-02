@@ -1,28 +1,28 @@
 # Icebound Outpost: The Frozen Trade Hub
 ## Overview
-A harsh, snow-covered industrial outpost where only the outer coastal rim is exposed dirt—everything else lies beneath deep permafrost. The island survives not by self-sufficiency but by **mining frozen resources from beneath the ice** and **processing them for trade** with the main map. Its extreme climate makes it poor and dependent, constantly needing imports of food and supplies while exporting processed minerals and fuel to pay for survival. Two clear cargo flows: ore and fuel north, food and goods south.
+A harsh, snow-covered industrial outpost. The outer coastal rim is dirt, but the main ring road loops twice around the island because it is dangerous—parts of it run through snow, then plunge into long, winding curves completely filled with snow. Alongside this risky main route there are smarter, more advanced roads built for skilled drivers and faster cars. The island survives by mining iron ore from the snowy interior, tapping gas seeps on the rim, and processing everything into steel, fuel, glass and lime for export. It is poor and dependent, constantly importing food, parts and luxuries while exporting processed goods to the main map.
 
 ---
-### 🌍 Phase I: Local Resource Extraction (Frozen Wealth Below)
-The island's value comes from mineral wealth hidden beneath the permafrost, plus accessible coastal gas seeps. Only the dirt rim allows basic surface access.
+### 🌍 Phase I: Local Resource Extraction
+The island's value comes from iron ore hidden under snow in the interior plus accessible coastal resources on the dirt rim.
 
-*   **Resource 1: Iron Ore Veins**: Dense deposits mined from snow-covered boreholes. *Location:* Northern Ice Fields (subsurface).
-*   **Resource 2: Permafrost Methane**: Gas trapped in the frozen ground, venting at the southern dirt rim. *Location:* Southern Gas Seeps (dirt rim).
-*   **Resource 3: Silica Gravel**: Purer-than-average sand found along the exposed coastal rim. *Location:* Coastal Strip (dirt rim).
-*   **Resource 4: Limestone Shelf**: Accessible rocky outcrops along the western dirt shore. *Location:* Western Rocky Shore (dirt).
+*   **Resource 1: Iron Ore**: Mined from snow-covered sites in the northern interior. *Location:* Northern Snow Fields (drill sites).
+*   **Resource 2: Natural Gas**: Vents at the southern dirt rim. *Location:* Southern Gas Seeps (dirt rim).
+*   **Resource 3: Silica Gravel**: Found along the exposed coastal dirt. *Location:* Coastal Strip (dirt rim).
+*   **Resource 4: Limestone**: Rocky outcrops on the western dirt shore. *Location:* Western Rocky Shore (dirt rim).
 
-*Note: Everything north of the dirt rim is frozen solid. Mining requires drilling through permafrost.**
+*Note: The interior is deep snow. The main ring road is long and dangerous, looping twice with long snow-filled curves. Separate advanced rally-style roads exist for skilled drivers.*
 
 ---
-### ⚙️ Phase II: Processing (The Only Industry)
-Raw frozen materials are heated, melted, and refined locally to create tradeable goods. All facilities sit on the dirt rim for access.
+### ⚙️ Phase II: Processing (The Dirt Rim Industry)
+Raw materials are processed locally on the dirt rim to create tradeable goods. All facilities sit on the exposed dirt for access and road connection.
 
 *   **From Iron Ore**: Smelted into **Steel Ingots** and **Iron Rebar**. *Facility:* Forge & Smelter (dirt rim, west).
-*   **From Methane**: Bottled as **Fuel Canisters** for export. *Facility:* Gas Compression Station (dirt rim, south).
+*   **From Natural Gas**: Bottled as **Fuel Canisters** for export. *Facility:* Gas Compression Station (dirt rim, south).
 *   **From Silica Gravel**: Washed and processed into **Glass Sheets**. *Facility:* Glassworks (dirt rim, east).
 *   **From Limestone**: Burned into **Quicklime** for cement and soil amendment. *Facility:* Lime Kiln (dirt rim, south).
 
-*The dirt rim is sacred—all facilities cluster here where the ground is solid.*
+*All industry lives on the dirt rim. The long, dangerous ring road connects everything.*
 
 ---
 ### 📦 Phase III: Export (Paying for Survival)
@@ -66,21 +66,25 @@ The island cannot grow food. Everything organic, plus machinery and luxuries, mu
 **Key Insight:** The island is poor. Profit margins are thin. One bad season—one collapsed export price, one missed shipment—and the outpost struggles. This creates constant, high-stakes gameplay around maintaining the cargo flow.
 
 ---
-### 🗺️ Terrain Map: The Dirt Rim
-```
-         SNOW (Permafrost - untrafficable)
-    +-----------------------------+
-    |                             |
-    |    SNOW INTERIOR            |
-    |    (Mining by drill only)    |
-    |         +---+               |
-    |             | DIRT RIM      |
-    |    ~~~~~~~~~~~~            |
-    |    (Roads, facilities,     |
-    |     housing cluster       |
-    |     here only)            |
-    +-----------------------------+
-         WATER (Docks, ferry)
-```
+### 🗺️ Terrain & Roads: The Dangerous Double Loop
+The island has two distinct road systems:
 
-*Only the outer ring (dirt rim) is driveable. The interior is snow-covered permafrost—impassable without heavy equipment. All industry, housing, and roads sit on this narrow rim.*
+**Main Ring Road (Dangerous)**
+- Long dirt road that loops around the island roughly twice for safety
+- Starts on the dirt rim, then runs through snow for long stretches
+- Plunges into many tight, snow-filled curves and switchbacks
+- Slow, risky, and punishing — the "normal" route for trucks and daily traffic
+
+**Advanced Rally Roads (Smart Drivers)**
+- Separate, more technical roads built for skilled drivers and faster cars
+- Tighter corners, bigger elevation changes, narrower snow paths
+- Meant for experienced players who want to go faster or take shortcuts
+- Connect key points (drill sites, forge, docks) in smarter, riskier ways
+
+**Terrain Summary**
+- Outer rim: dirt, where all facilities and housing sit
+- Interior: deep snow with iron ore drill sites
+- Southern dirt rim: gas seeps, docks, warehouse, main processing
+- Roads are the only way to move cargo — no shortcuts through open snow
+
+The island is built for dangerous, high-skill driving. One mistake on the long snowy curves and you lose the load.
