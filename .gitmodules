@@ -1,0 +1,3 @@
+[submodule "MTBPInjector/UAssetAPI"]
+	path = MTBPInjector/UAssetAPI
+	url = https://github.com/atenfyr/UAssetAPI.git

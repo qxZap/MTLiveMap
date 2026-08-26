@@ -1,0 +1,18 @@
+{
+  "_source_class": "SteelMill_Coil_C",
+  "label": "SteelMill_Coil",
+  "recipes": [
+    {
+      "inputs": {
+        "Coal": 30,
+        "IronOre": 20,
+        "Limestone": 5
+      },
+      "outputs": {
+        "SteelCoil_10t": 1
+      },
+      "time_seconds": 120.0
+    }
+  ],
+  "visuals_seen": {}
+}

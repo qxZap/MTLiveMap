@@ -1,0 +1,29 @@
+{
+  "_source_class": "Factory_FormulaSCM_C",
+  "label": "Factory_Formul",
+  "recipes": [
+    {
+      "inputs": {
+        "SmallBox": 2,
+        "BoxPallete_01": 6,
+        "Container_20ft_01": 2
+      },
+      "outputs": {
+        "FormulaSCM": 1
+      },
+      "time_seconds": 600.0
+    },
+    {
+      "inputs": {
+        "SteelCoil_10t": 1,
+        "BoxPallete_01": 6,
+        "Container_20ft_01": 2
+      },
+      "outputs": {
+        "FormulaSCM": 1
+      },
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}

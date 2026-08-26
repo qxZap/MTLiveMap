@@ -1,0 +1,22 @@
+{
+  "_source_class": "LogSupply_C",
+  "label": "LogSupply",
+  "recipes": [
+    {
+      "outputs": {
+        "Log_20ft": 1
+      },
+      "time_seconds": 300.0
+    },
+    {
+      "inputs": {
+        "Fuel": 1
+      },
+      "outputs": {
+        "Log_20ft": 1
+      },
+      "time_seconds": 360.0
+    }
+  ],
+  "visuals_seen": {}
+}

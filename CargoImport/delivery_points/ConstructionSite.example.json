@@ -1,0 +1,57 @@
+{
+  "_source_class": "ConstructionSite_C",
+  "label": "ConstructionSi",
+  "recipes": [
+    {
+      "outputs": {
+        "Sand": 1
+      },
+      "time_seconds": 120.0
+    },
+    {
+      "inputs": {
+        "Concrete": 1
+      },
+      "outputs": {
+        "FineSand": 1
+      },
+      "time_seconds": 5.0
+    },
+    {
+      "inputs": {
+        "Concrete": 1
+      },
+      "speed": 1.0299999713897705,
+      "time_seconds": 300.0
+    },
+    {
+      "inputs": {
+        "WoodPlank_14ft_5t": 1
+      },
+      "speed": 1.0299999713897705,
+      "time_seconds": 900.0
+    },
+    {
+      "inputs": {
+        "Fuel": 1
+      },
+      "speed": 1.0299999713897705,
+      "time_seconds": 360.0
+    },
+    {
+      "inputs": {
+        "PlasticPipes_6m": 1
+      },
+      "speed": 1.0299999713897705,
+      "time_seconds": 600.0
+    },
+    {
+      "inputs": {
+        "lHBeam_6m": 1
+      },
+      "speed": 1.0299999713897705,
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}

@@ -1,0 +1,23 @@
+{
+  "_source_class": "Mine_Coal_C",
+  "label": "Mine_Coal",
+  "recipes": [
+    {
+      "outputs": {
+        "Coal": 1
+      },
+      "time_seconds": 300.0
+    },
+    {
+      "inputs": {
+        "Fuel": 3,
+        "WoodPlank_14ft_5t": 1
+      },
+      "outputs": {
+        "Coal": 30
+      },
+      "time_seconds": 30.0
+    }
+  ],
+  "visuals_seen": {}
+}

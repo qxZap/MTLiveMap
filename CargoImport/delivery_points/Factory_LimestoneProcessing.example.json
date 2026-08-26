@@ -1,0 +1,16 @@
+{
+  "_source_class": "Factory_LimestoneProcessing_C",
+  "label": "Factory_Limest",
+  "recipes": [
+    {
+      "inputs": {
+        "LimestoneRock": 10
+      },
+      "outputs": {
+        "Limestone": 5
+      },
+      "time_seconds": 60.0
+    }
+  ],
+  "visuals_seen": {}
+}

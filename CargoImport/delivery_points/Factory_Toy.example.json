@@ -1,0 +1,31 @@
+{
+  "_source_class": "Factory_Toy_C",
+  "label": "Factory_Toy",
+  "recipes": [
+    {
+      "inputs": {
+        "PlasticPallete": 10
+      },
+      "outputs": {
+        "ToyBoxes": 20
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 60.0
+    },
+    {
+      "inputs": {
+        "PlasticPallete": 3
+      },
+      "outputs": {
+        "ToyBoxes": 6
+      },
+      "input_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 10.0
+    }
+  ],
+  "visuals_seen": {}
+}

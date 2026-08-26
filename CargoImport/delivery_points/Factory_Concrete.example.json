@@ -1,0 +1,20 @@
+{
+  "_source_class": "Factory_Concrete_C",
+  "label": "Factory_Concre",
+  "recipes": [
+    {
+      "inputs": {
+        "Cement": 10,
+        "Fuel": 1
+      },
+      "outputs": {
+        "Concrete": 10
+      },
+      "input_types": [
+        "Sand"
+      ],
+      "time_seconds": 60.0
+    }
+  ],
+  "visuals_seen": {}
+}

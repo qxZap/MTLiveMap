@@ -1,0 +1,17 @@
+{
+  "_source_class": "PizzaCounter_C",
+  "label": "PizzaCounter",
+  "recipes": [
+    {
+      "inputs": {
+        "MeatBox": 1,
+        "CheeseBox": 1
+      },
+      "outputs": {
+        "Pizza_01_Premium": 20
+      },
+      "time_seconds": 60.0
+    }
+  ],
+  "visuals_seen": {}
+}

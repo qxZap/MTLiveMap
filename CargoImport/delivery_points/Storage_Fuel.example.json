@@ -1,0 +1,16 @@
+{
+  "_source_class": "Storage_Fuel_C",
+  "label": "Storage_Fuel",
+  "recipes": [
+    {
+      "inputs": {
+        "Fuel": 1
+      },
+      "outputs": {
+        "Fuel": 1
+      },
+      "time_seconds": 1.0
+    }
+  ],
+  "visuals_seen": {}
+}

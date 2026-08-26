@@ -1,0 +1,28 @@
+{
+  "_source_class": "Refinery_Fuel_C",
+  "label": "Refinery_Fuel",
+  "recipes": [
+    {
+      "inputs": {
+        "CrudeOil": 5
+      },
+      "outputs": {
+        "Fuel": 10
+      },
+      "time_seconds": 60.0
+    },
+    {
+      "inputs": {
+        "CrudeOil": 10
+      },
+      "outputs": {
+        "Fuel": 30
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 60.0
+    }
+  ],
+  "visuals_seen": {}
+}

@@ -1,0 +1,18 @@
+{
+  "_source_class": "Factory_Raven_C",
+  "label": "Factory_Raven",
+  "recipes": [
+    {
+      "inputs": {
+        "SteelCoil_10t": 1,
+        "BoxPallete_01": 6,
+        "Container_20ft_01": 2
+      },
+      "outputs": {
+        "Raven": 1
+      },
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}

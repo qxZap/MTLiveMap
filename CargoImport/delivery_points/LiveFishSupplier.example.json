@@ -1,0 +1,13 @@
+{
+  "_source_class": "LiveFishSupplier_C",
+  "label": "LiveFishSuppli",
+  "recipes": [
+    {
+      "outputs": {
+        "LiveFish_01": 5
+      },
+      "time_seconds": 600.0
+    }
+  ],
+  "visuals_seen": {}
+}

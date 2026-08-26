@@ -1,0 +1,32 @@
+{
+  "_source_class": "Factory_Lumbermil_C",
+  "label": "Factory_Lumber",
+  "recipes": [
+    {
+      "inputs": {
+        "Log_20ft": 1
+      },
+      "outputs": {
+        "WoodPlank_14ft_5t": 4
+      },
+      "time_seconds": 60.0
+    },
+    {
+      "inputs": {
+        "Log_Oak_12ft": 1
+      },
+      "outputs": {
+        "WoodPlank_14ft_5t": 2
+      },
+      "time_seconds": 60.0
+    },
+    {
+      "inputs": {
+        "Fuel": 1
+      },
+      "speed": 1.100000023841858,
+      "time_seconds": 720.0
+    }
+  ],
+  "visuals_seen": {}
+}

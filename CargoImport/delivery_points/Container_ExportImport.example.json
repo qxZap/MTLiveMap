@@ -1,0 +1,13 @@
+{
+  "_source_class": "Container_ExportImport_C",
+  "label": "Container_Expo",
+  "recipes": [
+    {
+      "output_types": [
+        "Container"
+      ],
+      "time_seconds": 5.0
+    }
+  ],
+  "visuals_seen": {}
+}

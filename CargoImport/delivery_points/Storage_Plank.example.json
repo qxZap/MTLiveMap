@@ -1,0 +1,16 @@
+{
+  "_source_class": "Storage_Plank_C",
+  "label": "Storage_Plank",
+  "recipes": [
+    {
+      "inputs": {
+        "WoodPlank_14ft_5t": 1
+      },
+      "outputs": {
+        "WoodPlank_14ft_5t": 1
+      },
+      "time_seconds": 1.0
+    }
+  ],
+  "visuals_seen": {}
+}

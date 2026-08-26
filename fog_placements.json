@@ -1,0 +1,38 @@
+{
+  "_README": [
+    "Hand-placed meshes in EDITOR coordinates. EMPTY ON PURPOSE — the island's",
+    "fog is done with the game's own ExponentialHeightFog now (MTMI_FOG_PROPS,",
+    "or height_fog.json exported from the editor), not with meshes.",
+    "",
+    "The mechanism still works and is kept for placing one-off props without",
+    "an editor round-trip. Fields: name (prefix _ to disable), X/Y/Z, scale,",
+    "Yaw, mesh. Add \"world\": true for world-space coordinates.",
+    "",
+    "WHY NO MESH FOG — three attempts, all invisible in game, recorded so none",
+    "of them gets tried again:",
+    "",
+    "1. Volume-domain material (the original SM_Fog meshes). Must be voxelized",
+    "   into the volumetric fog grid; that never happened however correct the",
+    "   asset was. Motor Town has never voxelized a Volume material into fog:",
+    "   of 22,125 cooked assets exactly one carries voxelization shaders, and",
+    "   it is the engine's stock cloud material. See TODO section 4.",
+    "2. SM_Particle_Smoke_01a / Mat_Gradient_01. Surface + additive, so no",
+    "   voxelization needed, still invisible at 30x, 100x and 300x. Its cooked",
+    "   shader map carries FMeshParticleVertexFactory: an FX material wanting",
+    "   per-particle input a static mesh cannot supply.",
+    "3. SM_Generic_Cloud_* / Mat_Cloud. Also invisible, and this one was never",
+    "   explained. Mesh and material both ship in the base pak at the paths",
+    "   used, the mesh imports the material correctly, and Mat_Cloud cooks",
+    "   Local + InstancedStaticMesh + SplineMesh with no particle dependency —",
+    "   the same profile as meshes that do render.",
+    "",
+    "None of it was placement. Seven water tanks at the seven coordinates the",
+    "fog had occupied were ALL visible, including one 9 m above the delivery",
+    "actor, which is what finally ruled the coordinates out and pointed at the",
+    "height fog instead."
+  ],
+
+  "mesh": "",
+
+  "placements": []
+}

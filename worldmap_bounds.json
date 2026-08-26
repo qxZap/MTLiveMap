@@ -1,0 +1,27 @@
+{
+  "image": "T_WorldMap_Jeju.png",
+  "size_px": 16384,
+  "min_x": -1907770.4065900226,
+  "max_x": 920000.0,
+  "min_y": -855331.6627483835,
+  "max_y": 1972438.7438416393,
+  "uu_per_px": 172.59340860534806,
+  "y_down": true,
+  "vanilla": {
+    "min_x": -1280000.0,
+    "max_x": 920000.0,
+    "min_y": -320000.0,
+    "max_y": 1880000.0,
+    "size_px": 4096,
+    "uu_per_px": 537.109375
+  },
+  "_note": [
+    "The game maps a world position to a map pixel using ITS OWN copy",
+    "of these bounds. Shipping this image without moving those bounds",
+    "puts the island in the right place and every marker in the wrong",
+    "one -- so this file is an instruction for that step, not a record.",
+    "set-worldmap takes the centre and size, not the four corners.",
+    "world_to_pixel: px = (X - min_x) / uu_per_px",
+    "                py = (Y - min_y) / uu_per_px   when y_down"
+  ]
+}

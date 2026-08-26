@@ -1,0 +1,195 @@
+{
+  "_README_NEW_CARGOS": [
+    "How to add a custom cargo:",
+    "1. Add an object to the new_cargos list below.",
+    "2. copy_from = the vanilla cargo whose row gets cloned (template).",
+    "3. new_id    = the new row's name. Recipes reference this string.",
+    "4. display_source = OPTIONAL. Existing cargo whose StringTable label",
+    "                    your new cargo borrows in the mission UI. Defaults",
+    "                    to copy_from. Custom display labels need a separate",
+    "                    StringTable asset that's not yet wired up.",
+    "5. safety_dps = REQUIRED list of vanilla DP class names whose inputs",
+    "                will accept this cargo. MT crashes on world load if a",
+    "                cargo has zero vanilla consumers. Pick destinations",
+    "                whose payout leakage is acceptable.",
+    "6. Every other key on the entry is a UE cargo-row field name. Field",
+    "                names are case-sensitive and must match the vanilla",
+    "                cargo struct exactly. Run `python import_cargo_data.py`",
+    "                to extract a vanilla cargo dump under",
+    "                CargoImport/cargos/catalog.json — copy values 1:1.",
+    "7. Recipes (in DP entries below) reference cargos by name. Vanilla and",
+    "                new_id values are both valid; unknown names get logged",
+    "                and dropped at registry-load time."
+  ],
+  "_NEW_CARGO_FIELDS": {
+    "_": "Reference of every cargo-row field that the framework can set verbatim on a new_cargos entry. Type column matches the underlying UE property class — use the matching JSON literal type when you set a value. Vanilla examples are from the Fuel row.",
+    "_payment": {
+      "PaymentPer1Km":                       "Float — per-km payout. Only fires when MT's road-distance calc finds a marked road; offroad runs ignore this. Vanilla Fuel: 300.",
+      "PaymentPer1KmMultiplierByMaxWeight":  "Float — per-km value scales with the cargo's max weight by this factor. Vanilla Fuel: 2.",
+      "PaymentSqrtRatio":                    "Float — sqrt-curve coefficient applied to the payout. 1.0 default; <1 flattens long-route payouts, >1 amplifies. Vanilla Fuel: 1.",
+      "PaymentSqrtRatioMinCapcity":          "Int — minimum capacity before the sqrt curve kicks in. Vanilla Fuel: 0. (Fractional JSON values get truncated; setter warns when that happens.)",
+      "BasePayment":                         "Int64 — flat base payout independent of distance. THE offroad lever — bump this to make missions worth running on dirt roads. Vanilla Fuel: 100.",
+      "ExportPrice":                         "Int — price when delivered to a Container_Export-style DP. Vanilla Fuel: 10.",
+      "ImportPrice":                         "Int — price MT charges when this cargo is imported into a region. Vanilla Fuel: 10.",
+      "MaxDamagePaymentMultiplier":          "Float — payout cap for fully-damaged cargo (0..1). Vanilla Fuel: 0.1.",
+      "DamageBonusMultiplier":               "Float — bonus multiplier for delivering with no damage. Vanilla Fuel: 0.",
+      "ManualLoadingPayment":                "Int64 — extra pay when the player manually loads the cargo vs using a forklift. Vanilla Fuel: 0."
+    },
+    "_mission_gen": {
+      "SpawnProbability":     "Int — random/ambient mission generator weight. Higher = more frequent. Vanilla Fuel: 10.",
+      "NumCargoMin":          "Int — minimum units per generated mission. Vanilla Fuel: 5.",
+      "NumCargoMax":          "Int — maximum units per generated mission. Vanilla Fuel: 20.",
+      "MinDeliveryDistance":  "Float — mission gen filter, minimum km between source and destination. Vanilla Fuel: 1.",
+      "MaxDeliveryDistance":  "Float — mission gen filter, maximum km. 0 = unlimited. Vanilla Fuel: 0."
+    },
+    "_physical": {
+      "VolumeSize":             "Int — capacity-units the cargo occupies on a trailer. Vanilla Fuel: 1.",
+      "bAllowStacking":         "Bool — multiple units share one trailer slot. Vanilla Fuel: false.",
+      "bUseDamage":             "Bool — cargo accumulates damage from rough driving / collisions. Vanilla Fuel: false.",
+      "Fragile":                "Int — damage sensitivity (higher = breaks easier). Vanilla Fuel: 0.",
+      "bHoldingOffsetUsingItemBounds": "Bool — render attachment offset uses the item's bounding box instead of a fixed pivot. Vanilla Fuel: false."
+    },
+    "_timer": {
+      "bTimer":                       "Bool — whether the cargo has a delivery time limit / bonus. Vanilla Fuel: false.",
+      "BaseTimeSeconds":              "Float — baseline seconds for the timer. Vanilla Fuel: 0.",
+      "TimerBySpeedKPH":              "Float — timer scales with the player's average speed in km/h. Vanilla Fuel: 0.",
+      "TimerByRoadSpeedLimitRatio":   "Float — timer scales with the road's speed limit (1.0 = match the limit). Vanilla Fuel: 0."
+    },
+    "_meta": {
+      "bDepcreated": "Bool — marks the cargo as legacy. May hide it from random mission gen depending on MT version. Vanilla Fuel: false."
+    },
+    "_NOT_supported_yet": {
+      "_":                "These exist on every cargo row but require array/struct/enum/object handling that the generic setter doesn't do. Touching them needs a one-off code path in MTBPInjector.MutateCargos.",
+      "CargoType":        "EnumProperty — single value (Box, Pallet, LiquidContainer, ...). Useful but not wired yet.",
+      "CargoSpaceTypes":  "Array<EnumProperty> — list of trailer-bay categories the cargo fits (Tanker, Container, Flatbed, ...).",
+      "WeightRange":      "Vector2D struct — (min, max) tonnage range.",
+      "InTimeTipRange":   "Vector2D struct — UI tooltip min/max for the timer feature.",
+      "GameplayTags":     "GameplayTagContainer — array of FName tags.",
+      "ActorClass":       "ObjectProperty — the BP that spawns when the cargo physicalizes. Inherited from copy_from; changing requires new-import resolution.",
+      "DumpCargoSurfaceMesh / DumpCargoSurfaceMaterial / DumpPileActorClass": "ObjectProperty — visuals for dump-truck pile rendering.",
+      "Colors":           "Array<StructProperty> — per-cargo color palette for paint variants.",
+      "CargoFlags":       "Int bitmask — opaque, intentionally not exposed (no documented bit meanings)."
+    }
+  },
+  "new_cargos": [
+    {
+      "_": "Fuelx2 round-trip test — every supported field set to a value DIFFERENT from vanilla Fuel so a downstream dump-cargo-row can confirm each one was applied. bDepcreated intentionally omitted (would hide the cargo from mission gen during the test).",
+      "copy_from":                         "Fuel",
+      "new_id":                            "Fuelx2",
+      "display_source":                    "Fuel",
+      "safety_dps":                        ["Farm_Cabbage_C", "Farm_Hemp_C"],
+
+      "PaymentPer1Km":                     600,
+      "PaymentPer1KmMultiplierByMaxWeight": 5.0,
+      "PaymentSqrtRatio":                  2.0,
+      "PaymentSqrtRatioMinCapcity":        7,
+      "BasePayment":                       100000,
+      "ExportPrice":                       50,
+      "ImportPrice":                       25,
+      "MaxDamagePaymentMultiplier":        0.5,
+      "DamageBonusMultiplier":             0.25,
+      "ManualLoadingPayment":              5000,
+
+      "SpawnProbability":                  20,
+      "NumCargoMin":                       1,
+      "NumCargoMax":                       3,
+      "MinDeliveryDistance":               5,
+      "MaxDeliveryDistance":               100,
+
+      "VolumeSize":                        2,
+      "bAllowStacking":                    true,
+      "bUseDamage":                        true,
+      "Fragile":                           50,
+      "bHoldingOffsetUsingItemBounds":     true,
+
+      "bTimer":                            true,
+      "BaseTimeSeconds":                   600,
+      "TimerBySpeedKPH":                   1.5,
+      "TimerByRoadSpeedLimitRatio":        0.8
+    }
+  ],
+  "_doc": {
+    "purpose": "Per-name delivery-point configuration. Scene placeholders named DeliveryPoint_<KEY> resolve to the entry under <KEY> here. Missing entries are logged and ignored.",
+    "naming": "Scene placeholder asset_key 'DeliveryPoint_My_Cool_Spot' looks up KEY 'My_Cool_Spot'. The in-game label defaults to KEY with underscores replaced by spaces ('My Cool Spot'), capped at 14 chars (source label byte budget).",
+    "auto_derived": "target_class + target_path are always auto-generated. source_class + source_actor default from the chosen `template` but can be overridden per entry for experimental clones.",
+    "validation": "Cargo names + cargo types are cross-checked against CargoImport/cargos/. Invalid names produce a warning and are dropped from that recipe (don't crash the build). new_id values from the new_cargos list count as valid.",
+    "fields": {
+      "label":         "Optional in-game name. Default: KEY with '_' -> ' '. Max 14 chars (source label byte budget — varies by template).",
+      "template":      "Optional. Selects the vanilla DP class to clone. Default: 'farm' (Farm_Corn_C/CornFarm_2 — verified end-to-end). Other classes (Container_ExportImport_C, ComonDrop_C, Factory_*) have shown crashes / persistence issues; add new templates to bp_registry._TEMPLATES once validated.",
+      "source_class":  "Optional override. Bypasses `template` to clone a specific BP class. Experimental — may not work depending on the class's transitive dependencies.",
+      "source_actor":  "Optional override. Pairs with source_class. Must name a vanilla instance of source_class that exists in Jeju_World.umap.",
+      "recipes":       "List of production configs. See _example below for every supported field.",
+      "marker_color":  "RESERVED. Hex color for the world-map marker. Pipeline propagates the value but MTBPInjector mutation is not yet wired (see AGENTS.md 'Marker / Icon Mutation (Pending)').",
+      "icon":          "RESERVED. /Game/... path for the marker icon. Same plumbing status as marker_color.",
+      "output_storage_cap": "RESERVED. Per-cargo max storage on this delivery point (vanilla default ~100). Lives on a separate MTDeliveryPointInventoryRatio actor, not on the BP CDO — needs targeted mutation. Pipeline propagates the value but MTBPInjector mutation pending."
+    },
+    "recipe_fields": {
+      "inputs":        "{Cargo: Count} — specific cargo names. Vanilla names from cargos/cargo_names.txt OR new_id values from the new_cargos list above.",
+      "outputs":       "{Cargo: Count} — same shape as inputs.",
+      "input_types":   "[Type] OR {Type: Count} — EDeliveryCargoType filter from cargos/types.txt. Accepts ANY cargo of that type.",
+      "output_types":  "[Type] OR {Type: Count} — same shape as input_types.",
+      "speed":         "Float — ProductionSpeedMultiplier (1.0 default; 5.0 = 500%).",
+      "time_seconds":  "Float — ProductionTimeSeconds for one production cycle."
+    }
+  },
+  "TransformerFarm2": {
+    "label":        "TransformerFarm2",
+    "marker_color": "#3B0764",
+    "icon":         "/Game/Objects/Mission/Delivery/DeliveryPoint/ConstructionSite",
+    "recipes": [
+      {
+        "_": "TF2 is the consumer side of the boost test. Accepts both vanilla Fuel and the boosted Fuelx2 — both produce CornBox. Players can deliver either cargo here and compare the payouts.",
+        "inputs":       {"Fuel": 1, "Fuelx2": 1},
+        "outputs":      {"CornBox": 1},
+        "speed":        5.0,
+        "time_seconds": 30.0
+      }
+    ]
+  },
+  "TransformerFarm": {
+    "label":        "TransformerFarm",
+    "marker_color":        "#3B0764",
+    "icon":                "/Game/Objects/Mission/Delivery/DeliveryPoint/ConstructionSite",
+    "output_storage_cap":  5000,
+    "recipes": [
+      {
+        "_": "TF1 spawns Fuelx2 out of thin air on a timer (no inputs needed). Pairs with TF2 as the explicit producer-consumer chain for the boosted variant.",
+        "outputs":      {"Fuelx2": 1},
+        "time_seconds": 30.0
+      },
+      {
+        "_": "Multi-cargo input + multi-cargo output, custom speed + time.",
+        "inputs":       {"Transformer_50MVA": 1, "CrudeOil": 2},
+        "outputs":      {"CornBox": 3, "WoodPlank_14ft_5t": 1},
+        "speed":        5.0,
+        "time_seconds": 30.0
+      },
+      {
+        "_": "Multi-cargo input + multi-cargo output, custom speed + time.",
+        "inputs":       {"CornBox": 1, "CrudeOil": 2},
+        "outputs":      {"CornBox": 3, "WoodPlank_14ft_5t": 1},
+        "speed":        5.0,
+        "time_seconds": 1.0
+      },
+      {
+        "_": "Timer-only background production — no inputs, just outputs over time.",
+        "outputs":      {"CornBox": 1},
+        "time_seconds": 60.0
+      },
+      {
+        "_": "Cargo-TYPE filter (any LargePackage accepted as input). List form.",
+        "input_types":  ["LargePackage"]
+      },
+      {
+        "_": "Cargo-type filter as map with counts.",
+        "input_types":  {"Wood": 1, "Log": 2},
+        "outputs":      {"Concrete": 5}
+      },
+      {
+        "_": "Type-to-type recipe — accept any Sand-type cargo, produce any Concrete-type.",
+        "input_types":  ["Sand"],
+        "output_types": ["Concrete"]
+      }
+    ]
+  }
+}

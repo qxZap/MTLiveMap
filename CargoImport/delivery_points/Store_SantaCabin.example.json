@@ -1,0 +1,31 @@
+{
+  "_source_class": "Store_SantaCabin_C",
+  "label": "Store_SantaCab",
+  "recipes": [
+    {
+      "inputs": {
+        "ToyBoxes": 1
+      },
+      "outputs": {
+        "GiftBox_01": 10
+      },
+      "input_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 60.0
+    },
+    {
+      "inputs": {
+        "ToyBoxes": 5
+      },
+      "outputs": {
+        "GiftBox_01": 50
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 120.0
+    }
+  ],
+  "visuals_seen": {}
+}

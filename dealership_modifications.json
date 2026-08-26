@@ -1,0 +1,18 @@
+{
+    "_doc": "Two ways to place dealership vehicle spawn points (MTDealerVehicleSpawnPoint). (1) IN-EDITOR: place a placeholder named 'Dealership_<VehicleKey>' (split on the FIRST underscore, so keys with underscores like Cotra_20_3L survive); import_meshes resolves the vehicle path from the extracted game content, offsets it like other meshes, and the placeholder's own mesh is NOT shipped. (2) HAND-AUTHORED: list entries in the groups below. Both feed map_work_changes.json['dealerships'] which convert2.py injects. Coords are editor-local and get the world offset (MTMI_OFFSET_*); set 'world_coords': true to take X/Y/Z/Pitch/Roll/Yaw verbatim. Group/entry names starting with '_' are ignored (notes/examples). vehicle_path is the cooked vehicle BP path; vehicle_key its short asset name.",
+    "dealerships": {
+        "_example": [
+            {
+                "vehicle_path": "/Game/Cars/Models/Trailer_Cotra/Cotra_20_3L",
+                "vehicle_key": "Cotra_20_3L",
+                "X": 0.0,
+                "Y": 0.0,
+                "Z": 0.0,
+                "Pitch": 0.0,
+                "Roll": 0.0,
+                "Yaw": 0.0,
+                "world_coords": false
+            }
+        ]
+    }
+}

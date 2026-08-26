@@ -1,0 +1,16 @@
+{
+  "_source_class": "CopperRefinery_C",
+  "label": "CopperRefinery",
+  "recipes": [
+    {
+      "inputs": {
+        "CopperConcentrate": 3
+      },
+      "outputs": {
+        "CopperRodCoil_2t": 1
+      },
+      "time_seconds": 300.0
+    }
+  ],
+  "visuals_seen": {}
+}

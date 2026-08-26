@@ -1,0 +1,43 @@
+{
+  "_source_class": "Factory_Bakery_C",
+  "label": "Factory_Bakery",
+  "recipes": [
+    {
+      "outputs": {
+        "BreadPallet": 4
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 60.0
+    },
+    {
+      "outputs": {
+        "BreadPallet": 1
+      },
+      "input_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 10.0
+    },
+    {
+      "outputs": {
+        "BreadBox": 20
+      },
+      "input_types": [
+        "Container"
+      ],
+      "time_seconds": 60.0
+    },
+    {
+      "outputs": {
+        "BreadBox": 4
+      },
+      "input_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 10.0
+    }
+  ],
+  "visuals_seen": {}
+}

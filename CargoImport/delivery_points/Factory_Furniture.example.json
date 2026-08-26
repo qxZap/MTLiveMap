@@ -1,0 +1,24 @@
+{
+  "_source_class": "Factory_Furniture_C",
+  "label": "Factory_Furnit",
+  "recipes": [
+    {
+      "inputs": {
+        "WoodPlank_14ft_5t": 2,
+        "PlasticPallete": 1
+      },
+      "output_types": [
+        "Furniture"
+      ],
+      "time_seconds": 10.0
+    },
+    {
+      "inputs": {
+        "Fuel": 1
+      },
+      "speed": 1.100000023841858,
+      "time_seconds": 180.0
+    }
+  ],
+  "visuals_seen": {}
+}

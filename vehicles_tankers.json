@@ -1,0 +1,318 @@
+{
+  "_README": [
+    "Tanker fuel pumps \u2014 shipped as its OWN mod, not as part of the island.",
+    "",
+    "  python pack_vehicles.py --config vehicles_tankers.json --base vanilla",
+    "  python pack_vehicles.py --config vehicles_tankers.json \\",
+    "        --base CapitalistEconomy_P --name <something sorting after it>",
+    "",
+    "Kept out of vehicles.json on purpose: that file is the ISLAND's, and",
+    "the island build must not ship these rows or the standalone mod and",
+    "Arini would fight over the same vehicle tables.",
+    "",
+    "See _TANKER_SURVEY for how the twelve tankers were identified, and each",
+    "entry's own note for where its interaction point came from.",
+    "",
+    "WATER IS A FUEL TYPE. EMTFuelType is Invalid/Gasoline/Diesel/Electric/",
+    "Water, so a pump slot set to Water dispenses water -- which is what lets a",
+    "tanker refill a fire engine. Read it with:",
+    "  MTBPInjector dump-enum --mappings <usmap> --enum EMTFuelType",
+    "Do not infer enum members by grepping the mappings for strings: cooked",
+    "assets store enums as byte indices and a search for 'water' drowns in",
+    "Unreal's own water-body names while Electric never appears at all."
+  ],
+  "_TANKER_SURVEY": [
+    "CargoSpaceType on the vehicle's cargo space component is what identifies a",
+    "tanker -- not the row name. Names are useless here: most trailers are bare",
+    "brand names (Bulko, Olbe, Oldum, Lomax) that say nothing about what they",
+    "haul, Shotan_7 sits beside Shobed and Shovan in a bed/van/tan family, and",
+    "Kuda_LiveFishTank_4x2 matches every tank filter while hauling fish -- it",
+    "has its own CargoSpaceType, LiveFishTanker.",
+    "",
+    "Cooked assets store property names as mapping indices, so grepping the",
+    "bytes for 'CargoSpaceType' finds nothing; all 174 vehicle classes have to",
+    "be parsed. Result: 12 carry CargoSpaceType=Tanker.",
+    "",
+    "  vanilla already had a pump: Brutus_FireEngine, Brutus_Tanker,",
+    "                              Jemusi_Tanker, Trailer_Dinky_Tanker",
+    "  added here:                 Atlas_6x2_Tanker, Trailer_30ft_Tanker_01,",
+    "                              Trailer_Middle_Tanker_01, Trailer_Tanko40,",
+    "                              Trailer_Shotan_7, Trailer_Shotan_10,",
+    "                              Trailer_Taber_Lead, Trailer_Taber_Rear",
+    "  plus Kira_Tanker, which has no CargoSpaceType but is a tanker in game."
+  ],
+  "vehicles": [],
+  "modify": [
+    {
+      "row": "Trailer_30ft_Tanker_01",
+      "_": "Mobile fuel station. The Brutus fire engine already works this way; the only thing it had that the trailer lacked was the component. A 30ft tanker carries far more than the Brutus, which is the point of doing it here.",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -700,
+          "rel_y": 0,
+          "rel_z": 120,
+          "_": "Set to -500 by hand after testing in game. The earlier reasoning that -900ish was the rear face assumed the actor root sits at the kingpin; -500 landing right means the root is nearer the middle of the trailer than that."
+        },
+        {
+          "type": "cargo_fuel_types",
+          "types": [
+            "Gasoline",
+            "Diesel",
+            "Water"
+          ],
+          "_": "What the TANK accepts. The pump's Slots decide what it gives out; this decides what a hydrant or station may put in. Without Water here a hydrant answers 'wrong fuel type' no matter how the pump is set."
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    },
+    {
+      "row": "Trailer_Middle_Tanker_01",
+      "_": "5t Tanker Trailer. Hook socket at X=+298.9, Z=50. Scaled from the 30ft, whose hook sits at +501.6 and settled at -750 in game.",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -400,
+          "rel_y": 0,
+          "rel_z": 80
+        },
+        {
+          "type": "cargo_fuel_types",
+          "types": [
+            "Gasoline",
+            "Diesel",
+            "Water"
+          ],
+          "_": "What the TANK accepts. The pump's Slots decide what it gives out; this decides what a hydrant or station may put in. Without Water here a hydrant answers 'wrong fuel type' no matter how the pump is set."
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    },
+    {
+      "row": "Trailer_Tanko40",
+      "_": "Tanko 40. Utility0/Utility1 sockets at X=-542.7, Z=88.5 -- rear-mounted utility points, which is where a fuel hookup belongs. -650 stands just past them.",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -850,
+          "rel_y": 0,
+          "rel_z": 88
+        },
+        {
+          "type": "cargo_fuel_types",
+          "types": [
+            "Gasoline",
+            "Diesel",
+            "Water"
+          ],
+          "_": "What the TANK accepts. The pump's Slots decide what it gives out; this decides what a hydrant or station may put in. Without Water here a hydrant answers 'wrong fuel type' no matter how the pump is set."
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    },
+    {
+      "row": "Atlas_6x2_Tanker",
+      "_": "Atlas Tanker. TrailerHitch socket at X=-461.2, Z=85, which is the rear of the truck.",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -600,
+          "rel_y": 0,
+          "rel_z": 85
+        },
+        {
+          "type": "cargo_fuel_types",
+          "types": [
+            "Gasoline",
+            "Diesel",
+            "Water"
+          ],
+          "_": "What the TANK accepts. The pump's Slots decide what it gives out; this decides what a hydrant or station may put in. Without Water here a hydrant answers 'wrong fuel type' no matter how the pump is set."
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    },
+    {
+      "row": "Kira_Tanker",
+      "_": "Kira Tanker. FUEL ONLY, by decision -- water is deliberately not wired up here. It has no cargo space of its own: no CargoSpaceType, no components, and a 6-byte (empty) InheritableComponentHandler, so its tank comes wholesale from MTVehicleBaseBP_C. There is nothing on this asset to hang AllowedFuelTypes on, and editing the base class would reach every vehicle inheriting from it. The pump and the Tanker_FuelPump interaction still apply, so it dispenses and carries fuel exactly as before; it simply will not take water. Leave it that way.",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -400,
+          "rel_y": 0,
+          "rel_z": 90
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    },
+    {
+      "row": "Trailer_Taber_Lead",
+      "_": "Taber (lead). CargoSpaceType=Tanker. Hook1 at +527.1 front, Hook2 at -420.6 rear -- it links to another trailer, so both ends carry hooks. Front hook is within 26uu of the 30ft's +501.6, so it takes the same -750 that was measured there.",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -700,
+          "rel_y": 0,
+          "rel_z": 120
+        },
+        {
+          "type": "cargo_fuel_types",
+          "types": [
+            "Gasoline",
+            "Diesel",
+            "Water"
+          ],
+          "_": "What the TANK accepts. The pump's Slots decide what it gives out; this decides what a hydrant or station may put in. Without Water here a hydrant answers 'wrong fuel type' no matter how the pump is set."
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    },
+    {
+      "row": "Trailer_Taber_Rear",
+      "_": "Taber (rear). CargoSpaceType=Tanker. Hook at +420.4, front only. Scaled from the 30ft: -750 x (420/502).",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -700,
+          "rel_y": 0,
+          "rel_z": 120
+        },
+        {
+          "type": "cargo_fuel_types",
+          "types": [
+            "Gasoline",
+            "Diesel",
+            "Water"
+          ],
+          "_": "What the TANK accepts. The pump's Slots decide what it gives out; this decides what a hydrant or station may put in. Without Water here a hydrant answers 'wrong fuel type' no matter how the pump is set."
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    },
+    {
+      "row": "Trailer_Shotan_7",
+      "_": "Shotan 7. CargoSpaceType=Tanker. No hook socket exposed; rearmost wheel at -352.8, so the tail sits behind that. Least certain of the pair.",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -600,
+          "rel_y": 0,
+          "rel_z": 90
+        },
+        {
+          "type": "cargo_fuel_types",
+          "types": [
+            "Gasoline",
+            "Diesel",
+            "Water"
+          ],
+          "_": "What the TANK accepts. The pump's Slots decide what it gives out; this decides what a hydrant or station may put in. Without Water here a hydrant answers 'wrong fuel type' no matter how the pump is set."
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    },
+    {
+      "row": "Trailer_Shotan_10",
+      "_": "Shotan 10. CargoSpaceType=Tanker. The 10m version of Shotan_7, so proportionally further back than its -550.",
+      "modifications": [
+        {
+          "type": "fuel_pump",
+          "fuel_types": [
+            "Diesel",
+            "Gasoline",
+            "Water"
+          ],
+          "rel_x": -600,
+          "rel_y": 0,
+          "rel_z": 90
+        },
+        {
+          "type": "cargo_fuel_types",
+          "types": [
+            "Gasoline",
+            "Diesel",
+            "Water"
+          ],
+          "_": "What the TANK accepts. The pump's Slots decide what it gives out; this decides what a hydrant or station may put in. Without Water here a hydrant answers 'wrong fuel type' no matter how the pump is set."
+        },
+        {
+          "type": "row_field",
+          "field": "bHasFuelPump",
+          "value": true
+        }
+      ]
+    }
+  ]
+}

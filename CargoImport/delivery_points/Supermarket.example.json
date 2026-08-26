@@ -1,0 +1,88 @@
+{
+  "_source_class": "Supermarket_C",
+  "label": "Supermarket",
+  "recipes": [
+    {
+      "inputs": {
+        "BottlePallete": 1
+      },
+      "time_seconds": 2400.0
+    },
+    {
+      "inputs": {
+        "RicePallet": 1
+      },
+      "time_seconds": 1800.0
+    },
+    {
+      "inputs": {
+        "PumpkinPallet": 1
+      },
+      "time_seconds": 1800.0
+    },
+    {
+      "inputs": {
+        "CabbagePallet": 1
+      },
+      "time_seconds": 1800.0
+    },
+    {
+      "inputs": {
+        "PotatoPallet": 1
+      },
+      "time_seconds": 1800.0
+    },
+    {
+      "inputs": {
+        "CornPallet": 1
+      },
+      "time_seconds": 1800.0
+    },
+    {
+      "inputs": {
+        "OrangeBoxes": 1
+      },
+      "time_seconds": 1800.0
+    },
+    {
+      "inputs": {
+        "BeanPallet": 1
+      },
+      "time_seconds": 1800.0
+    },
+    {
+      "inputs": {
+        "CheesePallet": 1
+      },
+      "time_seconds": 2400.0
+    },
+    {
+      "inputs": {
+        "BreadPallet": 1
+      },
+      "time_seconds": 2400.0
+    },
+    {
+      "inputs": {
+        "MeatBox": 1
+      },
+      "time_seconds": 720.0
+    },
+    {
+      "inputs": {
+        "ToyBoxes": 1
+      },
+      "time_seconds": 1200.0
+    },
+    {
+      "outputs": {
+        "GroceryBag": 20
+      },
+      "input_types": [
+        "LargePackage"
+      ],
+      "time_seconds": 1.0
+    }
+  ],
+  "visuals_seen": {}
+}

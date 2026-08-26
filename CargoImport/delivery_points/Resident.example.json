@@ -1,0 +1,13 @@
+{
+  "_source_class": "Resident_C",
+  "label": "Resident",
+  "recipes": [
+    {
+      "inputs": {
+        "GroceryBag": 1
+      },
+      "time_seconds": 1200.0
+    }
+  ],
+  "visuals_seen": {}
+}

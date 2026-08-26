@@ -1,0 +1,1262 @@
+{
+  "_README_NEW_CARGOS": [
+    "How to add a custom cargo:",
+    "1. Add an object to the new_cargos list below.",
+    "2. copy_from = the vanilla cargo whose row gets cloned (template).",
+    "3. new_id    = the new row's name. Recipes reference this string.",
+    "4. display_source = OPTIONAL. Existing cargo whose StringTable label",
+    "                    your new cargo borrows in the mission UI. Defaults",
+    "                    to copy_from. Custom display labels need a separate",
+    "                    StringTable asset that's not yet wired up.",
+    "5. safety_dps = OPTIONAL emergency net. Adds the new cargo to the",
+    "                inputs of the named VANILLA DP classes by editing",
+    "                their CDO \u2014 which means every instance of that class",
+    "                in Jeju advertises your cargo. Do not use it unless a",
+    "                cargo genuinely has no consumer: every delivery point",
+    "                here gets its recipes written to its own mod BP CDO,",
+    "                so a cargo consumed by one of your own points already",
+    "                has a real consumer and needs no vanilla coverage.",
+    "6. Every other key on the entry is a UE cargo-row field name. Field",
+    "                names are case-sensitive and must match the vanilla",
+    "                cargo struct exactly. Run `python import_cargo_data.py`",
+    "                to extract a vanilla cargo dump under",
+    "                CargoImport/cargos/catalog.json \u2014 copy values 1:1.",
+    "7. Recipes (in DP entries below) reference cargos by name. Vanilla and",
+    "                new_id values are both valid; unknown names get logged",
+    "                and dropped at registry-load time."
+  ],
+  "_NEW_CARGO_FIELDS": {
+    "_": "Reference of every cargo-row field that the framework can set verbatim on a new_cargos entry. Type column matches the underlying UE property class \u2014 use the matching JSON literal type when you set a value. Vanilla examples are from the Fuel row.",
+    "_payment": {
+      "PaymentPer1Km": "Float \u2014 per-km payout. Only fires when MT's road-distance calc finds a marked road; offroad runs ignore this. Vanilla Fuel: 300.",
+      "PaymentPer1KmMultiplierByMaxWeight": "Float \u2014 per-km value scales with the cargo's max weight by this factor. Vanilla Fuel: 2.",
+      "PaymentSqrtRatio": "Float \u2014 sqrt-curve coefficient applied to the payout. 1.0 default; <1 flattens long-route payouts, >1 amplifies. Vanilla Fuel: 1.",
+      "PaymentSqrtRatioMinCapcity": "Int \u2014 minimum capacity before the sqrt curve kicks in. Vanilla Fuel: 0. (Fractional JSON values get truncated; setter warns when that happens.)",
+      "BasePayment": "Int64 \u2014 flat base payout independent of distance. THE offroad lever \u2014 bump this to make missions worth running on dirt roads. Vanilla Fuel: 100.",
+      "ExportPrice": "Int \u2014 price when delivered to a Container_Export-style DP. Vanilla Fuel: 10.",
+      "ImportPrice": "Int \u2014 price MT charges when this cargo is imported into a region. Vanilla Fuel: 10.",
+      "MaxDamagePaymentMultiplier": "Float \u2014 payout cap for fully-damaged cargo (0..1). Vanilla Fuel: 0.1.",
+      "DamageBonusMultiplier": "Float \u2014 bonus multiplier for delivering with no damage. Vanilla Fuel: 0.",
+      "ManualLoadingPayment": "Int64 \u2014 extra pay when the player manually loads the cargo vs using a forklift. Vanilla Fuel: 0."
+    },
+    "_mission_gen": {
+      "SpawnProbability": "Int \u2014 random/ambient mission generator weight. Higher = more frequent. Vanilla Fuel: 10.",
+      "NumCargoMin": "Int \u2014 minimum units per generated mission. Vanilla Fuel: 5.",
+      "NumCargoMax": "Int \u2014 maximum units per generated mission. Vanilla Fuel: 20.",
+      "MinDeliveryDistance": "Float \u2014 mission gen filter, minimum km between source and destination. Vanilla Fuel: 1.",
+      "MaxDeliveryDistance": "Float \u2014 mission gen filter, maximum km. 0 = unlimited. Vanilla Fuel: 0."
+    },
+    "_physical": {
+      "VolumeSize": "Int \u2014 capacity-units the cargo occupies on a trailer. Vanilla Fuel: 1.",
+      "bAllowStacking": "Bool \u2014 multiple units share one trailer slot. Vanilla Fuel: false.",
+      "bUseDamage": "Bool \u2014 cargo accumulates damage from rough driving / collisions. Vanilla Fuel: false.",
+      "Fragile": "Int \u2014 damage sensitivity (higher = breaks easier). Vanilla Fuel: 0.",
+      "bHoldingOffsetUsingItemBounds": "Bool \u2014 render attachment offset uses the item's bounding box instead of a fixed pivot. Vanilla Fuel: false."
+    },
+    "_timer": {
+      "bTimer": "Bool \u2014 whether the cargo has a delivery time limit / bonus. Vanilla Fuel: false.",
+      "BaseTimeSeconds": "Float \u2014 baseline seconds for the timer. Vanilla Fuel: 0.",
+      "TimerBySpeedKPH": "Float \u2014 timer scales with the player's average speed in km/h. Vanilla Fuel: 0.",
+      "TimerByRoadSpeedLimitRatio": "Float \u2014 timer scales with the road's speed limit (1.0 = match the limit). Vanilla Fuel: 0."
+    },
+    "_meta": {
+      "bDepcreated": "Bool \u2014 marks the cargo as legacy. May hide it from random mission gen depending on MT version. Vanilla Fuel: false."
+    },
+    "_NOT_supported_yet": {
+      "_": "These exist on every cargo row but require array/struct/enum/object handling that the generic setter doesn't do. Touching them needs a one-off code path in MTBPInjector.MutateCargos.",
+      "CargoType": "EnumProperty \u2014 single value (Box, Pallet, LiquidContainer, ...). Useful but not wired yet.",
+      "CargoSpaceTypes": "Array<EnumProperty> \u2014 list of trailer-bay categories the cargo fits (Tanker, Container, Flatbed, ...).",
+      "WeightRange": "Vector2D struct \u2014 (min, max) tonnage range.",
+      "InTimeTipRange": "Vector2D struct \u2014 UI tooltip min/max for the timer feature.",
+      "GameplayTags": "GameplayTagContainer \u2014 array of FName tags.",
+      "ActorClass": "ObjectProperty \u2014 the BP that spawns when the cargo physicalizes. Inherited from copy_from; changing requires new-import resolution.",
+      "DumpCargoSurfaceMesh / DumpCargoSurfaceMaterial / DumpPileActorClass": "ObjectProperty \u2014 visuals for dump-truck pile rendering.",
+      "Colors": "Array<StructProperty> \u2014 per-cargo color palette for paint variants.",
+      "CargoFlags": "Int bitmask \u2014 opaque, intentionally not exposed (no documented bit meanings)."
+    }
+  },
+  "_doc": {
+    "purpose": "Per-name delivery-point configuration. Scene placeholders named DeliveryPoint_<KEY> resolve to the entry under <KEY> here. Missing entries are logged and ignored.",
+    "naming": "Scene placeholder asset_key 'DeliveryPoint_My_Cool_Spot' looks up KEY 'My_Cool_Spot'. The in-game label defaults to KEY with underscores replaced by spaces ('My Cool Spot'). Any length; the old 14-char cap only applies on the RawExport fallback when the .usmap is stale.",
+    "auto_derived": "target_class + target_path are always auto-generated. source_class + source_actor default from the chosen `template` but can be overridden per entry for experimental clones.",
+    "validation": "Cargo names + cargo types are cross-checked against CargoImport/cargos/. Invalid names produce a warning and are dropped from that recipe (don't crash the build). new_id values from the new_cargos list count as valid.",
+    "fields": {
+      "label": "Optional in-game name. Default: KEY with '_' -> ' '. Any length (see naming).",
+      "template": "Optional. Selects the vanilla DP class to clone. Default: 'farm' (Farm_Corn_C/CornFarm_2 \u2014 verified end-to-end). Other classes (Container_ExportImport_C, ComonDrop_C, Factory_*) have shown crashes / persistence issues; add new templates to bp_registry._TEMPLATES once validated.",
+      "source_class": "Optional override. Bypasses `template` to clone a specific BP class. Experimental \u2014 may not work depending on the class's transitive dependencies.",
+      "source_actor": "Optional override. Pairs with source_class. Must name a vanilla instance of source_class that exists in Jeju_World.umap.",
+      "recipes": "List of production configs. See _example below for every supported field.",
+      "marker_color": "RESERVED. Hex color for the world-map marker. Pipeline propagates the value but MTBPInjector mutation is not yet wired (see AGENTS.md 'Marker / Icon Mutation (Pending)').",
+      "icon": "RESERVED. /Game/... path for the marker icon. Same plumbing status as marker_color.",
+      "output_storage_cap": "RESERVED. Per-cargo max storage on this delivery point (vanilla default ~100). Lives on a separate MTDeliveryPointInventoryRatio actor, not on the BP CDO \u2014 needs targeted mutation. Pipeline propagates the value but MTBPInjector mutation pending."
+    },
+    "recipe_fields": {
+      "inputs": "{Cargo: Count} \u2014 specific cargo names. Vanilla names from cargos/cargo_names.txt OR new_id values from the new_cargos list above.",
+      "outputs": "{Cargo: Count} \u2014 same shape as inputs.",
+      "input_types": "[Type] OR {Type: Count} \u2014 EDeliveryCargoType filter from cargos/types.txt. Accepts ANY cargo of that type.",
+      "output_types": "[Type] OR {Type: Count} \u2014 same shape as input_types.",
+      "speed": "Float \u2014 ProductionSpeedMultiplier (1.0 default; 5.0 = 500%).",
+      "time_seconds": "Float \u2014 ProductionTimeSeconds for one production cycle."
+    }
+  },
+  "new_cargos": [
+    {
+      "copy_from": "Fuel",
+      "new_id": "Water",
+      "display_source": "Fuel",
+      "PaymentPer1Km": 0,
+      "BasePayment": 60027,
+      "SpawnProbability": 14,
+      "VolumeSize": 1,
+      "_": "800 kg on a B5 rig over 0.93 km (Water_Storage->Cheese_Factory) = 60,027 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "display_name": "Water",
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "PaymentSqrtRatioMinCapcity": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0
+    },
+    {
+      "copy_from": "SmallBox",
+      "new_id": "Pezzi",
+      "display_source": "SmallBox",
+      "PaymentPer1Km": 0,
+      "BasePayment": 30000,
+      "SpawnProbability": 3,
+      "VolumeSize": 1,
+      "NumCargoMin": 1,
+      "NumCargoMax": 1,
+      "_": "500 kg on a B1 rig over 2.31 km (Trap_Cave->Abandoned_Market) = 30,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "display_name": "Pezzi",
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "PaymentSqrtRatioMinCapcity": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 30000
+    },
+    {
+      "copy_from": "Fuel",
+      "new_id": "JetFuel",
+      "display_source": "Fuel",
+      "display_name": "Jet Fuel",
+      "PaymentPer1Km": 0,
+      "BasePayment": 71153,
+      "SpawnProbability": 6,
+      "VolumeSize": 1,
+      "_": "800 kg on a B5 rig over 2.03 km (Fuel_Rafinery->South_East_Gas_Station) = 71,153 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "PaymentSqrtRatioMinCapcity": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0
+    },
+    {
+      "copy_from": "Fuel",
+      "new_id": "MoltenPlastic",
+      "display_source": "Fuel",
+      "display_name": "Molten Plastic",
+      "PaymentPer1Km": 0,
+      "BasePayment": 93313,
+      "SpawnProbability": 5,
+      "VolumeSize": 1,
+      "_": "800 kg on a B5 rig over 4.22 km (Fuel_Rafinery->Water_Storage_Depot) = 93,313 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "PaymentSqrtRatioMinCapcity": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0
+    },
+    {
+      "copy_from": "Fuel",
+      "new_id": "LiquidNitrogen",
+      "display_source": "Fuel",
+      "display_name": "Liquid Nitrogen",
+      "PaymentPer1Km": 0,
+      "BasePayment": 118257,
+      "SpawnProbability": 4,
+      "VolumeSize": 1,
+      "_": "800 kg on a B5 rig over 6.69 km (Aerotyne_International->Alpine_Rescue_Post) = 118,257 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "PaymentSqrtRatioMinCapcity": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0
+    },
+    {
+      "copy_from": "HempPallet",
+      "new_id": "HempBale",
+      "display_source": "HempPallet",
+      "display_name": "Hemp Bales",
+      "BasePayment": 28811,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "SpawnProbability": 6,
+      "VolumeSize": 1,
+      "_": "800 kg on a B2 rig over 2.12 km (South_Barn->Valley_Trailer) = 28,811 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "weight_kg": 800,
+      "batch": 2
+    },
+    {
+      "copy_from": "IronOre",
+      "new_id": "IronOreX",
+      "display_name": "Iron Ore (Arini)",
+      "weight_kg": 3200,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "BasePayment": 101534,
+      "_": "3200 kg on a B3 rig over 1.98 km (South_Iron_Quary->Aerotyne_International) = 101,534 flat. Computed by pricing.py \u2014 do not hand-edit."
+    },
+    {
+      "copy_from": "lHBeam_6m",
+      "new_id": "HBeamX",
+      "display_name": "Steel Beam (Arini)",
+      "weight_kg": 2000,
+      "SpawnProbability": 6,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "BasePayment": 158096,
+      "_": "2000 kg on a B3 rig over 9.62 km (Aerotyne_International->Abandoned_Market) = 158,096 flat. Computed by pricing.py \u2014 do not hand-edit."
+    },
+    {
+      "copy_from": "SteelCoil_10t",
+      "new_id": "SteelCoilX",
+      "display_name": "Steel Coil (Arini)",
+      "weight_kg": 10000,
+      "SpawnProbability": 5,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "BasePayment": 50000,
+      "_": "10000 kg on a B4 rig over 2.91 km (Abbandoned_Gas_Station->Abandoned_Market) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "base_payment": 50000
+    },
+    {
+      "copy_from": "SteelCoil_10t",
+      "new_id": "SteelCoilXL",
+      "display_name": "Steel Coil (Dorna)",
+      "weight_kg": 10000,
+      "base_payment": 150000,
+      "SpawnProbability": 4,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "BasePayment": 150000,
+      "_": "10000 kg on a B4 rig over 2.84 km (Abandoned_Market->Dorna_Beer_Factory) = 150,000 flat. Computed by pricing.py \u2014 do not hand-edit."
+    }
+  ],
+  "Galati_Port": {
+    "label": "Arini Galati Port",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_20ft_01": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 240.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "CrudeOil": 6
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "Container_20ft_01": 1
+        },
+        "outputs": {
+          "BoxPallete_01": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      },
+      {
+        "inputs": {
+          "TrashBag": 3
+        },
+        "outputs": {
+          "PlasticPipes_6m": 2,
+          "Transformer_20MVA": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 240.0
+      }
+    ],
+    "template": "warehouse"
+  },
+  "Fuel_Rafinery": {
+    "label": "Arini Fuel Refinery",
+    "recipes": [
+      {
+        "inputs": {
+          "CrudeOil": 3,
+          "Water": 1
+        },
+        "outputs": {
+          "Fuel": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      },
+      {
+        "inputs": {
+          "CrudeOil": 3
+        },
+        "outputs": {
+          "JetFuel": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "CrudeOil": 2
+        },
+        "outputs": {
+          "MoltenPlastic": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "SteelCoilX": 3
+        },
+        "outputs": {
+          "Tank_250kL": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      }
+    ],
+    "template": "refinery"
+  },
+  "South_Fuel_Storage": {
+    "label": "Arini Fuel Storage",
+    "recipes": [
+      {
+        "inputs": {
+          "CrudeOil": 4
+        },
+        "outputs": {
+          "Fuel": 6
+        },
+        "speed": 2.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "liquid"
+  },
+  "West_Wood_Cutting": {
+    "label": "Arini Wood Cutting",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "Log_Oak_12ft": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "Fuel": 1
+        },
+        "outputs": {
+          "Log_Oak_12ft": 6
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "logsupply",
+    "output_storage_cap": 40
+  },
+  "GrainTrailer": {
+    "label": "Arini Grain Silo",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "SunflowerSeed": 4,
+          "CornPallet": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "Fuel": 1
+        },
+        "outputs": {
+          "SunflowerSeed": 6,
+          "CornPallet": 5
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "farm",
+    "output_storage_cap": 60
+  },
+  "South_Iron_Quary": {
+    "label": "Arini Iron Quarry",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "IronOreX": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "Fuel": 10,
+          "MeatBox": 1
+        },
+        "outputs": {
+          "IronOreX": 6
+        },
+        "speed": 1.5,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "Transformer_20MVA": 1
+        },
+        "outputs": {
+          "IronOreX": 12
+        },
+        "speed": 3.0,
+        "time_seconds": 120.0
+      }
+    ],
+    "template": "mine",
+    "output_storage_cap": 80
+  },
+  "Aerotyne_International": {
+    "label": "Arini Aerotyne International",
+    "recipes": [
+      {
+        "inputs": {
+          "PlasticPipes_6m": 1,
+          "IronOreX": 3
+        },
+        "outputs": {
+          "PowerBox": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 150
+      },
+      {
+        "inputs": {
+          "JetFuel": 3
+        },
+        "outputs": {
+          "LiquidNitrogen": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 240.0
+      },
+      {
+        "inputs": {
+          "CopperRodCoil_2t": 2,
+          "SteelCoilX": 2
+        },
+        "outputs": {
+          "Transformer_20MVA": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "IronOreX": 2
+        },
+        "outputs": {
+          "HBeamX": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      }
+    ],
+    "template": "construction"
+  },
+  "South_East_Gas_Station": {
+    "label": "Arini Rusty Gas Station",
+    "recipes": [
+      {
+        "inputs": {
+          "Fuel": 4
+        },
+        "outputs": {
+          "TrashBag": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "JetFuel": 2
+        },
+        "outputs": {
+          "MilitarySupplyBox_01_Empty": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      }
+    ],
+    "template": "liquid",
+    "output_storage_cap": 140
+  },
+  "East_Water_Store": {
+    "label": "Arini Water Store",
+    "recipes": [
+      {
+        "inputs": {
+          "Water": 3
+        },
+        "outputs": {
+          "GlassBottleBox": 6
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      }
+    ],
+    "template": "liquid"
+  },
+  "South_Depot": {
+    "label": "Arini South Depot",
+    "recipes": [
+      {
+        "inputs": {
+          "Container_40ft_01": 1
+        },
+        "outputs": {
+          "BoxPallete_01": 4,
+          "SmallBox": 6
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "SteelCoilX": 2
+        },
+        "outputs": {
+          "CopperRodCoil_2t": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "MilitarySupplyBox_01_Empty": 2
+        },
+        "outputs": {
+          "MilitarySupplyBox_01": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      }
+    ],
+    "template": "warehouse"
+  },
+  "Water_Storage": {
+    "label": "Arini Water Storage",
+    "recipes": [
+      {
+        "inputs": {
+          "Water": 8
+        },
+        "outputs": {
+          "BottlePallete": 4
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "Tank_250kL": 1
+        },
+        "outputs": {
+          "Water": 12
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      }
+    ],
+    "template": "liquid"
+  },
+  "Water_Storage_Depot": {
+    "label": "Arini Water Depot",
+    "recipes": [
+      {
+        "inputs": {
+          "MoltenPlastic": 3
+        },
+        "outputs": {
+          "PlasticPipes_6m": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      },
+      {
+        "inputs": {
+          "PlasticPipes_6m": 3
+        },
+        "outputs": {
+          "BoxPallete_01": 3
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      }
+    ],
+    "template": "warehouse"
+  },
+  "Cheese_Factory": {
+    "label": "Arini Cheese Factory",
+    "recipes": [
+      {
+        "inputs": {
+          "Milk": 4,
+          "Water": 2
+        },
+        "outputs": {
+          "CheesePallet": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      }
+    ],
+    "template": "construction"
+  },
+  "Cheese_Shop": {
+    "label": "Arini Cheese Shop",
+    "recipes": [
+      {
+        "inputs": {
+          "CheesePallet": 2
+        },
+        "outputs": {
+          "CheeseBox": 6
+        },
+        "speed": 2.0,
+        "time_seconds": 45.0
+      }
+    ],
+    "template": "supermarket"
+  },
+  "South_Barn": {
+    "label": "Arini South Barn",
+    "recipes": [
+      {
+        "inputs": {
+          "SunflowerSeed": 2,
+          "CornPallet": 1
+        },
+        "outputs": {
+          "Milk": 4,
+          "MeatBox": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "HempBale": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 240.0
+      },
+      {
+        "inputs": {
+          "Fuel": 1
+        },
+        "outputs": {
+          "HempBale": 5
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "farm"
+  },
+  "Valley_Trailer": {
+    "label": "Arini Valley Trailer",
+    "recipes": [
+      {
+        "inputs": {
+          "HempPallet": 2
+        },
+        "outputs": {
+          "GiftBox_01": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 180
+      },
+      {
+        "inputs": {
+          "HempBale": 2
+        },
+        "outputs": {
+          "GiftBox_01": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      }
+    ],
+    "template": "farm"
+  },
+  "Braila_Port": {
+    "label": "Arini Braila Port",
+    "recipes": [
+      {
+        "outputs": {
+          "Container_40ft_01": 2,
+          "Container_20ft_01": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 150
+      },
+      {
+        "inputs": {
+          "GiftBox_01": 2,
+          "SmallBox": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      },
+      {
+        "inputs": {
+          "Sofa_01": 2,
+          "Bed_01": 2
+        },
+        "outputs": {
+          "Container_40ft_01": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "BoxPallete_01": 4
+        },
+        "outputs": {
+          "Container_20ft_01": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      }
+    ],
+    "template": "warehouse"
+  },
+  "Trap_Cave": {
+    "label": "Arini Trap Cave",
+    "recipes": [
+      {
+        "inputs": {
+          "HempPallet": 1
+        },
+        "outputs": {
+          "Pezzi": 20
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "HempBale": 1
+        },
+        "outputs": {
+          "Pezzi": 20
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "Pezzi": 2
+        },
+        "outputs": {
+          "TrashBag": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      }
+    ],
+    "template": "mine"
+  },
+  "Hospital": {
+    "label": "Arini Hospital",
+    "recipes": [
+      {
+        "inputs": {
+          "MilitarySupplyBox_01": 2
+        },
+        "outputs": {
+          "MilitarySupplyBox_01_Empty": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 90.0
+      },
+      {
+        "inputs": {
+          "LiquidNitrogen": 1
+        },
+        "outputs": {
+          "MilitarySupplyBox_01_Empty": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 90.0
+      }
+    ],
+    "template": "warehouse"
+  },
+  "East_Gas_Station": {
+    "label": "Arini East Gas Station",
+    "recipes": [
+      {
+        "inputs": {
+          "Fuel": 4
+        },
+        "outputs": {
+          "TrashBag": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "Water": 2
+        },
+        "outputs": {
+          "GlassBottleBox": 4
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "JetFuel": 2
+        },
+        "outputs": {
+          "MilitarySupplyBox_01_Empty": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      }
+    ],
+    "template": "liquid"
+  },
+  "Abandoned_Market": {
+    "label": "Arini Abandoned Market",
+    "recipes": [
+      {
+        "inputs": {
+          "IronOreX": 2,
+          "HBeamX": 1
+        },
+        "outputs": {
+          "SteelCoilXL": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "MeatBox": 2,
+          "Milk": 2,
+          "RicePallet": 1
+        },
+        "outputs": {
+          "GroceryBag": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      },
+      {
+        "inputs": {
+          "Pezzi": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 60
+      },
+      {
+        "inputs": {
+          "GroceryBag": 4
+        },
+        "outputs": {
+          "TrashBag": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 90.0
+      },
+      {
+        "inputs": {
+          "SteelCoilX": 1
+        },
+        "outputs": {
+          "SteelCoilXL": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      }
+    ],
+    "template": "supermarket"
+  },
+  "Beach_Lumbering": {
+    "label": "Arini Beach Lumber",
+    "recipes": [
+      {
+        "inputs": {
+          "Log_Oak_24ft": 2,
+          "Log_30ft_30t": 1
+        },
+        "outputs": {
+          "WoodPlank_14ft_5t": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Log_Oak_24ft": 2,
+          "Log_30ft_30t": 1,
+          "Fuel": 1
+        },
+        "outputs": {
+          "WoodPlank_14ft_5t": 4
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      },
+      {
+        "inputs": {
+          "Log_Oak_12ft": 3,
+          "Fuel": 1
+        },
+        "outputs": {
+          "WoodPlank_14ft_5t": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "logsupply"
+  },
+  "Serpent_Lumberjack": {
+    "label": "Arini Serpent Wood",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "Log_Oak_24ft": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Fuel": 1
+        },
+        "outputs": {
+          "Log_Oak_24ft": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "logsupply"
+  },
+  "Abbandoned_Gas_Station": {
+    "label": "Arini Abandoned Gas Station",
+    "recipes": [
+      {
+        "inputs": {
+          "Trash_Big": 2,
+          "TrashBag": 4
+        },
+        "outputs": {
+          "SteelCoilX": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 150
+      }
+    ],
+    "template": "liquid"
+  },
+  "Old_Trailer": {
+    "label": "Arini Old Trailer",
+    "recipes": [
+      {
+        "inputs": {
+          "BreadPallet": 2
+        },
+        "outputs": {
+          "BreadBox": 6
+        },
+        "speed": 2.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "fastfood"
+  },
+  "Dorna_Lumberjack": {
+    "label": "Arini Dorna Lumber",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "Log_30ft_30t": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Fuel": 2
+        },
+        "outputs": {
+          "Log_30ft_30t": 3,
+          "Log_Oak_24ft": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "logsupply"
+  },
+  "Dorna_Wood_Storage": {
+    "label": "Arini Dorna Wood",
+    "recipes": [
+      {
+        "inputs": {
+          "WoodPlank_14ft_5t": 4
+        },
+        "outputs": {
+          "Sofa_01": 2,
+          "Bed_01": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 150
+      }
+    ],
+    "template": "warehouse"
+  },
+  "Dorna_Supermarket": {
+    "label": "Arini Supermarket",
+    "recipes": [
+      {
+        "inputs": {
+          "BoxPallete_01": 3
+        },
+        "outputs": {
+          "GroceryBag": 9
+        },
+        "speed": 2.0,
+        "time_seconds": 45.0
+      },
+      {
+        "inputs": {
+          "BottlePallete": 2
+        },
+        "outputs": {
+          "GlassBottleBox": 6
+        },
+        "speed": 2.0,
+        "time_seconds": 45.0
+      }
+    ],
+    "template": "supermarket"
+  },
+  "Dorna_Beer_Factory": {
+    "label": "Arini Beer Factory",
+    "recipes": [
+      {
+        "inputs": {
+          "SunflowerSeed": 3,
+          "Water": 2,
+          "GlassBottleBox": 2
+        },
+        "outputs": {
+          "BottlePallete": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      },
+      {
+        "inputs": {
+          "SteelCoilXL": 1
+        },
+        "outputs": {
+          "GlassBottleBox": 6
+        },
+        "speed": 1.0,
+        "time_seconds": 200.0
+      }
+    ],
+    "template": "construction"
+  },
+  "Dorna_Old_Market": {
+    "label": "Arini Dorna Market",
+    "recipes": [
+      {
+        "inputs": {
+          "ToyBoxes": 2
+        },
+        "outputs": {
+          "GiftBox_01": 2
+        },
+        "speed": 2.0,
+        "time_seconds": 60.0
+      },
+      {
+        "inputs": {
+          "Pezzi": 1
+        },
+        "outputs": {
+          "TrashBag": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 60.0
+      },
+      {
+        "inputs": {
+          "BreadBox": 3,
+          "CheeseBox": 3
+        },
+        "outputs": {
+          "GroceryBag": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 90.0
+      }
+    ],
+    "template": "supermarket"
+  },
+  "Dorna_Gas_Station": {
+    "label": "Arini Dorna Gas Station",
+    "recipes": [
+      {
+        "inputs": {
+          "Fuel": 4
+        },
+        "outputs": {
+          "TrashBag": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      }
+    ],
+    "z_offset": 200,
+    "template": "liquid"
+  },
+  "Dish_Tower": {
+    "label": "Arini Dish Tower",
+    "recipes": [
+      {
+        "inputs": {
+          "PowerBox": 4,
+          "CopperRodCoil_2t": 2
+        },
+        "outputs": {
+          "SmallBox": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      }
+    ],
+    "template": "construction"
+  },
+  "Alpine_Rescue_Post": {
+    "label": "Arini Alpine Rescue",
+    "recipes": [
+      {
+        "inputs": {
+          "MilitarySupplyBox_01": 1
+        },
+        "outputs": {
+          "MilitarySupplyBox_01_Empty": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "LiquidNitrogen": 1
+        },
+        "outputs": {
+          "MilitarySupplyBox_01_Empty": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      }
+    ],
+    "template": "warehouse"
+  },
+  "MicroVille": {
+    "label": "Arini MicroVille",
+    "_": "Two houses mid-3rd-batch. A pure CONSUMER of food -- it takes what a settlement needs and produces only its own rubbish, so it is a destination and never a source to farm.",
+    "template": "supermarket",
+    "output_storage_cap": 120,
+    "recipes": [
+      {
+        "inputs": {
+          "MeatBox": 2,
+          "CheeseBox": 2,
+          "BreadBox": 2
+        },
+        "outputs": {
+          "TrashBag": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "GroceryBag": 4,
+          "Milk": 2
+        },
+        "outputs": {
+          "TrashBag": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      },
+      {
+        "inputs": {
+          "CheesePallet": 1,
+          "BreadPallet": 1
+        },
+        "outputs": {
+          "GroceryBag": 6
+        },
+        "speed": 1.0,
+        "time_seconds": 200.0
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "_source_class": "SteelMill_H-Beam_C",
+  "label": "SteelMill_H-Be",
+  "recipes": [
+    {
+      "inputs": {
+        "Coal": 12,
+        "IronOre": 8,
+        "Limestone": 2
+      },
+      "outputs": {
+        "lHBeam_6m": 1
+      },
+      "time_seconds": 120.0
+    }
+  ],
+  "visuals_seen": {}
+}

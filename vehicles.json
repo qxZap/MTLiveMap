@@ -1,0 +1,186 @@
+{
+  "_README": [
+    "Define NEW vehicles as modifications of existing ones.",
+    "",
+    "  base          DataTable ROW name to start from \u2014 what the game calls it,",
+    "                the same name Spawn_<Row> placeholders use.",
+    "                `python unlock_vehicles.py` lists every row.",
+    "  new_id        row name for the new vehicle. Spawn_<new_id> places it.",
+    "  display_name  name shown in game.",
+    "  modifications list of {type: ..., ...}, applied in order.",
+    "",
+    "Inspect any row's real fields with:",
+    "  MTBPInjector dump-table --uasset <Vehicles.uasset> --mappings <usmap> --row Vista",
+    "Vehicles.uasset is the aggregate \u2014 it carries ParentTables for the 12",
+    "others, so a row resolves through it even when defined elsewhere.",
+    "",
+    "MODIFICATION: all_wheel_drive",
+    "  (no flags)               spool \u2014 every wheel on one differential.",
+    "  each_set_awd: true       front and rear each get their own differential.",
+    "  enable_center_diff: true adds the centre differential they both feed.",
+    "                           This is vanilla's shape (see Neo).",
+    "MODIFICATION: row_field    {field, value} \u2014 any scalar on the vehicle row.",
+    "MODIFICATION: display_name is a top-level key, not a modification.",
+    "",
+    "  row            the existing DataTable row. Keeps its name and class path,",
+    "                 so the mod's copy overrides vanilla and every one already",
+    "                 in the world gains the change \u2014 no second vehicle to buy.",
+    "  Adds MTTankerFuelPumpComponent, which is what actually makes a vehicle",
+    "  usable as a refuelling station. bHasFuelPump on the row only ADVERTISES",
+    "  that component \u2014 setting the flag alone does nothing at all.",
+    "  One slot per fuel type. EMTFuelType has exactly two members, Gasoline",
+    "  and Diesel; water is not one of them, so a water tanker is not possible",
+    "  this way even though the fire engine carries water as cargo.",
+    "  rel_x/y/z move the interaction point; omitted leaves the class default,",
+    "  which is what the Brutus fire engine itself uses.",
+    "",
+    "The `modify` section lives in vehicles_tankers.json now, not here. The",
+    "tanker fuel pumps ship as their own mod; this file is the ISLAND's, so",
+    "anything in it goes into the Arini pak. Vista_GTR belongs here."
+  ],
+  "_STATUS": [
+    "The drivetrain analysis is DONE and recorded below. The injector work to",
+    "clone a vehicle class and restructure its differentials is NOT done, so",
+    "nothing in `vehicles` ships yet. Recorded so the analysis is not repeated.",
+    "",
+    "Cloning the class itself is tractable: the same byte-rename that produces",
+    "the Mod* delivery point classes works on a vehicle asset, and cloning the",
+    "DataTable row is the same mutate pattern used for cargo. That much gives a",
+    "new vehicle that exists, spawns and is buyable.",
+    "",
+    "The hard part is AWD, which is not a property change. It means ADDING",
+    "components to a cooked Blueprint's construction script, which this",
+    "framework has never done \u2014 every actor so far has been cloned whole or had",
+    "existing properties overwritten."
+  ],
+  "_DRIVETRAIN_ANALYSIS": {
+    "_": "How Motor Town expresses drivetrain, read from the cooked classes.",
+    "rwd_example_Vista": {
+      "Wheel0": "no DifferentialComponentName  (front, undriven)",
+      "Wheel1": "no DifferentialComponentName  (front, undriven)",
+      "Wheel2": "DifferentialComponentName = Differential",
+      "Wheel3": "DifferentialComponentName = Differential",
+      "components": [
+        "Differential"
+      ]
+    },
+    "awd_example_Neo": {
+      "Wheel0": "DifferentialComponentName = DifferentialF",
+      "Wheel1": "DifferentialComponentName = DifferentialF",
+      "Wheel2": "DifferentialComponentName = DifferentialR",
+      "Wheel3": "DifferentialComponentName = DifferentialR",
+      "DifferentialF": "DifferentialComponentName = DifferentialC",
+      "DifferentialR": "DifferentialComponentName = DifferentialC",
+      "components": [
+        "DifferentialC",
+        "DifferentialF",
+        "DifferentialR"
+      ]
+    },
+    "awd_example_EnfoGT": "same three-differential shape; the centre one is spelled DiffernetialC, a typo in the game's own data \u2014 match it exactly if cloning EnfoGT rather than Neo",
+    "conclusion": [
+      "AWD is a three-differential tree: front and rear differentials each",
+      "feed a centre differential, and all four wheels name their end.",
+      "Converting RWD -> AWD therefore requires renaming Differential to",
+      "DifferentialR, ADDING DifferentialF and DifferentialC components, and",
+      "repointing Wheel0/Wheel1. Neo is the reference to copy: it is a road",
+      "car like the Vista, where EnfoGT is a GT with its own quirks."
+    ]
+  },
+  "_PLANNED": {
+    "row_field": "DONE. Any scalar field on the row \u2014 Cost, bIsRaceCar, bTrailerHauling, DeliveryPaymentMultiplier, CurbWeight.",
+    "display_name": "DONE. VehicleName is a TextProperty into a StringTable, so a cloned row shows the BASE car's name. Written as CultureInvariant inline text instead, on both VehicleName and VehicleName2 \u2014 the two UI screens read different ones.",
+    "all_wheel_drive": "DONE, but as a SPOOL not a centre diff. All four wheels point at the differential the rear pair used. Vanilla AWD (Neo) is three differentials \u2014 F and R each feeding a centre C \u2014 which needs new components in a cooked Blueprint and is still out of reach.",
+    "fuel_tank_capacity": "NOT a vehicle property at all. It is a PART: UtilityParts has a row FuelTank_01 carrying FuelTank.FuelLiter (100 L, 1000c, 20kg) plus a mesh on Aero.Mesh. So a bigger tank means cloning that row with a larger FuelLiter and making the vehicle accept it, not editing the car. Reference implementation: D:/MT/MoreTuning/FuelTanks/run.py"
+  },
+  "vehicles": [
+    {
+      "base": "Vista",
+      "new_id": "Vista_GTR",
+      "display_name": "Vista GTR",
+      "_": "Placeholder Spawn_Vista_GTR is already placed in the scene at editor (-184975,-798940,865). It resolves to nothing until this ships, and the build logs `spawner: vehicle 'Vista_GTR' not found` every run \u2014 that warning is expected until then.",
+      "modifications": [
+        {
+          "type": "row_field",
+          "field": "Cost",
+          "value": 95000
+        },
+        {
+          "type": "all_wheel_drive",
+          "each_set_awd": true,
+          "enable_center_diff": true,
+          "_": "Full three-differential tree, the same shape Neo uses."
+        }
+      ]
+    }
+  ],
+  "_ROW_FIELDS_Vista": {
+    "_": "All 38 fields on the Vista row, from dump-table --row. NOTE: there is NO fuel tank field here. Anything not in this list is not a row-level knob.",
+    "identity": [
+      "VehicleName",
+      "VehicleName2",
+      "VehicleType",
+      "VehicleClass",
+      "TruckClass",
+      "VehicleTypeFlags"
+    ],
+    "economy": [
+      "Cost",
+      "DeliveryBasePayment",
+      "DeliveryPaymentMultiplier",
+      "CompanyAIRunningCostMultiplier",
+      "CompanyAIConditionUsageMultiplier",
+      "CompanyAIConditionUsageMultiplierOffroad"
+    ],
+    "roles": [
+      "bIsTaxiable",
+      "bIsLimoable",
+      "bIsBusable",
+      "bIsRaceCar",
+      "bTrailerHauling",
+      "bHasFuelPump"
+    ],
+    "availability": [
+      "bHidden",
+      "bDisabled",
+      "bShowRequirementsNotMet",
+      "LevelRequirementToDrive",
+      "GameplayTags",
+      "GarageGameplayTagQuery",
+      "NPCSpawnPrabability"
+    ],
+    "parts": [
+      "Parts",
+      "PartValues",
+      "NotOptionalPartTypes",
+      "OptionalPartTypes",
+      "NotOptionalPartSlots",
+      "NotSupportedPartTypes",
+      "SlotSupportedPartsQueries"
+    ],
+    "physical": [
+      "CurbWeight",
+      "BodyDamageThreshold",
+      "Comport",
+      "ExhaustBlackSmokeDensity",
+      "ExhaustTone",
+      "bShowCargoSpaceAtTheGarage"
+    ]
+  },
+  "_RENAME_TRAP": [
+    "Cloning a vehicle class is a byte-rename, which is only valid at equal",
+    "length \u2014 hence generated names like Vista -> V8C52. What matters more is",
+    "WHICH occurrences get renamed.",
+    "",
+    "A blind replace of the base name breaks the car in two ways at once:",
+    "  /Game/Cars/Models/Vista/Body      the FOLDER is also called Vista",
+    "  /Game/Cars/Parts/Wheels/Vista_L   the wheels are separate assets",
+    "Rename either and the clone points at packages that do not exist \u2014 the",
+    "car spawns with no body and no wheels. Only three self-references may",
+    "move: the package self-path, Default__<name>_C, and <name>_C.",
+    "",
+    "Delivery point classes never hit this because their folder is not named",
+    "after the class."
+  ],
+  "modify": []
+}
