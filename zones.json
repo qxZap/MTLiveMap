@@ -3,34 +3,42 @@
     "Zones for the island, cloned from a vanilla MTAreaVolume.",
     "",
     "A zone is what makes people exist. MTZoneState is keyed by ZoneKey and",
-    "carries Server_Residents, NumResidents and BusTransportRate; Jeju has",
-    "exactly seven volumes (Ara, Gwangjin, Gangjung, Jeju, Hallim, Seongsan,",
-    "Gapa) and Arini was inside none of them, so its bus stops held 0",
-    "passengers no matter how long anyone waited.",
+    "carries Server_Residents, NumResidents and BusTransportRate. Jeju ships",
+    "exactly seven volumes and Arini was inside none of them, so its bus stops",
+    "held 0 passengers no matter how long anyone waited.",
     "",
-    "world  = centre of the box, in WORLD coordinates.",
-    "scale  = RelativeScale3D on the brush, which is a unit box. Vanilla",
-    "         Gangjung is [1000, 1000, 500]. Ours covers the whole island,",
-    "         which is 14 km square -- far larger than any vanilla zone, so",
-    "         expect to shrink it around whatever actually gets populated.",
+    "world   = centre of the volume, WORLD coordinates.",
+    "scale   = RelativeScale3D on the brush, which is a unit box. This is the",
+    "          volume the game tests against. Vanilla Gangjung uses",
+    "          [1000, 1000, 500].",
+    "outline = HALF extent in uu of the rectangle drawn on the map. This is a",
+    "          SEPARATE thing from the volume: TopViewLines is its own",
+    "          world-space polygon, which is why a cloned zone kept drawing",
+    "          Gangjung's shape over Arini no matter where the box went. Keep",
+    "          it roughly consistent with scale by hand -- the relationship",
+    "          between brush scale and world size has not been measured.",
     "",
-    "UNPROVEN: a zone may not be sufficient. Residents likely need POIs to",
-    "live at -- MTResidentZoneState carries a POIs array and MTZoneState a",
-    "Server_Supermarkets one. A zone over empty ground may report zero."
+    "The zone registers and Arini appears in the resident system, but reports",
+    "0 residents. Residents likely need POIs to live at: MTResidentZoneState",
+    "carries a POIs array and MTZoneState a Server_Supermarkets one."
   ],
   "zones": [
     {
       "name": "Arini",
       "key": "Arini",
       "world": [
-        -1100008,
-        44869,
-        11093
+        -1206928,
+        -49717,
+        46440
       ],
       "scale": [
         7100,
         7250,
         600
+      ],
+      "outline": [
+        710000,
+        725000
       ]
     }
   ]

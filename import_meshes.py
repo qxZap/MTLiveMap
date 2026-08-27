@@ -878,6 +878,7 @@ def main():
             "asset_key": "AreaVolume",
             "actor_label": z.get("name") or z.get("key") or "Zone",
             "zone_key": z.get("key") or z.get("name"),
+            "outline": z.get("outline"),
         })
         print(f"  zone: '{z.get('name')}' key={z.get('key')} at "
               f"({w[0]:,.0f}, {w[1]:,.0f}, {w[2]:,.0f}) scale {sc}")

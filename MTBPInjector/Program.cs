@@ -3444,6 +3444,41 @@ internal static class Program
                 }
             }
 
+            // The map outline is NOT the brush. TopViewLines is its own
+            // world-space polygon, which is why a cloned zone kept drawing
+            // Gangjung's shape over Arini however the volume was placed and
+            // scaled. Redraw it as a rectangle around the zone's centre.
+            double? outX = (double?)s["outline_x"];
+            double? outY = (double?)s["outline_y"];
+            if (outX != null && outY != null && newActor is NormalExport tvExp)
+            {
+                EnsureName(dst, "TopViewLines");
+                EnsureName(dst, "Vector");
+                EnsureName(dst, "StructProperty");
+                var corners = new (double dx, double dy)[] {
+                    (-outX.Value, -outY.Value), ( outX.Value, -outY.Value),
+                    ( outX.Value,  outY.Value), (-outX.Value,  outY.Value),
+                };
+                var pts = corners.Select(c => (PropertyData)new StructPropertyData(
+                        FName.FromString(dst, "TopViewLines"), FName.FromString(dst, "Vector"))
+                {
+                    Value = new List<PropertyData> {
+                        new VectorPropertyData(FName.FromString(dst, "TopViewLines"))
+                        { Value = new FVector(tx + c.dx, ty + c.dy, tz) } }
+                }).ToArray();
+
+                var tvl = tvExp.Data.FirstOrDefault(q => q.Name.ToString() == "TopViewLines");
+                if (tvl is ArrayPropertyData tva) { tva.Value = pts; }
+                else
+                {
+                    tvExp.Data.Add(new ArrayPropertyData(FName.FromString(dst, "TopViewLines"))
+                    { ArrayType = FName.FromString(dst, "StructProperty"), Value = pts });
+                }
+                Console.WriteLine($"  TopViewLines -> {pts.Length} corners, "
+                                + $"{outX.Value * 2 / 100000.0:0.#} x {outY.Value * 2 / 100000.0:0.#} km "
+                                + $"around ({tx:0}, {ty:0})");
+            }
+
             string? customLabel = (string?)s["actor_label"];
             if (!string.IsNullOrEmpty(customLabel) && newActor is NormalExport neLbl)
             {
