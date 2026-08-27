@@ -3200,6 +3200,18 @@ internal static class Program
                         continue;
 
                     string className = exp.ClassIndex.IsImport() ? exp.ClassIndex.ToImport(dst).ObjectName.ToString() : "";
+
+                    // COMPONENTS ONLY. The 4-or-16 byte shape below is a fact
+                    // about components, and applying it to anything else
+                    // destroys data. A UModel keeps its entire BSP geometry in
+                    // Extras -- 3610 bytes for a zone volume's box, with
+                    // Data.Count=0 because UAssetAPI does not model UModel --
+                    // so truncating it to 4 left the export declaring 10 bytes
+                    // where the loader read 124, and the world load died on
+                    // "Serial size mismatch: Got 124, Expected 10".
+                    if (!className.EndsWith("Component", StringComparison.Ordinal))
+                        continue;
+
                     bool isPrimitive = className.Contains("MeshComponent") || className == "BoxComponent"
                                        || className == "StaticMeshComponent" || className == "SkeletalMeshComponent"
                                        || className == "InstancedStaticMeshComponent";
