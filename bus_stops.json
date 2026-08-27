@@ -18,6 +18,8 @@
     "vanilla actors come through the build as byte-copied RawExports, so they",
     "cannot be made to point back.",
     "",
+    "One stop is a CONTROL placed inside a vanilla zone -- see its _why.",
+    "",
     "Placement goes through the 'BusStop' entry in bp_registry, on the same",
     "clone path as the parking spaces and delivery points."
   ],
@@ -62,6 +64,15 @@
         118488,
         -21345
       ]
+    },
+    {
+      "name": "Zone Test Gangjung",
+      "world": [
+        -56888,
+        149094,
+        -20860
+      ],
+      "_why": "Deliberately inside the Gangjung MTAreaVolume, 40 m from its terminal. The five bridge stops sit in no zone at all and hold 0 passengers forever; this one is the control. If it fills and they stay empty, passengers come from zone residents and the island needs its own MTAreaVolume, not a fix to the stops."
     }
   ],
   "link_terminal": "Gang-JungTerminal_2"
