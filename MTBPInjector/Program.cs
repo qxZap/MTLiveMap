@@ -2755,6 +2755,9 @@ internal static class Program
             double tx = (double)s["x"]!;
             double ty = (double)s["y"]!;
             double tz = (double)s["z"]!;
+            double? tsx = (double?)s["scale_x"];
+            double? tsy = (double?)s["scale_y"];
+            double? tsz = (double?)s["scale_z"];
             double? tPitch = (double?)s["pitch"];
             double? tYaw   = (double?)s["yaw"];
             double? tRoll  = (double?)s["roll"];
@@ -3242,9 +3245,16 @@ internal static class Program
             }
             void ApplyTransform(NormalExport nc)
             {
-                bool setLoc = false, setRot = false;
+                bool setLoc = false, setRot = false, setScale = false;
                 foreach (var p in nc.Data)
                 {
+                    // A zone is a unit box, sized entirely by scale: vanilla
+                    // Gangjung is RelativeScale3D (1000, 1000, 500). Without
+                    // this the clone inherits the source zone's footprint.
+                    if (tsx != null && p.Name.ToString() == "RelativeScale3D"
+                        && p is StructPropertyData ssc
+                        && ssc.Value.Count > 0 && ssc.Value[0] is VectorPropertyData svp)
+                    { svp.Value = new FVector(tsx.Value, tsy ?? tsx.Value, tsz ?? tsx.Value); setScale = true; }
                     if (p.Name.ToString() == "RelativeRotation" && p is StructPropertyData srot
                         && srot.Value.Count > 0 && srot.Value[0] is RotatorPropertyData rp)
                     { rp.Value = new FRotator(tPitch ?? rp.Value.Pitch, tYaw ?? rp.Value.Yaw, tRoll ?? rp.Value.Roll); setRot = true; }
@@ -3258,6 +3268,17 @@ internal static class Program
                 // overwrite — the clone then silently stays at (0,0,0) while
                 // its map marker shows the intended spot. Every delivery point
                 // landed at world origin this way.
+                if (tsx != null && !setScale)
+                {
+                    EnsureName(dst, "RelativeScale3D");
+                    EnsureName(dst, "Vector");
+                    var svd = new VectorPropertyData(FName.FromString(dst, "RelativeScale3D"))
+                    { Value = new FVector(tsx.Value, tsy ?? tsx.Value, tsz ?? tsx.Value) };
+                    nc.Data.Add(new StructPropertyData(FName.FromString(dst, "RelativeScale3D"),
+                                                       FName.FromString(dst, "Vector"))
+                    { Value = new List<PropertyData> { svd } });
+                    Console.WriteLine($"    (created RelativeScale3D on {nc.ObjectName} — source had none)");
+                }
                 if (!setLoc)
                 {
                     EnsureName(dst, "RelativeLocation");
@@ -3389,6 +3410,28 @@ internal static class Program
             // ASCII run with our custom label, zero-padded to the same length
             // — UE reads the FString to its declared length, displays up to
             // first null. Longer labels need full FString resize (TODO).
+            // A zone identifies itself by ZoneKey, and MTZoneState is keyed
+            // by it -- residents, NumResidents and BusTransportRate all hang
+            // off that name. Cloning Gangjung's volume without renaming it
+            // would give Arini a second volume claiming to BE Gangjung.
+            string? zoneKey = (string?)s["zone_key"];
+            if (!string.IsNullOrEmpty(zoneKey) && newActor is NormalExport zoneExp)
+            {
+                EnsureName(dst, zoneKey!);
+                var zk = zoneExp.Data.FirstOrDefault(q => q.Name.ToString() == "ZoneKey");
+                if (zk is NamePropertyData zkn)
+                {
+                    zkn.Value = FName.FromString(dst, zoneKey!);
+                    Console.WriteLine($"  ZoneKey -> '{zoneKey}'");
+                }
+                else
+                {
+                    zoneExp.Data.Add(new NamePropertyData(FName.FromString(dst, "ZoneKey"))
+                    { Value = FName.FromString(dst, zoneKey!) });
+                    Console.WriteLine($"  ZoneKey -> '{zoneKey}' (created)");
+                }
+            }
+
             string? customLabel = (string?)s["actor_label"];
             if (!string.IsNullOrEmpty(customLabel) && newActor is NormalExport neLbl)
             {
@@ -3434,7 +3477,8 @@ internal static class Program
                         if (pnm == "BusStopName") isBusStop = true;
                     }
                     else if (p is TextPropertyData mpn
-                             && (pnm == "MissionPointName" || pnm == "BusStopDisplayName"))
+                             && (pnm == "MissionPointName" || pnm == "BusStopDisplayName"
+                                 || pnm == "AreaName"))
                     {
                         // Inline culture-invariant FText does not render in
                         // this MT build. Cargo rows went blank with it, and a
@@ -3485,7 +3529,7 @@ internal static class Program
                             Console.WriteLine($"  Patched {pnm} -> '{customLabel}'");
                         }
                         patchedAny = true;
-                        if (pnm == "BusStopDisplayName") isBusStop = true;
+                        if (pnm != "MissionPointName") isBusStop = true;   // no PointName synthesis
                     }
                 }
                 if (pn?.Value != null)

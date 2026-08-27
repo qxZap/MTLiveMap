@@ -855,6 +855,33 @@ def main():
         print(f"  busstop: {len(bus_stop_meshes)} station(s) placed from "
               f"{BUS_STOP_MESH_PREFIX}* mesh names")
 
+    # Zones, from zones.json. World coordinates; size comes from the brush
+    # scale rather than from geometry, because the volume is a unit box.
+    try:
+        _zn = json.loads(pathlib.Path("zones.json").read_text(encoding="utf-8"))
+    except Exception as _e:
+        _zn = None
+        print(f"  zone: zones.json not read ({_e})")
+    for z in (_zn or {}).get("zones") or []:
+        w = z.get("world")
+        if not (isinstance(w, (list, tuple)) and len(w) >= 3):
+            print(f"  zone: '{z.get('name')}' world must be [X, Y, Z] — skipped")
+            continue
+        sc = z.get("scale") or [1000, 1000, 500]
+        parking.append({
+            "X": float(w[0]), "Y": float(w[1]), "Z": float(w[2]),
+            "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0,
+            "world_coords": True,
+            "ScaleX": float(sc[0]), "ScaleY": float(sc[1]), "ScaleZ": float(sc[2]),
+            "blueprint_path": "/Script/MotorTown",
+            "blueprint_class": "MTAreaVolume",
+            "asset_key": "AreaVolume",
+            "actor_label": z.get("name") or z.get("key") or "Zone",
+            "zone_key": z.get("key") or z.get("name"),
+        })
+        print(f"  zone: '{z.get('name')}' key={z.get('key')} at "
+              f"({w[0]:,.0f}, {w[1]:,.0f}, {w[2]:,.0f}) scale {sc}")
+
     dst.setdefault("blueprint_actors", {})[TARGET_GROUP] = parking
     dst["dealerships"] = dealerships
     # Preserve hand-authored comment entries (dicts whose keys all start

@@ -1,0 +1,37 @@
+{
+  "_README": [
+    "Zones for the island, cloned from a vanilla MTAreaVolume.",
+    "",
+    "A zone is what makes people exist. MTZoneState is keyed by ZoneKey and",
+    "carries Server_Residents, NumResidents and BusTransportRate; Jeju has",
+    "exactly seven volumes (Ara, Gwangjin, Gangjung, Jeju, Hallim, Seongsan,",
+    "Gapa) and Arini was inside none of them, so its bus stops held 0",
+    "passengers no matter how long anyone waited.",
+    "",
+    "world  = centre of the box, in WORLD coordinates.",
+    "scale  = RelativeScale3D on the brush, which is a unit box. Vanilla",
+    "         Gangjung is [1000, 1000, 500]. Ours covers the whole island,",
+    "         which is 14 km square -- far larger than any vanilla zone, so",
+    "         expect to shrink it around whatever actually gets populated.",
+    "",
+    "UNPROVEN: a zone may not be sufficient. Residents likely need POIs to",
+    "live at -- MTResidentZoneState carries a POIs array and MTZoneState a",
+    "Server_Supermarkets one. A zone over empty ground may report zero."
+  ],
+  "zones": [
+    {
+      "name": "Arini",
+      "key": "Arini",
+      "world": [
+        -1100008,
+        44869,
+        11093
+      ],
+      "scale": [
+        7100,
+        7250,
+        600
+      ]
+    }
+  ]
+}

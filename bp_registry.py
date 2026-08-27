@@ -45,6 +45,20 @@ REGISTRY: dict[str, dict] = {
         "preload_bp":       GAME_CONTENT / "Objects/Mission/Bus/BusStop_01.uasset",
         "inject_into_main": True,
     },
+    # A zone. MTZoneState hangs off ZoneKey -- residents, NumResidents,
+    # BusTransportRate -- and a stop outside every zone has no residents to
+    # carry, which is why the bridge stops sat at 0 passengers forever. The
+    # volume is a unit box: position from the transform, size from
+    # RelativeScale3D (vanilla Gangjung is 1000/1000/500). Its UModel and
+    # BrushComponent are both outered to the actor, so the clone takes them.
+    "AreaVolume": {
+        "bp_path":          "/Script/MotorTown",
+        "bp_class":         "MTAreaVolume",
+        "source_umap":      JEJU_MAIN,
+        "source_actor":     "MTAreaVolume_UAID_107C61471EBEE42202_1333339548",
+        "preload_bp":       None,
+        "inject_into_main": True,
+    },
     "Garage": {
         "bp_path":      "/Game/Objects/GarageActorBP",
         "bp_class":     "GarageActorBP_C",

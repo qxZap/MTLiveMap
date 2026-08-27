@@ -34,15 +34,22 @@ MOD_CARGOS_01     = MOD_CONTENT_ROOT / "DataAsset" / "Cargos_01.uasset"
 # modified vanilla StringTable crashes MT on world load.
 MOD_STRINGTABLE   = "ModCargo"
 
-MOD_BUS_STRINGTABLE = "ModBusStop"
+# Every mod-authored display label, not just bus stops: zone AreaName has
+# the same problem, and one table is easier to reason about than one per
+# actor type. Inline culture-invariant FText does not render in this build.
+MOD_LABEL_STRINGTABLE = "ModLabels"
+
+# Actor types whose label must go through the table. Delivery points are
+# deliberately absent: PointName is MoreTuning's inline trick and it works.
+LABEL_TABLE_KEYS = ("BusStop", "AreaVolume")
 
 
-def _bus_label_key(label: str) -> str:
+def _label_key(label: str) -> str:
     """StringTable key for a stop label. Keys are identifiers, not prose."""
     return "".join(c if c.isalnum() else "_" for c in label).strip("_") or "BusStop"
 
 
-def build_bus_stringtable(entries) -> str | None:
+def build_label_stringtable(entries) -> str | None:
     """Ship our own StringTable so bus stop names actually render.
 
     Inline culture-invariant FText does not display in this MT build -- the
@@ -58,10 +65,16 @@ def build_bus_stringtable(entries) -> str | None:
     labels = {}
     for e in entries:
         lbl = e.get("actor_label")
-        if lbl and e.get("asset_key") == "BusStop":
-            labels[_bus_label_key(lbl)] = lbl
+        if lbl and e.get("asset_key") in LABEL_TABLE_KEYS:
+            labels[_label_key(lbl)] = lbl
     st_dir = MOD_CONTENT_ROOT / "DataAsset" / "StringTables"
-    out = st_dir / f"{MOD_BUS_STRINGTABLE}.uasset"
+    # Table was called ModBusStop before it covered zones too.
+    for _old in ("ModBusStop.uasset", "ModBusStop.uexp"):
+        _q = st_dir / _old
+        if _q.exists():
+            _q.unlink()
+            print(f"  cleaned stale {_old}")
+    out = st_dir / f"{MOD_LABEL_STRINGTABLE}.uasset"
     if not labels:
         for q in (out, out.with_suffix(".uexp")):
             if q.exists():
@@ -81,7 +94,7 @@ def build_bus_stringtable(entries) -> str | None:
         r = subprocess.run([
             str(INJECTOR), "make-stringtable",
             "--src", str(src), "--output", str(out),
-            "--namespace", MOD_BUS_STRINGTABLE, "--entries", ent,
+            "--namespace", MOD_LABEL_STRINGTABLE, "--entries", ent,
             "--mappings", MAPPINGS,
         ], capture_output=True, text=True)
         for line in r.stdout.splitlines():
@@ -92,8 +105,8 @@ def build_bus_stringtable(entries) -> str | None:
     finally:
         try: os.unlink(ent)
         except OSError: pass
-    print(f"  bus stop labels -> {MOD_BUS_STRINGTABLE} ({len(labels)} entries)")
-    return f"/Game/DataAsset/StringTables/{MOD_BUS_STRINGTABLE}.{MOD_BUS_STRINGTABLE}"
+    print(f"  bus stop labels -> {MOD_LABEL_STRINGTABLE} ({len(labels)} entries)")
+    return f"/Game/DataAsset/StringTables/{MOD_LABEL_STRINGTABLE}.{MOD_LABEL_STRINGTABLE}"
 
 
 
@@ -818,7 +831,7 @@ def main():
     # register-and-clone so the 30 MB MotorTown.usmap is parsed exactly once
     # for the entire BP phase.
     import json as _json, tempfile
-    bus_table = build_bus_stringtable([e for e, _t, _c, _s in
+    label_table = build_label_stringtable([e for e, _t, _c, _s in
                                        (x for items in grouped.values() for x in items)])
     jobs = []
     for cell, items in grouped.items():
@@ -853,11 +866,16 @@ def main():
             # delivery point (one entry, one point) and wrong for bus stops,
             # where every placement is a different station and they would
             # otherwise all display the same name.
+            if e.get("zone_key"):
+                spec["zone_key"] = e["zone_key"]
+            for _k, _f in (("ScaleX", "scale_x"), ("ScaleY", "scale_y"), ("ScaleZ", "scale_z")):
+                if e.get(_k) is not None:
+                    spec[_f] = float(e[_k])
             if e.get("bus_link"):
                 spec["bus_link"] = e["bus_link"]
-            if bus_table and e.get("asset_key") == "BusStop" and e.get("actor_label"):
-                spec["label_table"] = bus_table
-                spec["label_key"]   = _bus_label_key(e["actor_label"])
+            if label_table and e.get("asset_key") in LABEL_TABLE_KEYS and e.get("actor_label"):
+                spec["label_table"] = label_table
+                spec["label_key"]   = _label_key(e["actor_label"])
             if e.get("actor_label") or tpl.get("actor_label"):
                 spec["actor_label"] = e.get("actor_label") or tpl["actor_label"]
             if tpl.get("hide_template_mesh"):
