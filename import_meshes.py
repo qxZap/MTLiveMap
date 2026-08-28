@@ -22,24 +22,68 @@ from mesh_shards import ShardWriter, iter_entries, has_shards, split_json_file
 # ---------------------------------------------------------------------------
 # Paths — pulled from env (see mt_paths.py and build.bat)
 # ---------------------------------------------------------------------------
-# Name a mesh BusStop_My_Cool_Location in the editor and it becomes a station:
-# the mesh is placed as usual and a working bus stop actor is dropped on it,
-# displayed in game as "My Cool Location".
-BUS_STOP_MESH_PREFIX = "BusStop_"
+# MARKERS: place a mesh in the editor, name it, get an actor.
+#
+# The name is the whole interface. Everything else -- position, height,
+# rotation -- comes from where you put the mesh, so nothing has to be typed
+# into a config and nothing can drift out of sync with the scene.
+#
+#     BusStop_<Name>      a working bus stop, displayed as "<Name>"
+#     Home_<Name>         a POI people live at        (POI_House_C)
+#     Work_<Name>         a POI people work at        (POI_Office_C)
+#     Zone_<Key>_<NN>     one CORNER of zone <Key>'s polygon, in order NN
+#
+# Underscores in <Name> become spaces, so Home_Old_Harbour reads "Old Harbour".
+#
+# THE MESH ITSELF is still placed for BusStop/Home/Work -- the shelter, the
+# house, the office is the thing you see. Zone corners are survey markers, not
+# scenery, so their mesh is consumed and never shipped: put a cone or a cube
+# down, name it, and it will not appear in game.
+#
+# A zone needs at least three corners. Order comes from the trailing number
+# (Zone_Arini_01, Zone_Arini_02, ...), which is also the winding order of the
+# polygon, so walk the boundary in one direction rather than dotting corners
+# about at random. The volume the game tests against is derived from the
+# corners' bounding box, so the polygon is the only thing to author.
+MARKER_PREFIXES = {
+    "BusStop_": "busstop",
+    "Home_":    "home",
+    "Work_":    "work",
+    "Zone_":    "zone",
+}
+# Roles whose mesh is a marker only and must not reach the world.
+MARKER_ONLY_ROLES = {"zone"}
+
+
+def marker_role(asset_path: str):
+    """(role, label, order) for a marker mesh, or None if it is ordinary.
+
+    Takes a full asset path ("/Game/.../BusStop_Old_Harbour.BusStop_Old_
+    Harbour") because that is what the shard entries carry -- the object name
+    is the part after the last DOT, not the last slash.
+    """
+    obj = asset_path.rsplit("/", 1)[-1].rsplit(".", 1)[-1]
+    for prefix, role in MARKER_PREFIXES.items():
+        if not obj.startswith(prefix):
+            continue
+        rest = obj[len(prefix):]
+        order = None
+        if role == "zone":
+            # Trailing _<digits> is the winding order, not part of the name.
+            head, sep, tail = rest.rpartition("_")
+            if sep and tail.isdigit():
+                rest, order = head, int(tail)
+        label = rest.replace("_", " ").strip()
+        if not label:
+            return None
+        return role, label, order
+    return None
 
 
 def bus_stop_label(asset_path: str) -> str | None:
-    """Station name for a BusStop_* mesh, or None if the mesh is not one.
-
-    Takes a full asset path ("/Game/.../BusStop_My_Cool_Location.BusStop_My_
-    Cool_Location") because that is what the shard entries carry -- the object
-    name is the part after the last dot, not the last slash.
-    """
-    obj = asset_path.rsplit("/", 1)[-1].rsplit(".", 1)[-1]
-    if not obj.startswith(BUS_STOP_MESH_PREFIX):
-        return None
-    label = obj[len(BUS_STOP_MESH_PREFIX):].replace("_", " ").strip()
-    return label or None
+    """Station name for a BusStop_* mesh, or None if it is not one."""
+    r = marker_role(asset_path)
+    return r[1] if r and r[0] == "busstop" else None
 
 from mt_paths import (GAME_CONTENT as _GAME_CONTENT, COOKED_CONTENT as _COOKED,
                       MOD_CONTENT_ROOT as _MOD_CONTENT_ROOT)
@@ -537,8 +581,10 @@ def main():
     # delivery, dealers) accumulate in lists.
     mesh_writer = ShardWriter(str(MAP_WORK_MESHES_DIR), prefix="mesh")
     parking = []
-    # Meshes named BusStop_* -- see the streaming loop below.
+    # Marker meshes -- see marker_role() and the streaming loop below.
     bus_stop_meshes: list[tuple[str, float, float, float, float]] = []
+    poi_meshes: list[tuple[str, str, float, float, float, float]] = []
+    zone_marks: dict[str, list[tuple[int | None, float, float, float]]] = {}
     delivery = []
     placed_dealers = []   # from "Dealership_<VehicleKey>" scene placeholders
     skipped = 0
@@ -682,13 +728,19 @@ def main():
                 # named after the suffix. Collected here rather than by
                 # re-reading the shard, so the coordinates are the same ones
                 # the mesh itself was written with.
-                _label = bus_stop_label(base_entry["asset_path"])
-                if _label:
-                    bus_stop_meshes.append((
-                        _label,
-                        base_entry["X"], base_entry["Y"], base_entry["Z"],
-                        base_entry.get("Yaw", 0.0),
-                    ))
+                _mk = marker_role(base_entry["asset_path"])
+                if _mk:
+                    _role, _label, _order = _mk
+                    _x, _y, _z = base_entry["X"], base_entry["Y"], base_entry["Z"]
+                    _yaw = base_entry.get("Yaw", 0.0)
+                    if _role == "busstop":
+                        bus_stop_meshes.append((_label, _x, _y, _z, _yaw))
+                    elif _role in ("home", "work"):
+                        poi_meshes.append((_role, _label, _x, _y, _z, _yaw))
+                    elif _role == "zone":
+                        zone_marks.setdefault(_label, []).append((_order, _x, _y, _z))
+                    if _role in MARKER_ONLY_ROLES:
+                        continue          # a survey marker, not scenery
                 # Streamed to JSONL sidecar shards instead of held in memory.
                 mesh_writer.write(base_entry)
 
@@ -862,7 +914,39 @@ def main():
     except Exception as _e:
         _zn = None
         print(f"  zone: zones.json not read ({_e})")
-    for z in (_zn or {}).get("zones") or []:
+    # Zone_<Key>_<NN> markers define the polygon directly. The volume the game
+    # tests against is the corners' bounding box, so placing the corners is the
+    # whole job -- no centre, no scale, nothing to keep in sync by hand. A key
+    # authored this way REPLACES any entry of the same name in zones.json.
+    _zones = list((_zn or {}).get("zones") or [])
+    for _zkey, _marks in zone_marks.items():
+        if len(_marks) < 3:
+            print(f"  zone: '{_zkey}' has {len(_marks)} corner(s), needs 3 — skipped")
+            continue
+        _marks.sort(key=lambda m: (m[0] is None, m[0] if m[0] is not None else 0))
+        _pts = [[m[1], m[2]] for m in _marks]
+        _xs = [q[0] for q in _pts]; _ys = [q[1] for q in _pts]
+        _cx, _cy = (min(_xs) + max(_xs)) / 2, (min(_ys) + max(_ys)) / 2
+        _cz = sum(m[3] for m in _marks) / len(_marks)
+        _prev = next((q for q in _zones if str(q.get("key") or q.get("name")) == _zkey), None)
+        if _prev:
+            _zones.remove(_prev)
+            print(f"  zone: '{_zkey}' markers override the zones.json entry")
+        _zones.append({
+            "name": (_prev or {}).get("name", _zkey),
+            "key": _zkey,
+            "world": [_cx, _cy, _cz],
+            # 200 uu unit box, matching how the vanilla volumes are scaled.
+            "scale": [max(1.0, (max(_xs) - min(_xs)) / 200),
+                      max(1.0, (max(_ys) - min(_ys)) / 200),
+                      (_prev or {}).get("scale", [0, 0, 600])[2]],
+            "outline_points": _pts,
+            "color": (_prev or {}).get("color"),
+        })
+        print(f"  zone: '{_zkey}' from {len(_pts)} marker(s), "
+              f"centre ({_cx:,.0f}, {_cy:,.0f}), "
+              f"{(max(_xs)-min(_xs))/100000:.1f} x {(max(_ys)-min(_ys))/100000:.1f} km")
+    for z in _zones:
         w = z.get("world")
         if not (isinstance(w, (list, tuple)) and len(w) >= 3):
             print(f"  zone: '{z.get('name')}' world must be [X, Y, Z] — skipped")
@@ -913,6 +997,19 @@ def main():
             "asset_key": key,
         })
         _n_poi += 1
+    # Home_* / Work_* markers. Position, height and facing all come from the
+    # mesh, so these need no entry in pois.json at all.
+    for _role, _label, _x, _y, _z, _yaw in poi_meshes:
+        key, bp, cls = _POI_KIND["house" if _role == "home" else "office"]
+        parking.append({
+            "X": _x, "Y": _y, "Z": _z,
+            "Pitch": 0.0, "Roll": 0.0, "Yaw": _yaw,
+            "world_coords": True,
+            "blueprint_path": bp, "blueprint_class": cls,
+            "asset_key": key,
+        })
+        _n_poi += 1
+        print(f"  poi: '{_label}' ({_role}) from mesh at ({_x:,.0f}, {_y:,.0f}, {_z:,.0f})")
     if _n_poi:
         print(f"  poi: {_n_poi} point(s) of interest placed")
 

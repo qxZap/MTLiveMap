@@ -1315,6 +1315,35 @@ labels per variant need a SEPARATE-path StringTable asset
 (`/Game/DataAsset/StringTables/CargoBoosted.uasset` or similar) —
 not yet wired.
 
+### Editor markers: name a mesh, get an actor
+
+Place a mesh, name it, done. Position, height and rotation come from where the
+mesh sits, so nothing is typed into a config and nothing drifts out of sync
+with the scene.
+
+    BusStop_<Name>      a bus stop, displayed as "<Name>"
+    Home_<Name>         a POI people live at     (POI_House_C)
+    Work_<Name>         a POI people work at     (POI_Office_C)
+    Zone_<Key>_<NN>     corner NN of zone <Key>'s polygon
+
+Underscores become spaces: Home_Old_Harbour reads "Old Harbour".
+
+The mesh is still placed for BusStop/Home/Work -- the shelter, the house, the
+office is the thing you see. Zone corners are survey markers: their mesh is
+consumed and never ships, so a cone named Zone_Arini_01 leaves nothing in
+game.
+
+A zone needs 3+ corners. The trailing number is winding order, so walk the
+boundary in one direction. The volume is derived from the corners' bounding
+box -- the polygon is the only thing to author, and a key authored this way
+replaces any zones.json entry of the same name.
+
+Matching is on the object name, which is the part after the last DOT of the
+asset path, not the last slash. The prefix needs its underscore: BusStopSign
+is an ordinary mesh.
+
+Checks: test_markers.py.
+
 ### A StringTable is only loaded if a package IMPORTS it
 
 `TableId` on a Text is an FName, not an object reference, so pointing text at
