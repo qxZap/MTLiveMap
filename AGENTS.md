@@ -1333,6 +1333,20 @@ office is the thing you see. Zone corners are survey markers: their mesh is
 consumed and never ships, so a cone named Zone_Arini_01 leaves nothing in
 game.
 
+A FOLDER can name the zone instead, which keeps one zone's pieces together in
+the content browser rather than spread through a flat list:
+
+    .../Zones/Arini/Border_01          corner 1 of Arini
+    .../Zones/Arini/Border_02
+    .../Zones/Arini/Home_Fisher_Row
+    .../Zones/Arini/BusStop_Old_Harbour
+
+The folder under Zones/ IS the zone key, so a border carries only its number
+and nothing repeats the zone's name. Everything else keeps its own prefix --
+the folder only says which zone it belongs to. A Border_ outside a Zones/
+folder names nothing, rather than inventing a zone from whatever folder it
+happens to sit in.
+
 A zone needs 3+ corners. The trailing number is winding order, so walk the
 boundary in one direction. The volume is derived from the corners' bounding
 box -- the polygon is the only thing to author, and a key authored this way

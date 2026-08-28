@@ -54,6 +54,28 @@ MARKER_PREFIXES = {
 # Roles whose mesh is a marker only and must not reach the world.
 MARKER_ONLY_ROLES = {"zone"}
 
+# A FOLDER can name the zone instead, which keeps one zone's pieces together
+# in the content browser rather than spread through a flat list:
+#
+#     .../Zones/Arini/Border_01      corner 1 of Arini
+#     .../Zones/Arini/Home_Fisher_Row
+#     .../Zones/Arini/BusStop_Old_Harbour
+#
+# The folder under Zones/ IS the zone key, so a border needs only its number
+# and nothing repeats the zone's name. Everything else keeps its own prefix --
+# the folder just says which zone it belongs to.
+ZONES_FOLDER = "Zones"
+BORDER_PREFIX = "Border_"
+
+
+def zone_folder(asset_path: str) -> str | None:
+    """Zone key from a .../Zones/<Key>/... path, or None."""
+    parts = asset_path.rsplit(".", 1)[0].split("/")
+    for i, seg in enumerate(parts[:-1]):
+        if seg == ZONES_FOLDER and i + 1 < len(parts) - 1:
+            return parts[i + 1].replace("_", " ").strip() or None
+    return None
+
 
 def marker_role(asset_path: str):
     """(role, label, order) for a marker mesh, or None if it is ordinary.
@@ -63,16 +85,29 @@ def marker_role(asset_path: str):
     is the part after the last DOT, not the last slash.
     """
     obj = asset_path.rsplit("/", 1)[-1].rsplit(".", 1)[-1]
+
+    def _order_of(rest: str):
+        # Trailing _<digits> is winding order, not part of the name.
+        head, sep, tail = rest.rpartition("_")
+        return (head, int(tail)) if sep and tail.isdigit() else (rest, None)
+
+    # Border_NN inside a Zones/<Key>/ folder: the folder supplies the key.
+    if obj.startswith(BORDER_PREFIX):
+        zone = zone_folder(asset_path)
+        if zone:
+            _, order = _order_of(obj[len(BORDER_PREFIX):])
+            if order is None and obj[len(BORDER_PREFIX):].isdigit():
+                order = int(obj[len(BORDER_PREFIX):])
+            return "zone", zone, order
+        return None          # a Border_ outside any zone folder names nothing
+
     for prefix, role in MARKER_PREFIXES.items():
         if not obj.startswith(prefix):
             continue
         rest = obj[len(prefix):]
         order = None
         if role == "zone":
-            # Trailing _<digits> is the winding order, not part of the name.
-            head, sep, tail = rest.rpartition("_")
-            if sep and tail.isdigit():
-                rest, order = head, int(tail)
+            rest, order = _order_of(rest)
         label = rest.replace("_", " ").strip()
         if not label:
             return None
