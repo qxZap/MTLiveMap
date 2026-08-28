@@ -13,7 +13,6 @@
     "",
     "Z is tile Z + 20, so the stop sits on the deck rather than in it.",
     "",
-    "link_terminal names a vanilla stop every one of these points at through",
     "AdditionalDestinations, together with its siblings. One direction only --",
     "vanilla actors come through the build as byte-copied RawExports, so they",
     "cannot be made to point back.",
@@ -21,7 +20,17 @@
     "One stop is a CONTROL placed inside a vanilla zone -- see its _why.",
     "",
     "Placement goes through the 'BusStop' entry in bp_registry, on the same",
-    "clone path as the parking spaces and delivery points."
+    "clone path as the parking spaces and delivery points.",
+    "",
+    "link_terminal is DISABLED. With it set, the game crashed with an access",
+    "violation the moment a resident boarded a bus -- reading a null at +0x2d8,",
+    "in the destination logic. AdditionalDestinations is part of that logic and",
+    "no vanilla stop uses it the way we did: one stop, one entry, on a warehouse",
+    "(Ae-WolWarehouse). Five stops all pointing at a terminal in another zone was",
+    "always the unvalidated experiment here.",
+    "",
+    "Re-enable by naming a terminal, but only once passengers are known to work",
+    "without it."
   ],
   "bp_path": "/Game/Objects/Mission/Bus/BusStop_01",
   "stops": [
@@ -75,5 +84,5 @@
       "_why": "Deliberately inside the Gangjung MTAreaVolume, 40 m from its terminal. The five bridge stops sit in no zone at all and hold 0 passengers forever; this one is the control. If it fills and they stay empty, passengers come from zone residents and the island needs its own MTAreaVolume, not a fix to the stops."
     }
   ],
-  "link_terminal": "Gang-JungTerminal_2"
+  "link_terminal": ""
 }
