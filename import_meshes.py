@@ -879,9 +879,42 @@ def main():
             "actor_label": z.get("name") or z.get("key") or "Zone",
             "zone_key": z.get("key") or z.get("name"),
             "outline": z.get("outline"),
+            "outline_points": z.get("outline_points"),
+            "zone_color": z.get("color"),
         })
         print(f"  zone: '{z.get('name')}' key={z.get('key')} at "
               f"({w[0]:,.0f}, {w[1]:,.0f}, {w[2]:,.0f}) scale {sc}")
+
+    # Points of interest -- homes and workplaces for the zone's residents.
+    try:
+        _pj = json.loads(pathlib.Path("pois.json").read_text(encoding="utf-8"))
+    except Exception as _e:
+        _pj = None
+        print(f"  poi: pois.json not read ({_e})")
+    _POI_KIND = {"house": ("POIHouse", "/Game/Objects/PointOfInterest/POI_House", "POI_House_C"),
+                 "office": ("POIOffice", "/Game/Objects/PointOfInterest/POI_Office", "POI_Office_C")}
+    _n_poi = 0
+    for q in (_pj or {}).get("pois") or []:
+        w = q.get("world")
+        kind = str(q.get("kind", "house")).lower()
+        if kind not in _POI_KIND:
+            print(f"  poi: '{q.get('name')}' unknown kind '{kind}' — skipped")
+            continue
+        if not (isinstance(w, (list, tuple)) and len(w) >= 3):
+            print(f"  poi: '{q.get('name')}' world must be [X, Y, Z] — skipped")
+            continue
+        key, bp, cls = _POI_KIND[kind]
+        parking.append({
+            "X": float(w[0]), "Y": float(w[1]), "Z": float(w[2]),
+            "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0,
+            "world_coords": True,
+            "blueprint_path": bp,
+            "blueprint_class": cls,
+            "asset_key": key,
+        })
+        _n_poi += 1
+    if _n_poi:
+        print(f"  poi: {_n_poi} point(s) of interest placed")
 
     dst.setdefault("blueprint_actors", {})[TARGET_GROUP] = parking
     dst["dealerships"] = dealerships

@@ -1,0 +1,141 @@
+{
+  "_README": [
+    "Points of interest, which is where residents live and work.",
+    "",
+    "MTResident carries HomePOI, WorkPOI, CurrentBusStop and",
+    "DestinationBusStop: a resident lives at one POI, works at another, and",
+    "rides between them. A zone with no POIs has nobody to put in it, which",
+    "is why Arini registered as a zone and still reported 0 residents.",
+    "",
+    "kind maps to the vanilla blueprint: house -> POI_House_C (a home),",
+    "office -> POI_Office_C (a workplace). Both are tiny actors -- a scene",
+    "component, a GUID, nothing else -- and the class is the only thing that",
+    "says which is which.",
+    "",
+    "Placed beside existing delivery points, 60 m off, because those are",
+    "known-good ground with real access. Homes and workplaces alternate so",
+    "residents have somewhere to commute TO, which is the whole point."
+  ],
+  "pois": [
+    {
+      "name": "Arini Home 1",
+      "kind": "house",
+      "world": [
+        -1689163,
+        -291887,
+        -22035
+      ],
+      "near": "Braila_Port"
+    },
+    {
+      "name": "Arini Work 1",
+      "kind": "office",
+      "world": [
+        -1347163,
+        1238,
+        9055
+      ],
+      "near": "South_Barn"
+    },
+    {
+      "name": "Arini Home 2",
+      "kind": "house",
+      "world": [
+        -1327613,
+        -460162,
+        -20980
+      ],
+      "near": "Trap_Cave"
+    },
+    {
+      "name": "Arini Work 2",
+      "kind": "office",
+      "world": [
+        -1281093,
+        604863,
+        -20275
+      ],
+      "near": "South_Iron_Quary"
+    },
+    {
+      "name": "Arini Home 3",
+      "kind": "house",
+      "world": [
+        -1200928,
+        -43717,
+        46440
+      ],
+      "near": "Alpine_Rescue_Post"
+    },
+    {
+      "name": "Arini Work 3",
+      "kind": "office",
+      "world": [
+        -1126308,
+        -346577,
+        -8845
+      ],
+      "near": "Abandoned_Market"
+    },
+    {
+      "name": "Arini Home 4",
+      "kind": "house",
+      "world": [
+        -1091303,
+        582268,
+        -20990
+      ],
+      "near": "South_Fuel_Storage"
+    },
+    {
+      "name": "Arini Work 4",
+      "kind": "office",
+      "world": [
+        -1082903,
+        614718,
+        -21530
+      ],
+      "near": "Aerotyne_International"
+    },
+    {
+      "name": "Arini Home 5",
+      "kind": "house",
+      "world": [
+        -1062688,
+        187163,
+        1215
+      ],
+      "near": "Water_Storage_Depot"
+    },
+    {
+      "name": "Arini Work 5",
+      "kind": "office",
+      "world": [
+        -970493,
+        176348,
+        -1015
+      ],
+      "near": "Cheese_Factory"
+    },
+    {
+      "name": "Arini Home 6",
+      "kind": "house",
+      "world": [
+        -888413,
+        567373,
+        -22285
+      ],
+      "near": "South_Depot"
+    },
+    {
+      "name": "Arini Work 6",
+      "kind": "office",
+      "world": [
+        -617878,
+        230938,
+        -22035
+      ],
+      "near": "Galati_Port"
+    }
+  ]
+}

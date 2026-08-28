@@ -20,7 +20,11 @@
     "",
     "The zone registers and Arini appears in the resident system, but reports",
     "0 residents. Residents likely need POIs to live at: MTResidentZoneState",
-    "carries a POIs array and MTZoneState a Server_Supermarkets one."
+    "carries a POIs array and MTZoneState a Server_Supermarkets one.",
+    "",
+    "color = ZoneColor as [r, g, b, a], 0..1. Cloned from Gangjung it drew in",
+    "        Gangjung's colour, which is the one thing that must not happen",
+    "        when the point is telling two zones apart."
   ],
   "zones": [
     {
@@ -39,7 +43,14 @@
       "outline": [
         710000,
         725000
-      ]
+      ],
+      "color": [
+        0.15,
+        0.65,
+        0.85,
+        1.0
+      ],
+      "_outline_points": "Optional explicit polygon [[x,y], ...] in WORLD coords. Overrides `outline`. Vanilla zones are irregular and tile against each other, and the map label is drawn from this outline -- so shaping it is also how the label moves."
     }
   ]
 }

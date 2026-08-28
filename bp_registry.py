@@ -59,6 +59,28 @@ REGISTRY: dict[str, dict] = {
         "preload_bp":       None,
         "inject_into_main": True,
     },
+    # Where residents live and work. MTResident carries HomePOI, WorkPOI,
+    # CurrentBusStop and DestinationBusStop -- people live at one POI, work at
+    # another, and ride between them. A zone with no POIs has nobody in it,
+    # which is why Arini registered as a zone and still reported 0 residents.
+    # The actors are tiny: a scene component, a GUID, and the class is the only
+    # thing that distinguishes a home from a workplace.
+    "POIHouse": {
+        "bp_path":          "/Game/Objects/PointOfInterest/POI_House",
+        "bp_class":         "POI_House_C",
+        "source_umap":      JEJU_MAIN,
+        "source_actor":     "POI_House_C_UAID_345A60416115446802_1960644402",
+        "preload_bp":       GAME_CONTENT / "Objects/PointOfInterest/POI_House.uasset",
+        "inject_into_main": True,
+    },
+    "POIOffice": {
+        "bp_path":          "/Game/Objects/PointOfInterest/POI_Office",
+        "bp_class":         "POI_Office_C",
+        "source_umap":      JEJU_MAIN,
+        "source_actor":     "POI_Jeju_Office9",
+        "preload_bp":       GAME_CONTENT / "Objects/PointOfInterest/POI_Office.uasset",
+        "inject_into_main": True,
+    },
     "Garage": {
         "bp_path":      "/Game/Objects/GarageActorBP",
         "bp_class":     "GarageActorBP_C",

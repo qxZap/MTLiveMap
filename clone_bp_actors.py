@@ -868,6 +868,10 @@ def main():
             # otherwise all display the same name.
             if e.get("zone_key"):
                 spec["zone_key"] = e["zone_key"]
+            if e.get("zone_color"):
+                spec["zone_color"] = e["zone_color"]
+            if e.get("outline_points"):
+                spec["outline_points"] = e["outline_points"]
             _ol = e.get("outline")
             if isinstance(_ol, (list, tuple)) and len(_ol) >= 2:
                 spec["outline_x"] = float(_ol[0])

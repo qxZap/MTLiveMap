@@ -3455,10 +3455,17 @@ internal static class Program
                 EnsureName(dst, "TopViewLines");
                 EnsureName(dst, "Vector");
                 EnsureName(dst, "StructProperty");
-                var corners = new (double dx, double dy)[] {
-                    (-outX.Value, -outY.Value), ( outX.Value, -outY.Value),
-                    ( outX.Value,  outY.Value), (-outX.Value,  outY.Value),
-                };
+                // An explicit polygon wins over the rectangle. Vanilla zones are
+                // irregular and tile against each other, so a plain box reads as
+                // wrong next to them -- and the map label is drawn from this
+                // outline, so shaping it is also how the label moves.
+                var poly = s["outline_points"] as Newtonsoft.Json.Linq.JArray;
+                var corners = poly != null && poly.Count >= 3
+                    ? poly.Select(pt => (dx: (double)pt[0]! - tx, dy: (double)pt[1]! - ty)).ToArray()
+                    : new (double dx, double dy)[] {
+                        (-outX.Value, -outY.Value), ( outX.Value, -outY.Value),
+                        ( outX.Value,  outY.Value), (-outX.Value,  outY.Value),
+                    };
                 var pts = corners.Select(c => (PropertyData)new StructPropertyData(
                         FName.FromString(dst, "TopViewLines"), FName.FromString(dst, "Vector"))
                 {
@@ -3477,6 +3484,28 @@ internal static class Program
                 Console.WriteLine($"  TopViewLines -> {pts.Length} corners, "
                                 + $"{outX.Value * 2 / 100000.0:0.#} x {outY.Value * 2 / 100000.0:0.#} km "
                                 + $"around ({tx:0}, {ty:0})");
+            }
+
+            // Zone colour. Cloned from Gangjung, it drew in Gangjung's colour,
+            // which is exactly wrong for telling two zones apart on a map.
+            var zc = s["zone_color"] as Newtonsoft.Json.Linq.JArray;
+            if (zc != null && zc.Count >= 3 && newActor is NormalExport zcExp)
+            {
+                EnsureName(dst, "ZoneColor");
+                EnsureName(dst, "LinearColor");
+                var lc = new LinearColorPropertyData(FName.FromString(dst, "ZoneColor"))
+                {
+                    Value = new FLinearColor((float)(double)zc[0]!, (float)(double)zc[1]!,
+                                             (float)(double)zc[2]!,
+                                             zc.Count > 3 ? (float)(double)zc[3]! : 1f)
+                };
+                var prior = zcExp.Data.FirstOrDefault(q => q.Name.ToString() == "ZoneColor");
+                if (prior is StructPropertyData zsp) zsp.Value = new List<PropertyData> { lc };
+                else
+                    zcExp.Data.Add(new StructPropertyData(FName.FromString(dst, "ZoneColor"),
+                                                         FName.FromString(dst, "LinearColor"))
+                    { Value = new List<PropertyData> { lc } });
+                Console.WriteLine($"  ZoneColor -> ({zc[0]}, {zc[1]}, {zc[2]})");
             }
 
             string? customLabel = (string?)s["actor_label"];
