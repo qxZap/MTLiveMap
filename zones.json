@@ -24,25 +24,31 @@
     "",
     "color = ZoneColor as [r, g, b, a], 0..1. Cloned from Gangjung it drew in",
     "        Gangjung's colour, which is the one thing that must not happen",
-    "        when the point is telling two zones apart."
+    "        when the point is telling two zones apart.",
+    "",
+    "The square is built from the injected map's own extents: the larger of the",
+    "two mesh spans becomes the side, so it is square rather than merely",
+    "rectangular. Its EAST edge is pinned to X -457,000, which is where Jeju's",
+    "westernmost zones end -- Hallim at -458,080 and Gangjung at -456,942 -- so",
+    "Arini abuts both instead of floating in the sea with a gap."
   ],
   "zones": [
     {
       "name": "Arini",
       "key": "Arini",
       "world": [
-        -1206928,
-        -49717,
+        -1178216,
+        44869,
         46440
       ],
       "scale": [
-        7100,
-        7250,
+        7212,
+        7212,
         600
       ],
       "outline": [
-        710000,
-        725000
+        721216,
+        721216
       ],
       "color": [
         0.15,
@@ -50,7 +56,24 @@
         0.85,
         1.0
       ],
-      "_outline_points": "Optional explicit polygon [[x,y], ...] in WORLD coords. Overrides `outline`. Vanilla zones are irregular and tile against each other, and the map label is drawn from this outline -- so shaping it is also how the label moves."
+      "outline_points": [
+        [
+          -1899432,
+          -676347
+        ],
+        [
+          -457000,
+          -676347
+        ],
+        [
+          -457000,
+          766085
+        ],
+        [
+          -1899432,
+          766085
+        ]
+      ]
     }
   ]
 }

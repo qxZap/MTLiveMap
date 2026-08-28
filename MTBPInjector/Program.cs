@@ -303,12 +303,16 @@ internal static class Program
                 Console.WriteLine($"{indent}{field.Name}: [Array {ap.ArrayType} count={ap.Value?.Length ?? 0}]");
                 if (ap.Value != null && ap.Value.Length > 0)
                 {
-                    for (int i = 0; i < Math.Min(ap.Value.Length, 3); i++)
+                    // Three was fine for eyeballing; it is useless for reading
+                    // geometry back out. A zone's TopViewLines is 16 points and
+                    // the first three tell you nothing about its shape.
+                    int cap = ArrayDumpLimit;
+                    for (int i = 0; i < Math.Min(ap.Value.Length, cap); i++)
                     {
                         Console.WriteLine($"{indent}  [{i}]:");
                         DumpField(ap.Value[i], indent + "    ", maxDepth - 1);
                     }
-                    if (ap.Value.Length > 3) Console.WriteLine($"{indent}  ... {ap.Value.Length - 3} more");
+                    if (ap.Value.Length > cap) Console.WriteLine($"{indent}  ... {ap.Value.Length - cap} more");
                 }
                 break;
             case UAssetAPI.PropertyTypes.Structs.StructPropertyData sp:
@@ -4779,6 +4783,8 @@ internal static class Program
         }
     }
 
+    private static int ArrayDumpLimit = 3;
+
     private static int InspectExport(string[] args)
     {
         var f = ParseFlags(args);
@@ -4787,6 +4793,7 @@ internal static class Program
         var filter = f.TryGetValue("name", out var fn) ? fn : null;
         int limit = f.TryGetValue("limit", out var ls) ? int.Parse(ls) : 3;
         int idxFilter = f.TryGetValue("index", out var idxs) ? int.Parse(idxs) : -1;
+        ArrayDumpLimit = f.TryGetValue("array-limit", out var als) ? int.Parse(als) : 3;
         int count = 0;
         for (int i = 0; i < asset.Exports.Count; i++)
         {
