@@ -906,7 +906,7 @@ def main():
         key, bp, cls = _POI_KIND[kind]
         parking.append({
             "X": float(w[0]), "Y": float(w[1]), "Z": float(w[2]),
-            "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0,
+            "Pitch": 0.0, "Roll": 0.0, "Yaw": float(q.get("yaw", 0.0)),
             "world_coords": True,
             "blueprint_path": bp,
             "blueprint_class": cls,
