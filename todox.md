@@ -71,20 +71,53 @@ Arini refinery" is a job.
 
 ---
 
-## Zones and people
+## MINE TO PLACE — the editor work
 
-New since the zone system works. A zone is what makes residents exist, and
-residents are what make bus stops worth having.
+This is the part only I can do. Everything below is a mesh placed and named
+in the editor; the build turns each one into a working actor.
 
-- [ ] Bus stops near the delivery points. Currently every stop is on the
-      bridge and the median walk from a delivery point is 6 km, which is why
-      stops sit empty even though people now spawn and board.
-- [ ] More zones? Each needs a `Zones/<Key>/` folder with 3+ `Border_NN`
-      markers walked in one direction.
-- [ ] How many people should Arini have? Population comes from how many
-      Home_/Work_ POIs are inside the zone.
+- [ ] **POIs — homes and workplaces.** `Home_<Name>` and `Work_<Name>`.
+      Population is literally how many of these sit inside the zone, and
+      residents need BOTH: they live at one and work at another, and the
+      commute between them is what puts anyone on a bus. 136 are placed
+      programmatically at the delivery points right now, four per point, as a
+      test rig -- these replace them with real ones in real places.
+- [ ] **Bus stops near where people are.** `BusStop_<Name>`. Every stop is
+      still out on the bridge and the median walk from a delivery point is
+      6 km, which is why stops sit empty even though people spawn and board.
+- [ ] **Zone borders**, if Arini's square should become a real shape.
+      `Zones/Arini/Border_01`, `Border_02`, ... walked in one direction, 3+ of
+      them. The mesh is consumed, so a cone works and nothing appears in game.
+- [ ] More zones? A new `Zones/<Key>/` folder is the whole setup.
+
+Position, height and facing all come from where the mesh sits. Nothing to
+type, and nothing that can drift out of sync with the scene.
 
 ---
+
+## Economy
+
+The model is `pricing.py`: `pay = kg^0.63 * 150 * batch * (1 + km/5)`, floor
+1,000. The exponent is the GAME's own weight curve, fitted from its cargo
+rows -- only the level (150) is ours. Batch is the licence tier, and it
+already multiplies exactly as discussed: B2 x2, B3 x3, B4 x4, B5 x5.
+
+- [ ] **19 orphaned vanilla cargos.** BottlePallete, BoxPallete_01, BreadBox,
+      BreadPallet, CheeseBox, CheesePallet, Container_20ft_01,
+      Container_40ft_01, CopperRodCoil_2t, CornPallet, GlassBottleBox,
+      HempPallet, MeatBox, PlasticPipes_6m, PowerBox, RicePallet, SmallBox,
+      SunflowerSeed, WoodPlank_14ft_5t. All carry zero BasePayment and rely on
+      per-km, which finds no road off the vanilla network -- so hauling any of
+      them on Arini pays near nothing. This is the single biggest hole in
+      "people who go to the struggle get paid".
+      FIX: custom copies priced by the model, recipes swapped to them, Jeju
+      left alone. Same pattern as IronOreX / SteelCoilX already use.
+- [ ] **4 cargos bypass the model** with hand-set prices: Pezzi 30,000,
+      SteelCoilX 50,000, SteelCoilXL 150,000. Decide whether they should be
+      computed like everything else.
+- [ ] Re-run `python pricing.py` after moving any delivery point: prices are
+      derived from the real distance between producer and consumer, so moving
+      a point silently makes its price wrong. `stale_prices()` detects it.
 
 ## Done
 
@@ -107,6 +140,13 @@ residents are what make bus stops worth having.
 - [ ] Snow should sink you the way mud does (a NEW cloned material, not an
       edit to the vanilla one) — TODO.md §11.
 - [ ] Console variables never reach the game; `merge_config.py` is inert.
+- [ ] PARKED: soft limits. 20 attachments per vehicle, ~20 vehicles per
+      company. `MaxVehiclePerPlayer` is an Int on `MTServerRuntimeConfig`, so
+      it is server config rather than a packaged asset -- the open question is
+      whether the singleplayer host reads it, because if it does this is a
+      config line and not a mod at all. Attachments have no governing property
+      anywhere in the schema, which points at a C++ constant no pak can move.
+      Coming back to this later.
 - [ ] `Zone Test Gangjung` is a leftover diagnostic stop and can be deleted.
 - [ ] Bridge stop 5 sits east of the boundary, so it belongs to Hallim rather
       than Arini.
