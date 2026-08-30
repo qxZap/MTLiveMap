@@ -1315,6 +1315,25 @@ labels per variant need a SEPARATE-path StringTable asset
 (`/Game/DataAsset/StringTables/CargoBoosted.uasset` or similar) —
 not yet wired.
 
+### TopViewLines is SEGMENTS, stored as point pairs
+
+A zone's map outline is a list of line segments, each one two consecutive
+points -- not a polygon ring whose corners get joined up. Every vanilla zone
+has an EVEN count (Jeju 8, Gangjung 16, Gapa 24) and each pair's end is
+exactly the next pair's start, with the last closing back to the first:
+
+    pair 0: (-127072,  95960) -> (-187063,-176711)
+    pair 1: (-187063,-176711) -> (  84839,-246367)   <- starts where 0 ended
+
+Four corners written as four points therefore draws the bottom and top edges
+and nothing else, which reads in game as a zone cut open down the middle. N
+corners need 2N points.
+
+The volume and the outline are also independent: the brush is placed and
+scaled by the transform, TopViewLines is its own world-space geometry, and
+the map label is drawn from the outline. Moving or resizing the box does not
+move what the map shows.
+
 ### Editor markers: name a mesh, get an actor
 
 Place a mesh, name it, done. Position, height and rotation come from where the

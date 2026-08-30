@@ -3470,7 +3470,19 @@ internal static class Program
                         (-outX.Value, -outY.Value), ( outX.Value, -outY.Value),
                         ( outX.Value,  outY.Value), (-outX.Value,  outY.Value),
                     };
-                var pts = corners.Select(c => (PropertyData)new StructPropertyData(
+                // TopViewLines is SEGMENTS, stored as point PAIRS -- not a
+                // polygon ring. Every vanilla zone has an even count (Jeju 8,
+                // Gangjung 16, Gapa 24) and each pair's end is the next pair's
+                // start, with the last closing back to the first. Writing four
+                // corners as four points drew two opposite edges and left the
+                // shape open down the middle.
+                var edges = new List<(double dx, double dy)>();
+                for (int c = 0; c < corners.Length; c++)
+                {
+                    edges.Add(corners[c]);
+                    edges.Add(corners[(c + 1) % corners.Length]);
+                }
+                var pts = edges.Select(c => (PropertyData)new StructPropertyData(
                         FName.FromString(dst, "TopViewLines"), FName.FromString(dst, "Vector"))
                 {
                     Value = new List<PropertyData> {
@@ -3485,7 +3497,7 @@ internal static class Program
                     tvExp.Data.Add(new ArrayPropertyData(FName.FromString(dst, "TopViewLines"))
                     { ArrayType = FName.FromString(dst, "StructProperty"), Value = pts });
                 }
-                Console.WriteLine($"  TopViewLines -> {pts.Length} corners, "
+                Console.WriteLine($"  TopViewLines -> {corners.Length} corners / {pts.Length} points, "
                                 + $"{outX.Value * 2 / 100000.0:0.#} x {outY.Value * 2 / 100000.0:0.#} km "
                                 + $"around ({tx:0}, {ty:0})");
             }
