@@ -48,14 +48,17 @@ REGISTRY: dict[str, dict] = {
     # A zone. MTZoneState hangs off ZoneKey -- residents, NumResidents,
     # BusTransportRate -- and a stop outside every zone has no residents to
     # carry, which is why the bridge stops sat at 0 passengers forever. The
-    # volume is a unit box: position from the transform, size from
+    # true 200-unit box: 50,000 world / scale 250 = 200, and 40,000 / 200 =
+    # 200. Gangjung's brush is a POLYGON, which is why a zone cloned from it
+    # could never be square however it was scaled. Size from
     # RelativeScale3D (vanilla Gangjung is 1000/1000/500). Its UModel and
     # BrushComponent are both outered to the actor, so the clone takes them.
     "AreaVolume": {
         "bp_path":          "/Script/MotorTown",
         "bp_class":         "MTAreaVolume",
         "source_umap":      JEJU_MAIN,
-        "source_actor":     "MTAreaVolume_UAID_107C61471EBEE42202_1333339548",
+        "source_actor":     "MTAreaVolume_UAID_2CF05D790A1C2C0902_1632830822",
+        # Nobong Landfill, NOT a zone -- picked because its brush is a
         "preload_bp":       None,
         "inject_into_main": True,
     },

@@ -3446,6 +3446,50 @@ internal static class Program
                     { Value = FName.FromString(dst, zoneKey!) });
                     Console.WriteLine($"  ZoneKey -> '{zoneKey}' (created)");
                 }
+
+                // A box-brush source is a SMALL AREA, not a zone: the vanilla
+                // volumes whose brush is a true 200-unit box are dealerships and
+                // a landfill, and none of them carries AreaVolumeFlags at all.
+                // Without Zone here the clone is a labelled area, not somewhere
+                // people live.
+                if (!zoneExp.Data.Any(q => q.Name.ToString() == "AreaVolumeFlags"))
+                {
+                    EnsureName(dst, "AreaVolumeFlags");
+                    EnsureName(dst, "EMTAreaVolumeFlags");
+                    EnsureName(dst, "EMTAreaVolumeFlags::Zone");
+                    EnsureName(dst, "EnumProperty");
+                    zoneExp.Data.Add(new ArrayPropertyData(FName.FromString(dst, "AreaVolumeFlags"))
+                    {
+                        ArrayType = FName.FromString(dst, "EnumProperty"),
+                        Value = new PropertyData[] {
+                            new EnumPropertyData(FName.FromString(dst, "AreaVolumeFlags")) {
+                                EnumType = FName.FromString(dst, "EMTAreaVolumeFlags"),
+                                Value    = FName.FromString(dst, "EMTAreaVolumeFlags::Zone") } }
+                    });
+                    Console.WriteLine("  AreaVolumeFlags -> Zone (created)");
+                }
+
+                // Drop AreaNameTexts. A real zone names itself with AreaName --
+                // Gangjung has AreaName and no AreaNameTexts, Nobong has
+                // AreaNameTexts and no AreaName -- and while both are present
+                // the source's own name wins, so the clone reads "Nobong
+                // Landfill" however carefully AreaName is patched.
+                var ant = zoneExp.Data.FirstOrDefault(q => q.Name.ToString() == "AreaNameTexts");
+                if (ant != null)
+                {
+                    zoneExp.Data.Remove(ant);
+                    Console.WriteLine("  removed AreaNameTexts (the source's own name)");
+                }
+
+                // Same source has no AreaName, and the label patch below only
+                // fills a property that already exists. Create one to write into.
+                if (!zoneExp.Data.Any(q => q.Name.ToString() == "AreaName"))
+                {
+                    EnsureName(dst, "AreaName");
+                    zoneExp.Data.Add(new TextPropertyData(FName.FromString(dst, "AreaName"))
+                    { HistoryType = TextHistoryType.None, Value = new FString("") });
+                    Console.WriteLine("  AreaName created for the label patch");
+                }
             }
 
             // The map outline is NOT the brush. TopViewLines is its own

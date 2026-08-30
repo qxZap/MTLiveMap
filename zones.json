@@ -30,25 +30,96 @@
     "two mesh spans becomes the side, so it is square rather than merely",
     "rectangular. Its EAST edge is pinned to X -457,000, which is where Jeju's",
     "westernmost zones end -- Hallim at -458,080 and Gangjung at -456,942 -- so",
-    "Arini abuts both instead of floating in the sea with a gap."
+    "Arini abuts both instead of floating in the sea with a gap.",
+    "",
+    "polygon fill looks like. Measured winding matches vanilla (all seven Jeju",
+    "",
+    "THE FILL IS NOT OURS TO PLACE. A zone's UModel stores WORLD-SPACE",
+    "geometry -- Gangjung's model literally contains -456,942, which is that",
+    "zone's own TopViewLines minimum. Cloning it copies Gangjung's shape AND",
+    "its position, and our transform then scales that 7,212x. The border comes",
+    "from TopViewLines and is ours; the fill comes from the brush and is",
+    "Gangjung's, which is why it appears somewhere else entirely in a shape we",
+    "never authored.",
+    "",
+    "Two consequences worth stating plainly:",
+    "  1. The real containment volume is NOT the square drawn on the map. It",
+    "     works only because 7,212x makes it big enough to swallow the island.",
+    "  2. Fixing it properly means authoring BSP geometry, not setting a",
+    "  2. Alpha 0 removed OUR border and label and left the stray fill untouched,",
+    "     which means that fill is not drawn with our ZoneColor and is not ours.",
+    "",
+    "OUTLINE ONLY, deliberately. The square drawn on the map is TopViewLines;",
+    "what the game tests against is the brush, and they are independent. This",
+    "build shrinks and moves the OUTLINE to clear Gapa and leaves `scale`",
+    "alone, so if residents change we learn something unexpected, and if the",
+    "fill changes we know it tracks the outline.",
+    "",
+    "A 1.5x shrink on the same centre would still have overlapped Gapa by",
+    "284,000 x 393,000 uu, so it could not have tested the collision idea.",
+    "Pushed west instead: east edge at -1,000,000, clear of Gapa's -981,345.",
+    "Cost is 20 of 34 delivery points inside the drawn square, down from 34.",
+    "",
+    "WORLD-SPACE geometry -- Gangjung's own outline minimum, -456,942, is in",
+    "those bytes. Scaling it 7,212x pushed the footprint to +/- 3 BILLION uu,",
+    "which is why colour covered the whole map while our border stayed correct:",
+    "the border comes from TopViewLines and is ours, the fill comes from the",
+    "brush and was Gangjung's, multiplied into nonsense.",
+    "",
+    "Gangjung's shape at roughly X -1,635,158..-999,050, Y 84,819..476,268 --",
+    "",
+    "",
+    "CALIBRATION. The fill is the BRUSH, proven by scale: 7,212 drowned the",
+    "whole map in colour, 1 made the fill vanish entirely. Nothing about the",
+    "outline ever moved it -- not winding, not position, not clearing Gapa.",
+    "",
+    "Z must stay large. At scale [1,1,1] the volume was also one unit TALL, a",
+    "paper-thin sheet at Z 46,440 that intersects nothing, so that build could",
+    "not distinguish 'too small' from 'too flat'.",
+    "",
+    "4808 assumes the model is the +/-100 local box its float data suggests, so",
+    "side = scale * 200 = 961,600, matching the drawn outline. If the fill comes",
+    "back the same size as the border, that assumption is right and border,",
+    "fill and volume finally agree.",
+    "",
+    "SOURCE IS NOBONG LANDFILL, not a zone. Its brush is a true 200-unit box --",
+    "50,000 world / scale 250 = 200, 40,000 / 200 = 200, exactly. Gangjung's is",
+    "a polygon, which is why the fill was never square no matter how it was",
+    "scaled or moved.",
+    "",
+    "So: world size = scale * 200, and scale 4808 gives 961,600 uu -- the drawn",
+    "outline is 961,621. Border, fill and volume should finally be the same",
+    "square.",
+    "",
+    "The source has no AreaVolumeFlags and no AreaName (it uses AreaNameTexts),",
+    "so the clone creates both: Zone, and an empty AreaName for the label to be",
+    "written into.",
+    "",
+    "world MUST be the outline's centre. Moving the outline west to clear Gapa",
+    "without moving the volume left them 302,594 uu apart in X -- a quarter of",
+    "the width, which is exactly what the offset fill looked like. Y was never",
+    "wrong, because Y never moved.",
+    "",
+    "Marker-authored zones derive both from the same corners and cannot drift",
+    "like this; it is only hand-edited outline_points that can."
   ],
   "zones": [
     {
       "name": "Arini",
       "key": "Arini",
       "world": [
-        -1178216,
+        -1480810,
         44869,
         46440
       ],
       "scale": [
-        7212,
-        7212,
+        4808,
+        4808,
         600
       ],
       "outline": [
-        721216,
-        721216
+        480810,
+        480810
       ],
       "color": [
         0.15,
@@ -58,20 +129,20 @@
       ],
       "outline_points": [
         [
-          -1899432,
-          -676347
+          -1961621,
+          -435942
         ],
         [
-          -457000,
-          -676347
+          -1000000,
+          -435942
         ],
         [
-          -457000,
-          766085
+          -1000000,
+          525680
         ],
         [
-          -1899432,
-          766085
+          -1961621,
+          525680
         ]
       ]
     }
