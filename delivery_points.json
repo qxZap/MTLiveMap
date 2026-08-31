@@ -195,8 +195,7 @@
       "SpawnProbability": 6,
       "VolumeSize": 1,
       "_": "800 kg on a B2 rig over 2.12 km (South_Barn->Valley_Trailer) = 28,811 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "weight_kg": 800,
-      "batch": 2
+      "weight_kg": 800
     },
     {
       "copy_from": "IronOre",
@@ -259,6 +258,278 @@
       "MaxDeliveryDistance": 0,
       "BasePayment": 150000,
       "_": "10000 kg on a B4 rig over 2.84 km (Abandoned_Market->Dorna_Beer_Factory) = 150,000 flat. Computed by pricing.py \u2014 do not hand-edit."
+    },
+    {
+      "copy_from": "BottlePallete",
+      "new_id": "BottlePalleteX",
+      "display_name": "Bottle Pallete (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 50000,
+      "BasePayment": 50000,
+      "_": "500 kg = B2. Hard-set at 25,000 x 2 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 2
+    },
+    {
+      "copy_from": "BoxPallete_01",
+      "new_id": "BoxPallete_01X",
+      "display_name": "Box Pallete (Arini)",
+      "weight_kg": 300.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 50000,
+      "BasePayment": 50000,
+      "_": "300 kg = B2. Hard-set at 25,000 x 2 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 2
+    },
+    {
+      "copy_from": "BreadBox",
+      "new_id": "BreadBoxX",
+      "display_name": "Bread Box (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 25000,
+      "BasePayment": 25000,
+      "_": "500 kg = B1. Hard-set at 25,000 x 1 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 1
+    },
+    {
+      "copy_from": "CheeseBox",
+      "new_id": "CheeseBoxX",
+      "display_name": "Cheese Box (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 25000,
+      "BasePayment": 25000,
+      "_": "500 kg = B1. Hard-set at 25,000 x 1 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 1
+    },
+    {
+      "copy_from": "CheesePallet",
+      "new_id": "CheesePalletX",
+      "display_name": "Cheese Pallet (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 50000,
+      "BasePayment": 50000,
+      "_": "500 kg = B2. Hard-set at 25,000 x 2 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 2
+    },
+    {
+      "copy_from": "Container_20ft_01",
+      "new_id": "Container_20ft_01X",
+      "display_name": "Container (Arini)",
+      "weight_kg": 30000.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 125000,
+      "BasePayment": 125000,
+      "_": "30000 kg = B5. Hard-set at 25,000 x 5 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 5
+    },
+    {
+      "copy_from": "Container_40ft_01",
+      "new_id": "Container_40ft_01X",
+      "display_name": "Container (Arini)",
+      "weight_kg": 30000.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 125000,
+      "BasePayment": 125000,
+      "_": "30000 kg = B5. Hard-set at 25,000 x 5 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 5
+    },
+    {
+      "copy_from": "CopperRodCoil_2t",
+      "new_id": "CopperRodCoil_2tX",
+      "display_name": "Copper Rod Coil (Arini)",
+      "weight_kg": 2000.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 75000,
+      "BasePayment": 75000,
+      "_": "2000 kg = B3. Hard-set at 25,000 x 3 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 3
+    },
+    {
+      "copy_from": "CornPallet",
+      "new_id": "CornPalletX",
+      "display_name": "Corn Pallet (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 50000,
+      "BasePayment": 50000,
+      "_": "500 kg = B2. Hard-set at 25,000 x 2 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 2
+    },
+    {
+      "copy_from": "GlassBottleBox",
+      "new_id": "GlassBottleBoxX",
+      "display_name": "Glass Bottle Box (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 25000,
+      "BasePayment": 25000,
+      "_": "500 kg = B1. Hard-set at 25,000 x 1 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 1
+    },
+    {
+      "copy_from": "MeatBox",
+      "new_id": "MeatBoxX",
+      "display_name": "Meat Box (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 25000,
+      "BasePayment": 25000,
+      "_": "500 kg = B1. Hard-set at 25,000 x 1 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 1
+    },
+    {
+      "copy_from": "PlasticPipes_6m",
+      "new_id": "PlasticPipes_6mX",
+      "display_name": "Plastic Pipes 6m (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 25000,
+      "BasePayment": 25000,
+      "_": "500 kg = B1. Hard-set at 25,000 x 1 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 1
+    },
+    {
+      "copy_from": "PowerBox",
+      "new_id": "PowerBoxX",
+      "display_name": "Power Box (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 50000,
+      "BasePayment": 50000,
+      "_": "500 kg = B2. Hard-set at 25,000 x 2 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 2
+    },
+    {
+      "copy_from": "SmallBox",
+      "new_id": "SmallBoxX",
+      "display_name": "Small Box (Arini)",
+      "weight_kg": 500.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 25000,
+      "BasePayment": 25000,
+      "_": "500 kg = B1. Hard-set at 25,000 x 1 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 1
+    },
+    {
+      "copy_from": "SunflowerSeed",
+      "new_id": "SunflowerSeedX",
+      "display_name": "Sunflower Seed (Arini)",
+      "weight_kg": 450.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 25000,
+      "BasePayment": 25000,
+      "_": "450 kg = B1. Hard-set at 25,000 x 1 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 1
+    },
+    {
+      "copy_from": "WoodPlank_14ft_5t",
+      "new_id": "WoodPlank_14ft_5tX",
+      "display_name": "Wood Plank (Arini)",
+      "weight_kg": 5000.0,
+      "SpawnProbability": 8,
+      "VolumeSize": 1,
+      "PaymentPer1Km": 0,
+      "PaymentPer1KmMultiplierByMaxWeight": 0,
+      "PaymentSqrtRatio": 0,
+      "MinDeliveryDistance": 0,
+      "MaxDeliveryDistance": 0,
+      "base_payment": 75000,
+      "BasePayment": 75000,
+      "_": "5000 kg = B3. Hard-set at 25,000 x 3 \u2014 flat across the batch, not computed. The vanilla row it copies pays per-km with zero base, which finds no road off Jeju's network and so pays near nothing on the island.",
+      "batch": 3
     }
   ],
   "Galati_Port": {
@@ -267,7 +538,7 @@
       {
         "inputs": {},
         "outputs": {
-          "Container_20ft_01": 2
+          "Container_20ft_01X": 2
         },
         "speed": 1.0,
         "time_seconds": 240.0
@@ -282,10 +553,10 @@
       },
       {
         "inputs": {
-          "Container_20ft_01": 1
+          "Container_20ft_01X": 1
         },
         "outputs": {
-          "BoxPallete_01": 4
+          "BoxPallete_01X": 4
         },
         "speed": 1.0,
         "time_seconds": 150.0
@@ -295,8 +566,8 @@
           "TrashBag": 3
         },
         "outputs": {
-          "PlasticPipes_6m": 2,
-          "Transformer_20MVA": 1
+          "Transformer_20MVA": 1,
+          "PlasticPipes_6mX": 2
         },
         "speed": 1.0,
         "time_seconds": 240.0
@@ -398,8 +669,8 @@
       {
         "inputs": {},
         "outputs": {
-          "SunflowerSeed": 4,
-          "CornPallet": 3
+          "CornPalletX": 3,
+          "SunflowerSeedX": 4
         },
         "speed": 1.0,
         "time_seconds": 120.0
@@ -409,8 +680,8 @@
           "Fuel": 1
         },
         "outputs": {
-          "SunflowerSeed": 6,
-          "CornPallet": 5
+          "CornPalletX": 5,
+          "SunflowerSeedX": 6
         },
         "speed": 5.0,
         "time_seconds": 60.0
@@ -433,7 +704,7 @@
       {
         "inputs": {
           "Fuel": 10,
-          "MeatBox": 1
+          "MeatBoxX": 1
         },
         "outputs": {
           "IronOreX": 6
@@ -460,11 +731,11 @@
     "recipes": [
       {
         "inputs": {
-          "PlasticPipes_6m": 1,
-          "IronOreX": 3
+          "IronOreX": 3,
+          "PlasticPipes_6mX": 1
         },
         "outputs": {
-          "PowerBox": 2
+          "PowerBoxX": 2
         },
         "speed": 1.0,
         "time_seconds": 150
@@ -481,8 +752,8 @@
       },
       {
         "inputs": {
-          "CopperRodCoil_2t": 2,
-          "SteelCoilX": 2
+          "SteelCoilX": 2,
+          "CopperRodCoil_2tX": 2
         },
         "outputs": {
           "Transformer_20MVA": 1
@@ -538,7 +809,7 @@
           "Water": 3
         },
         "outputs": {
-          "GlassBottleBox": 6
+          "GlassBottleBoxX": 6
         },
         "speed": 5.0,
         "time_seconds": 20.0
@@ -551,11 +822,11 @@
     "recipes": [
       {
         "inputs": {
-          "Container_40ft_01": 1
+          "Container_40ft_01X": 1
         },
         "outputs": {
-          "BoxPallete_01": 4,
-          "SmallBox": 6
+          "BoxPallete_01X": 4,
+          "SmallBoxX": 6
         },
         "speed": 1.0,
         "time_seconds": 120.0
@@ -565,7 +836,7 @@
           "SteelCoilX": 2
         },
         "outputs": {
-          "CopperRodCoil_2t": 2
+          "CopperRodCoil_2tX": 2
         },
         "speed": 5.0,
         "time_seconds": 20.0
@@ -591,7 +862,7 @@
           "Water": 8
         },
         "outputs": {
-          "BottlePallete": 4
+          "BottlePalleteX": 4
         },
         "speed": 5.0,
         "time_seconds": 20.0
@@ -617,17 +888,17 @@
           "MoltenPlastic": 3
         },
         "outputs": {
-          "PlasticPipes_6m": 4
+          "PlasticPipes_6mX": 4
         },
         "speed": 1.0,
         "time_seconds": 150.0
       },
       {
         "inputs": {
-          "PlasticPipes_6m": 3
+          "PlasticPipes_6mX": 3
         },
         "outputs": {
-          "BoxPallete_01": 3
+          "BoxPallete_01X": 3
         },
         "speed": 5.0,
         "time_seconds": 20.0
@@ -644,7 +915,7 @@
           "Water": 2
         },
         "outputs": {
-          "CheesePallet": 3
+          "CheesePalletX": 3
         },
         "speed": 1.0,
         "time_seconds": 120
@@ -657,10 +928,10 @@
     "recipes": [
       {
         "inputs": {
-          "CheesePallet": 2
+          "CheesePalletX": 2
         },
         "outputs": {
-          "CheeseBox": 6
+          "CheeseBoxX": 6
         },
         "speed": 2.0,
         "time_seconds": 45.0
@@ -673,12 +944,12 @@
     "recipes": [
       {
         "inputs": {
-          "SunflowerSeed": 2,
-          "CornPallet": 1
+          "CornPalletX": 1,
+          "SunflowerSeedX": 2
         },
         "outputs": {
           "Milk": 4,
-          "MeatBox": 2
+          "MeatBoxX": 2
         },
         "speed": 1.0,
         "time_seconds": 120
@@ -735,8 +1006,8 @@
     "recipes": [
       {
         "outputs": {
-          "Container_40ft_01": 2,
-          "Container_20ft_01": 2
+          "Container_20ft_01X": 2,
+          "Container_40ft_01X": 2
         },
         "speed": 1.0,
         "time_seconds": 150
@@ -744,7 +1015,7 @@
       {
         "inputs": {
           "GiftBox_01": 2,
-          "SmallBox": 4
+          "SmallBoxX": 4
         },
         "speed": 1.0,
         "time_seconds": 120
@@ -755,17 +1026,17 @@
           "Bed_01": 2
         },
         "outputs": {
-          "Container_40ft_01": 1
+          "Container_40ft_01X": 1
         },
         "speed": 1.0,
         "time_seconds": 180.0
       },
       {
         "inputs": {
-          "BoxPallete_01": 4
+          "BoxPallete_01X": 4
         },
         "outputs": {
-          "Container_20ft_01": 1
+          "Container_20ft_01X": 1
         },
         "speed": 1.0,
         "time_seconds": 150.0
@@ -853,7 +1124,7 @@
           "Water": 2
         },
         "outputs": {
-          "GlassBottleBox": 4
+          "GlassBottleBoxX": 4
         },
         "speed": 5.0,
         "time_seconds": 20.0
@@ -887,9 +1158,9 @@
       },
       {
         "inputs": {
-          "MeatBox": 2,
           "Milk": 2,
-          "RicePallet": 1
+          "RicePallet": 1,
+          "MeatBoxX": 2
         },
         "outputs": {
           "GroceryBag": 4
@@ -936,7 +1207,7 @@
           "Log_30ft_30t": 1
         },
         "outputs": {
-          "WoodPlank_14ft_5t": 4
+          "WoodPlank_14ft_5tX": 4
         },
         "speed": 1.0,
         "time_seconds": 300.0
@@ -948,7 +1219,7 @@
           "Fuel": 1
         },
         "outputs": {
-          "WoodPlank_14ft_5t": 4
+          "WoodPlank_14ft_5tX": 4
         },
         "speed": 5.0,
         "time_seconds": 60.0
@@ -959,7 +1230,7 @@
           "Fuel": 1
         },
         "outputs": {
-          "WoodPlank_14ft_5t": 2
+          "WoodPlank_14ft_5tX": 2
         },
         "speed": 5.0,
         "time_seconds": 60.0
@@ -1016,7 +1287,7 @@
           "BreadPallet": 2
         },
         "outputs": {
-          "BreadBox": 6
+          "BreadBoxX": 6
         },
         "speed": 2.0,
         "time_seconds": 60.0
@@ -1054,7 +1325,7 @@
     "recipes": [
       {
         "inputs": {
-          "WoodPlank_14ft_5t": 4
+          "WoodPlank_14ft_5tX": 4
         },
         "outputs": {
           "Sofa_01": 2,
@@ -1071,7 +1342,7 @@
     "recipes": [
       {
         "inputs": {
-          "BoxPallete_01": 3
+          "BoxPallete_01X": 3
         },
         "outputs": {
           "GroceryBag": 9
@@ -1081,10 +1352,10 @@
       },
       {
         "inputs": {
-          "BottlePallete": 2
+          "BottlePalleteX": 2
         },
         "outputs": {
-          "GlassBottleBox": 6
+          "GlassBottleBoxX": 6
         },
         "speed": 2.0,
         "time_seconds": 45.0
@@ -1097,12 +1368,12 @@
     "recipes": [
       {
         "inputs": {
-          "SunflowerSeed": 3,
           "Water": 2,
-          "GlassBottleBox": 2
+          "GlassBottleBoxX": 2,
+          "SunflowerSeedX": 3
         },
         "outputs": {
-          "BottlePallete": 4
+          "BottlePalleteX": 4
         },
         "speed": 1.0,
         "time_seconds": 120
@@ -1112,7 +1383,7 @@
           "SteelCoilXL": 1
         },
         "outputs": {
-          "GlassBottleBox": 6
+          "GlassBottleBoxX": 6
         },
         "speed": 1.0,
         "time_seconds": 200.0
@@ -1145,8 +1416,8 @@
       },
       {
         "inputs": {
-          "BreadBox": 3,
-          "CheeseBox": 3
+          "BreadBoxX": 3,
+          "CheeseBoxX": 3
         },
         "outputs": {
           "GroceryBag": 3
@@ -1179,11 +1450,11 @@
     "recipes": [
       {
         "inputs": {
-          "PowerBox": 4,
-          "CopperRodCoil_2t": 2
+          "CopperRodCoil_2tX": 2,
+          "PowerBoxX": 4
         },
         "outputs": {
-          "SmallBox": 3
+          "SmallBoxX": 3
         },
         "speed": 1.0,
         "time_seconds": 180.0
@@ -1225,9 +1496,9 @@
     "recipes": [
       {
         "inputs": {
-          "MeatBox": 2,
-          "CheeseBox": 2,
-          "BreadBox": 2
+          "BreadBoxX": 2,
+          "CheeseBoxX": 2,
+          "MeatBoxX": 2
         },
         "outputs": {
           "TrashBag": 2
@@ -1248,8 +1519,8 @@
       },
       {
         "inputs": {
-          "CheesePallet": 1,
-          "BreadPallet": 1
+          "BreadPallet": 1,
+          "CheesePalletX": 1
         },
         "outputs": {
           "GroceryBag": 6
