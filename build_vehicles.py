@@ -107,6 +107,65 @@ def apply_modifications(entries, row_to_class, tables) -> bool:
                     a += ["--space-type", m["space_type"]]
                 if not run(*a):
                     ok = False
+            elif t == "crane_winch":
+                a = ["vehicle-crane-winch", "--uasset", str(dst), "--mappings", str(MAPPINGS)]
+                if m.get("name"):  a += ["--name", m["name"]]
+                if m.get("crane"): a += ["--crane", m["crane"]]
+                if not run(*a):
+                    ok = False
+            elif t == "all_wheel_drive":
+                # Present in the CLONE dispatch but not here, so asking for AWD
+                # on an existing vehicle silently hit "unsupported" and the log
+                # line that looked like Crany's AWD was actually Vista GTR's,
+                # a few lines further down.
+                a = ["vehicle-awd", "--uasset", str(dst), "--mappings", str(MAPPINGS)]
+                if m.get("each_set_awd"):       a.append("--each-set-awd")
+                if m.get("enable_center_diff"): a.append("--center-diff")
+                if not run(*a):
+                    ok = False
+            elif t == "constraint":
+                # A hydraulic constraint between two of the vehicle's own
+                # components. Crany's boom is driven kinematically and pulls
+                # nothing; the wreckers that lift are built from these.
+                a = ["vehicle-constraint", "--uasset", str(dst), "--mappings", str(MAPPINGS),
+                     "--component1", m["component1"], "--component2", m["component2"]]
+                if m.get("name"):           a += ["--name", m["name"]]
+                if m.get("angular_speed") is not None:
+                    a += ["--angular-speed", str(m["angular_speed"])]
+                if not run(*a):
+                    ok = False
+            elif t == "interactable":
+                a = ["vehicle-interactable", "--uasset", str(dst), "--mappings", str(MAPPINGS),
+                     "--types", ",".join(m["types"])]
+                if m.get("name"):
+                    a += ["--name", m["name"]]
+                if not run(*a):
+                    ok = False
+            elif t == "part_slots":
+                # Slots are a SET on the row, and a winch is spawned at runtime
+                # from a part fitted to one. Crany declares no slots at all,
+                # which is why its crane's Winch is forever null.
+                for rel in tables:
+                    tbl_src = effective_asset(rel)
+                    if not tbl_src.is_file():
+                        continue
+                    probe = subprocess.run(
+                        [str(INJECTOR), "dump-table", "--uasset", str(tbl_src),
+                         "--mappings", str(MAPPINGS), "--fields", "VehicleClass"],
+                        capture_output=True, text=True)
+                    if f"{row}	" not in probe.stdout:
+                        continue
+                    out = MOD_CONTENT_ROOT / rel
+                    out.parent.mkdir(parents=True, exist_ok=True)
+                    if not out.is_file():
+                        for ext in (".uasset", ".uexp"):
+                            sp = tbl_src.with_suffix(ext)
+                            if sp.exists():
+                                out.with_suffix(ext).write_bytes(sp.read_bytes())
+                    if not run("set-row-slots", "--uasset", str(out), "--mappings", str(MAPPINGS),
+                               "--row", row, "--field", m.get("field", "NotOptionalPartSlots"),
+                               "--add", ",".join(m["add"])):
+                        ok = False
             elif t == "row_field":
                 val = m["value"]
                 row_sets.append(f'{m["field"]}={val}')
@@ -144,6 +203,43 @@ def apply_modifications(entries, row_to_class, tables) -> bool:
     return ok
 
 
+
+# What the LAST run staged, so this run can remove what it no longer builds.
+MANIFEST = MOD_CONTENT_ROOT / ".vehicles_staged.json"
+
+
+def prune_stale(expected: set[str]) -> None:
+    """Delete vehicle assets a previous run staged and this one does not.
+
+    Dropping a `modify` entry stops the build TOUCHING that vehicle -- it does
+    not remove the copy already sitting in the staging tree, which is packed
+    again regardless. Removing the crashing Crany constraint from vehicles.json
+    therefore shipped the crashing Crany anyway, and the build log looked clean
+    because the step simply never ran.
+
+    Reverting a change has to remove its artifact, or "reverted" is a claim
+    about the config rather than about the pak.
+    """
+    try:
+        old = set(json.loads(MANIFEST.read_text(encoding="utf-8")))
+    except Exception:
+        old = set()
+    for rel in sorted(old - expected):
+        d = MOD_CONTENT_ROOT / rel
+        if not d.exists():
+            continue
+        for f in sorted(d.glob("*")):
+            if f.is_file():
+                f.unlink()
+        try:
+            d.rmdir()
+        except OSError:
+            pass
+        print(f"  pruned {rel} — staged by an earlier run, not built by this one")
+    MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    MANIFEST.write_text(json.dumps(sorted(expected), indent=2), encoding="utf-8")
+
+
 def main() -> int:
     # --config so the island's vehicles and the shippable tanker work can live
     # in separate files. They ship as different mods, so keeping them in one
@@ -167,6 +263,19 @@ def main() -> int:
 
     row_to_class = vehicle_class_by_row()
     tables = discover_tables()
+
+    # Everything this run intends to stage. Anything a previous run left behind
+    # and this one does not rebuild gets removed before we start.
+    expected = set()
+    for v in mods:
+        cp = row_to_class.get(v.get("row"))
+        if cp:
+            expected.add(cp[len("/Game/"):].rsplit("/", 1)[0])
+    for v in entries:
+        cp = row_to_class.get(v.get("base"))
+        if cp:
+            expected.add(cp[len("/Game/"):].rsplit("/", 1)[0])
+    prune_stale(expected)
     ok = True
 
     if mods:

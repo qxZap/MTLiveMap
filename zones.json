@@ -101,49 +101,100 @@
     "wrong, because Y never moved.",
     "",
     "Marker-authored zones derive both from the same corners and cannot drift",
-    "like this; it is only hand-edited outline_points that can."
+    "like this; it is only hand-edited outline_points that can.",
+    "",
+    "world is EXPLICIT and overrides what the Border_ markers would derive.",
+    "Markers give the bounding-box centre, which for a sprawling polygon lands",
+    "wherever the box happens to middle -- a quarry, in our case. The volume and",
+    "the map label both hang off this point, so it is set to Arini Alpine Rescue",
+    "(-1206928, -49717, 46440) deliberately.",
+    "",
+    "The outline still comes from the 12 markers. The FILL cannot: the brush is a",
+    "200-unit BOX, so it is always a rectangle however many corners the border",
+    "has. Border and fill agreeing was only ever possible while the zone was a",
+    "rectangle too.",
+    "",
+    "fill_boxes is OFF. Tiling the polygon out of box volumes covered 100% of the",
+    "area on paper and looked wrong in game: unaligned squares with untouched",
+    "gaps between them. The arithmetic was right and the result was worse than the",
+    "single box it replaced, so it is disabled rather than deleted -- the code is",
+    "",
+    "The fill stays a rectangle until the brush is real geometry. That means",
+    "authoring UModel data, which is the honest remaining option and has not been",
+    "attempted.",
+    "",
+    "SOURCE IS GANGJUNG AGAIN, and scale is EXPLICIT. Nobong's brush is a 200-unit",
+    "box, so the fill was always a rectangle however it was sized -- which is the",
+    "complaint. Gangjung's brush is a polygon: its outline spans 636,108 x 391,449",
+    "at brush scale 1000, so its local footprint is 636 x 391. Arini's 12 corners",
+    "span 1,290,000 x 1,480,000, giving scale 2028 x 3781.",
+    "",
+    "The fill will be GANGJUNG-shaped, not Arini-shaped. It will not trace the 12",
+    "borders. But it is a region rather than a rectangle, which is the difference",
+    "worth having until the brush is authored geometry.",
+    "",
+    "BACK TO THE BOX. Gangjung's brush turned out to be a QUADRILATERAL, and its",
+    "geometry is offset from the component origin -- Gangjung's brush sits at",
+    "(-43037, 101047) while its outline centres on (-138888, 235674) -- so the",
+    "fill came out four-sided and off-centre. Worse than a box, not better.",
+    "",
+    "Every shape tried so far is one somebody else authored: Nobong's box,",
+    "eleven tiled boxes, Gangjung's quad. None can match 12 arbitrary corners,",
+    "because the brush is the fill and we do not author brushes yet. That is the",
+    "whole problem and the only real fix.",
+    "",
+    "SOURCE IS GAPA. Zones do not all have the same brush: Nobong's is a box,",
+    "Gangjung's a quadrilateral, and GAPA's is seven-sided -- 5,576 bytes of",
+    "model against Gangjung's 3,616 and the box's 1,636. It is the most complex",
+    "brush in the map and therefore the closest thing to a real region we can",
+    "clone.",
+    "",
+    "It also happens to fit. Gapa's local footprint is 1509.0 x 1713.9, aspect",
+    "0.88; Arini's 12 corners span 1,290,000 x 1,480,000, aspect 0.87. So scale",
+    "855 x 864 -- near-uniform, meaning the shape arrives undistorted rather than",
+    "stretched into something else.",
+    "",
+    "The fill will be Gapa-shaped, not Arini-shaped. Seven sides at the right",
+    "proportions is not twelve, but it is a region instead of a box.",
+    "",
+    "SETTLED: Nobong's box, sized from the markers. The map draws each volume's",
+    "axis-aligned BOUNDING BOX rather than its geometry -- proven by rotating a",
+    "traced ring of boxes, which rendered as twelve huge overlapping squares.",
+    "So a volume can only ever paint an axis-aligned rectangle, and a box IS its",
+    "own bounding box, which is why this is the one shape that has ever looked",
+    "correct. Gapa's seven sides and Gangjung's quad both arrive as their",
+    "bounding boxes too, just wrong ones.",
+    "",
+    "world is the CENTROID of Alpine Rescue, Dish Tower and Dorna Old Market --",
+    "the label and the named volume sit at the middle of that triangle rather",
+    "than at the bounding box's centre, which landed on a quarry.",
+    "",
+    "fill_bands: how many horizontal bands tile the polygon. Per-EDGE boxes are",
+    "not an option however they are turned -- a diagonal edge's bounding box is",
+    "enormous either way, and the map draws bounding boxes. Bands are their own",
+    "bounding boxes, tile without overlapping, and their ends follow the real",
+    "outline, so the silhouette steps along the border."
   ],
   "zones": [
     {
       "name": "Arini",
       "key": "Arini",
-      "world": [
-        -1480810,
-        44869,
-        46440
-      ],
-      "scale": [
-        4808,
-        4808,
-        600
-      ],
-      "outline": [
-        480810,
-        480810
-      ],
       "color": [
         0.15,
         0.65,
         0.85,
         1.0
       ],
-      "outline_points": [
-        [
-          -1961621,
-          -435942
-        ],
-        [
-          -1000000,
-          -435942
-        ],
-        [
-          -1000000,
-          525680
-        ],
-        [
-          -1961621,
-          525680
-        ]
+      "_": "ONE volume. The 12-band fill made 12 nameless towns -- the game lists every MTAreaVolume that holds residents, and the tiles carry no AreaName by design (a label per box would caption the map twelve times). The named volume was scale [1,1,600], a 200x200 box holding nobody, so 'Arini' never appeared at all. A rectangle over the whole island is the standard metric here.",
+      "world": [
+        -1191830,
+        37903,
+        48385
+      ],
+      "scale": [
+        6430.925,
+        7410.0,
+        600
       ]
     }
   ]

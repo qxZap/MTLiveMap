@@ -182,5 +182,60 @@
     "Delivery point classes never hit this because their folder is not named",
     "after the class."
   ],
-  "modify": []
+  "modify": [
+    {
+      "row": "Crany",
+      "_": "Crany's rope has no tension because MTCraneComponent.Winch is null, and it is null because a winch is spawned at runtime from a PART fitted to a SLOT -- not authored as a component. Crany declares no slots at all, so there is nowhere for one to go. Crane0 ONLY: Pulio also carries Utility0 and Utility1, but those are a tow truck's business and would offer Crany equipment it has no arm for.",
+      "modifications": [
+        {
+          "type": "crane_winch",
+          "name": "MTWinch",
+          "crane": "MTCrane_GEN_VARIABLE",
+          "_": "The rope's tension refreshes the moment the controller is picked up and never changes in between -- so tension IS computed, on discrete interaction events, and nothing updates it per-frame. MTCraneComponent.Winch is null, so the crane has nothing to tick. MTWinchComponent is a real class, so this adds one and points the crane at it rather than waiting for a spawn the Blueprint never does."
+        },
+        {
+          "type": "part_slots",
+          "field": "NotOptionalPartSlots",
+          "add": [
+            "EMTVehiclePartSlot::Crane0"
+          ]
+        },
+        {
+          "type": "interactable",
+          "name": "CraneWinchControl",
+          "types": [
+            "Crane0_In",
+            "Crane0_Out"
+          ],
+          "_": "Crany has a crane SEAT and no crane INTERACTION. GolimaRotator, whose crane works, carries CraneInteraction_L and _R as dedicated components; Crany's only interactables are for the driver and passenger seats. EMotorTownInteractableType has Crane0_In (50) and Crane0_Out (51) -- the winch in/out for the crane slot Crany now declares -- and nothing on the vehicle exposed them."
+        },
+        {
+          "type": "all_wheel_drive",
+          "each_set_awd": true,
+          "enable_center_diff": true,
+          "_": "Front and rear each get a differential, with a centre one they both feed -- the shape vanilla AWD vehicles actually use. A crane truck spends its life on soft ground and outriggers."
+        }
+      ]
+    }
+  ],
+  "_crany_finding": [
+    "CRANY CRANE: the constraint approach CRASHES. Do not re-add without a new idea.",
+    "",
+    "Constraint_Boom1 (Boom1 <-> CraneTop, hydraulic, angular) applied cleanly and",
+    "the vehicle drove, but stepping OUT of it crashed with an access violation",
+    "reading 0x10 -- a null dereference as the physics state is released.",
+    "",
+    "Why, most likely: a constraint joins two SIMULATED bodies. Crany's booms are",
+    "driven kinematically by MTCraneComponent every tick and have no authored",
+    "transforms at all, so there is no body for the constraint to hold, and the",
+    "null shows up when something walks the constraint list on exit.",
+    "",
+    "This is the answer to the question the build was designed to ask, and it is a",
+    "no: the two systems do not coexist. Brutus_Wrecker and GolimaRotator have",
+    "constraints and NO MTCraneComponent -- they are alternatives, not layers.",
+    "",
+    "A real fix means replacing MTCraneComponent with a constraint-driven arm, which",
+    "also replaces what CraneSeat currently talks to. That is a vehicle rebuild, not",
+    "a patch."
+  ]
 }

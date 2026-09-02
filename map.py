@@ -100,6 +100,16 @@ CHROMA_MATCHING = ["SM_Env_Unreal_Water", "M_Water", "MI_Water",
                              # is always drawn with a water material, so this
                              # keeps matching when the mesh name does not.
 HIDE_MATCHING = ["SM_SkySphere"]
+# Editor MARKERS, hidden for the shot and restored afterwards: a cone marking a
+# zone corner is a survey stake, not scenery, and Border_* never ships at all.
+#
+# These match on PREFIX, against the actor's label and object name ONLY -- not
+# substring, and not against material names. HIDE_MATCHING is substring-and-
+# materials because a water plane has to be caught however it is built, and
+# that same looseness is wrong here: "Work_" as a substring is one unlucky
+# material name away from hiding the sea, and a hidden sea is a grey frame
+# instead of a magenta one.
+HIDE_PREFIXES = ["BusStop_", "Home_", "Work_", "Border_", "Spawn_"]
                              # The sky dome, and NOT the water. Hiding the sea
                              # works -- 36% of the frame came back as clean
                              # background -- but it throws away the one thing
@@ -293,8 +303,8 @@ def export_map_png(out_dir, size=SIZE, only_z_above=ONLY_Z_ABOVE):
     # should not change where the camera points or how wide it looks, only what
     # is drawn. Framing off a different actor set is what caused an earlier
     # black image.
-    hidden, census = [], []
-    if HIDE_MATCHING:
+    hidden, census, marked = [], [], []
+    if HIDE_MATCHING or HIDE_PREFIXES:
         for a in actors:
             names = []
             for get in (a.get_actor_label, a.get_name):
@@ -314,7 +324,13 @@ def export_map_png(out_dir, size=SIZE, only_z_above=ONLY_Z_ABOVE):
                         names.append(m.get_name())
             except Exception:
                 pass
-            if any(m.lower() in n.lower() for n in names for m in HIDE_MATCHING):
+            # Markers first, on the actor's own names only. Anything caught
+            # here is ours and can never be the sea.
+            own = [x for x in names[:2]]
+            if any(x.startswith(pfx) for x in own for pfx in HIDE_PREFIXES):
+                hidden.append(a)
+                marked.append(own[0] if own else "?")
+            elif any(m.lower() in n.lower() for n in names for m in HIDE_MATCHING):
                 if CHROMA_RGB and any(m.lower() in n.lower()
                                       for n in names for m in CHROMA_MATCHING):
                     unreal.log_warning(
@@ -330,7 +346,12 @@ def export_map_png(out_dir, size=SIZE, only_z_above=ONLY_Z_ABOVE):
                 census.append((4.0 * e.x * e.y / 1e10, _names_of(a)))
             except Exception:
                 pass
-        unreal.log(f"[map] hiding {len(hidden)} actor(s) matching {HIDE_MATCHING}")
+        unreal.log(f"[map] hiding {len(hidden)} actor(s): "
+                   f"{len(marked)} marker(s) + {len(hidden) - len(marked)} matched "
+                   f"{HIDE_MATCHING}")
+        if marked:
+            unreal.log(f"[map] markers hidden: {', '.join(sorted(marked)[:12])}"
+                       + (" ..." if len(marked) > 12 else ""))
         if not hidden:
             unreal.log_warning(
                 "[map] HIDE_MATCHING matched NOTHING. The sea will be rendered, "
