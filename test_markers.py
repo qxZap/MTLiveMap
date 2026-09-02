@@ -29,7 +29,11 @@ assert R(p("Border_01")) is None
 # --- ordinary meshes are left alone ---------------------------------------
 assert R(p("SM_SM_Concrete_Base_XXL1")) is None
 assert R(p("BusStopSign")) is None          # the prefix needs its underscore
-assert R(p("Home_")) is None                # nothing left to name it
+# A bare Home_/Work_ is valid: the label is only read for stops and zones.
+assert R(p("Home_")) == ("home", "Home", None)
+assert R(p("Work_")) == ("work", "Work", None)
+# but a bus stop still needs a name, since it displays one
+assert R(p("BusStop_")) is None
 
 assert L(p("BusStop_Old_Harbour")) == "Old Harbour"
 assert L(p("Home_Fisher_Row")) is None

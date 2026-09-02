@@ -228,9 +228,21 @@ def export_static_meshes_to_shards(out_dir):
                 rotation = transform.rotation.rotator()
                 scale = transform.scale3d
 
+                # The OUTLINER label, not the mesh. A marker's name is its
+                # meaning -- BusStop_Old_Harbour makes a station called Old
+                # Harbour -- and renaming an actor is one click, where naming
+                # the MESH means duplicating an asset per stop. import_meshes
+                # reads this first and falls back to the asset name, so both
+                # conventions keep working.
+                try:
+                    label = actor.get_actor_label()
+                except Exception:
+                    label = ""
+
                 writer.write({
                     "asset_path": static_mesh.get_path_name(),
                     "asset_key": static_mesh.get_name(),
+                    "actor_label": label,
                     "X": location.x,
                     "Y": location.y,
                     "Z": location.z,

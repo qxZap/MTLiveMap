@@ -1,88 +1,16 @@
 {
   "_README": [
-    "Bus stops along the first bridge, in WORLD coordinates.",
+    "Bus stops by explicit world coordinates. EMPTY on purpose.",
     "",
-    "Taken straight from the placed SM_SM_Concrete_Base_XXL1 bridge tiles in",
-    "the mesh shard, which is already post-offset -- so these need no further",
-    "transform and carry world_coords.",
+    "The five bridge stops and the Gangjung control that used to live here were",
+    "scaffolding from before BusStop_* meshes worked. Stops are placed in the",
+    "editor now: name a mesh BusStop_Old_Harbour and it becomes a station where",
+    "it stands, which is both fewer coordinates to keep in sync and the only way",
+    "the name and the position can never disagree.",
     "",
-    "Do NOT run OFFSET_* over them. Only OFFSET_Z separates a tile's editor Z",
-    "(815) from its world Z (-21365); X and Y come through unchanged. Adding",
-    "OFFSET_X/Y as well moved the stops off the bridge entirely, and skipping",
-    "OFFSET_Z put them 222 m up. The tiles themselves are the ground truth.",
-    "",
-    "Z is tile Z + 20, so the stop sits on the deck rather than in it.",
-    "",
-    "AdditionalDestinations, together with its siblings. One direction only --",
-    "vanilla actors come through the build as byte-copied RawExports, so they",
-    "cannot be made to point back.",
-    "",
-    "One stop is a CONTROL placed inside a vanilla zone -- see its _why.",
-    "",
-    "Placement goes through the 'BusStop' entry in bp_registry, on the same",
-    "clone path as the parking spaces and delivery points.",
-    "",
-    "link_terminal is DISABLED. With it set, the game crashed with an access",
-    "violation the moment a resident boarded a bus -- reading a null at +0x2d8,",
-    "in the destination logic. AdditionalDestinations is part of that logic and",
-    "no vanilla stop uses it the way we did: one stop, one entry, on a warehouse",
-    "(Ae-WolWarehouse). Five stops all pointing at a terminal in another zone was",
-    "always the unvalidated experiment here.",
-    "",
-    "Re-enable by naming a terminal, but only once passengers are known to work",
-    "without it."
+    "Entries here still work if a stop ever needs placing without an editor pass."
   ],
   "bp_path": "/Game/Objects/Mission/Bus/BusStop_01",
-  "stops": [
-    {
-      "name": "Arini Bridge Stop 1",
-      "world": [
-        -608412,
-        45916,
-        -21345
-      ]
-    },
-    {
-      "name": "Arini Bridge Stop 2",
-      "world": [
-        -564218,
-        62001,
-        -21345
-      ]
-    },
-    {
-      "name": "Arini Bridge Stop 3",
-      "world": [
-        -514486,
-        80852,
-        -21345
-      ]
-    },
-    {
-      "name": "Arini Bridge Stop 4",
-      "world": [
-        -465214,
-        98786,
-        -21345
-      ]
-    },
-    {
-      "name": "Arini Bridge Stop 5",
-      "world": [
-        -411083,
-        118488,
-        -21345
-      ]
-    },
-    {
-      "name": "Zone Test Gangjung",
-      "world": [
-        -56888,
-        149094,
-        -20860
-      ],
-      "_why": "Deliberately inside the Gangjung MTAreaVolume, 40 m from its terminal. The five bridge stops sit in no zone at all and hold 0 passengers forever; this one is the control. If it fills and they stay empty, passengers come from zone residents and the island needs its own MTAreaVolume, not a fix to the stops."
-    }
-  ],
+  "stops": [],
   "link_terminal": ""
 }

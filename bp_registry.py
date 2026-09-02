@@ -58,7 +58,9 @@ REGISTRY: dict[str, dict] = {
         "bp_class":         "MTAreaVolume",
         "source_umap":      JEJU_MAIN,
         "source_actor":     "MTAreaVolume_UAID_2CF05D790A1C2C0902_1632830822",
-        # Nobong Landfill, NOT a zone -- picked because its brush is a
+        # Gangjung's volume. Its brush is a POLYGON, not a box -- which is why a
+        # zone cloned from it can never be square, and square is the problem.
+        # Nobong Landfill was used for a while precisely BECAUSE its brush is a
         "preload_bp":       None,
         "inject_into_main": True,
     },

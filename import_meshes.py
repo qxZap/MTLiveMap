@@ -52,7 +52,7 @@ MARKER_PREFIXES = {
     "Zone_":    "zone",
 }
 # Roles whose mesh is a marker only and must not reach the world.
-MARKER_ONLY_ROLES = {"zone"}
+MARKER_ONLY_ROLES = {"zone", "busstop"}
 
 # A FOLDER can name the zone instead, which keeps one zone's pieces together
 # in the content browser rather than spread through a flat list:
@@ -77,14 +77,28 @@ def zone_folder(asset_path: str) -> str | None:
     return None
 
 
-def marker_role(asset_path: str):
+def marker_role(asset_path: str, actor_label: str = ""):
     """(role, label, order) for a marker mesh, or None if it is ordinary.
 
     Takes a full asset path ("/Game/.../BusStop_Old_Harbour.BusStop_Old_
     Harbour") because that is what the shard entries carry -- the object name
     is the part after the last DOT, not the last slash.
+
+    The OUTLINER LABEL wins when it names a role. Naming the mesh means
+    duplicating an asset per stop; renaming the actor is one click, and 25
+    buses dropped in as plain SM_Veh_Bus_01 named nothing at all because the
+    asset path never sees an outliner rename. Falls back to the asset name so
+    meshes that ARE named BusStop_* keep working.
     """
-    obj = asset_path.rsplit("/", 1)[-1].rsplit(".", 1)[-1]
+    if actor_label:
+        hit = _role_from_name(actor_label, asset_path)
+        if hit:
+            return hit
+    return _role_from_name(asset_path.rsplit("/", 1)[-1].rsplit(".", 1)[-1],
+                           asset_path)
+
+
+def _role_from_name(obj: str, asset_path: str):
 
     def _order_of(rest: str):
         # Trailing _<digits> is winding order, not part of the name.
@@ -108,11 +122,71 @@ def marker_role(asset_path: str):
         order = None
         if role == "zone":
             rest, order = _order_of(rest)
-        label = rest.replace("_", " ").strip()
+        # Underscores AND camelCase both become spaces, so EarlyBridge reads
+        # "Early Bridge" without having to be typed Early_Bridge. Runs of
+        # capitals are left alone -- "BPStation" is not "B P Station".
+        label = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", rest.replace("_", " ")).strip()
+        label = re.sub(r"\s+", " ", label)
         if not label:
+            # A bare "Home_" is fine. The label is only READ for a bus stop,
+            # where it becomes the station name, and for a zone, where it is
+            # the key -- a home or a workplace never displays it, so demanding
+            # one turned "the name does not matter" into a silent no-op that
+            # dropped 149 houses on the floor.
+            if role in ("home", "work"):
+                return role, role.capitalize(), order
             return None
         return role, label, order
     return None
+
+
+
+
+def zone_fill_boxes(pts, bands: int = 12):
+    """Cover a polygon with axis-aligned boxes that tile without overlapping.
+
+    THE CONSTRAINT: the map draws a volume's axis-aligned BOUNDING BOX, not its
+    geometry. Proven by tracing the border with rotated boxes -- a turned strip's
+    AABB is nearly as wide as it is long, and twelve of them rendered as twelve
+    huge overlapping squares across half the map.
+
+    That rules out anything per-EDGE. A box covering a diagonal edge has the
+    same enormous bounding box whether or not it is rotated, so "a square on
+    each border segment" and "a rotated strip on each border segment" are the
+    same picture.
+
+    What is left is horizontal bands. Each is already axis-aligned, so it draws
+    as itself; they meet edge to edge without overlapping, so there are no
+    doubled translucencies and no gaps; and their left and right ends follow the
+    real outline, so the silhouette steps along the border instead of squaring
+    it off. Bands are UNIFORM in height rather than cut at each corner's Y --
+    corner-cut bands produced slivers a few metres tall next to bands a
+    kilometre tall, which is what made the first attempt look like debris.
+
+    Returns (cx, cy, width, height) per box.
+    """
+    ys = [q[1] for q in pts]
+    y0, y1 = min(ys), max(ys)
+    if y1 <= y0 or bands < 1:
+        return []
+    step = (y1 - y0) / bands
+    n = len(pts)
+    out = []
+    for b in range(bands):
+        by0, by1 = y0 + b * step, y0 + (b + 1) * step
+        mid = (by0 + by1) / 2.0
+        xs = []
+        for i in range(n):
+            ax, ay = pts[i]
+            bx, cy_ = pts[(i + 1) % n]
+            if (ay > mid) == (cy_ > mid):
+                continue
+            xs.append(ax + (mid - ay) * (bx - ax) / (cy_ - ay))
+        xs.sort()
+        for xa, xb in zip(xs[0::2], xs[1::2]):
+            if xb > xa:
+                out.append(((xa + xb) / 2.0, mid, xb - xa, by1 - by0))
+    return out
 
 
 def bus_stop_label(asset_path: str) -> str | None:
@@ -121,7 +195,8 @@ def bus_stop_label(asset_path: str) -> str | None:
     return r[1] if r and r[0] == "busstop" else None
 
 from mt_paths import (GAME_CONTENT as _GAME_CONTENT, COOKED_CONTENT as _COOKED,
-                      MOD_CONTENT_ROOT as _MOD_CONTENT_ROOT)
+                      MOD_CONTENT_ROOT as _MOD_CONTENT_ROOT,
+                      remap_asset_path as _remap_asset_path)
 GAME_CONTENT = str(_GAME_CONTENT)
 # COOKED_CONTENT is the UE editor's cooked output for THIS mod's Unreal
 # project (where editor-cooked .uasset/.ubulk files land before they're
@@ -229,7 +304,16 @@ from bp_registry import REGISTRY as _BP_REGISTRY, asset_keys as _bp_asset_keys
 # Excluded here rather than fixed in the editor on purpose. The mesh is
 # legitimately part of the scene and should stay in it; what is wrong is
 # exporting it, so the build is where it gets dropped.
-SKIP_KEYS = {"SM_SkySphere", "SM_Env_Unreal_Water_DC"}
+SKIP_KEYS = {
+    "SM_SkySphere", "SM_Env_Unreal_Water_DC",
+    # The harbour's vessels. They are scenery-shaped but vehicle-sized, and
+    # sitting in open water 1.66 km off the coast they read as props you ought
+    # to be able to board. Dropped at the build rather than deleted from the
+    # scene, so the harbour keeps its layout and they come back by removing a
+    # line here.
+    "SM_Veh_ContainerShip_01", "SM_Veh_ContainerShip_Containers_01",
+    "SM_Veh_Tugboat_01_Preset", "SM_Veh_Boat_01_Preset",
+}
 
 # Placeholder asset_keys (from bp_registry) become blueprint_actors entries
 # instead of static meshes. Registry keys are the single source of truth.
@@ -753,17 +837,30 @@ def main():
                 base_entry["asset_key"] = key
                 parking.append(base_entry)
             else:
-                base_entry["asset_path"] = raw_path
+                # MTMI_MESH_REMAP ("from=to,from=to") rewrites the mesh a
+                # placement points at, without repainting the level. Was wired
+                # only into foliage; static meshes need it too -- swapping the
+                # number signs onto the game's own copies is a one-line env
+                # change rather than 31 edits in the editor. The object NAME is
+                # unchanged by a folder-to-folder rule, so asset_key stays
+                # correct; remap_asset_path falls back to the original whenever
+                # the target does not exist, so a partially populated folder is
+                # safe.
+                base_entry["asset_path"] = _remap_asset_path(raw_path)
                 base_entry["asset_key"] = entry.get("asset_key", "")
                 base_entry["ScaleX"] = float(entry.get("ScaleX", 1.0))
                 base_entry["ScaleY"] = float(entry.get("ScaleY", 1.0))
                 base_entry["ScaleZ"] = float(entry.get("ScaleZ", 1.0))
-                # A mesh named BusStop_<Something> is a station: it keeps its
-                # place as scenery AND gets a working stop actor dropped on it,
-                # named after the suffix. Collected here rather than by
-                # re-reading the shard, so the coordinates are the same ones
-                # the mesh itself was written with.
-                _mk = marker_role(base_entry["asset_path"])
+                # A mesh named BusStop_<Something> is a station: the stop actor
+                # takes its place, named after the suffix, and the marker mesh
+                # itself is dropped -- whatever you point at is a stand-in for
+                # aiming, not scenery to keep next to the real shelter.
+                # Collected here rather than by re-reading the shard, so the
+                # coordinates are the same ones the mesh itself was written
+                # with. Home_/Work_ markers DO stay: those are houses and
+                # offices you placed to be looked at.
+                _mk = marker_role(base_entry["asset_path"],
+                                  str(entry.get("actor_label") or ""))
                 if _mk:
                     _role, _label, _order = _mk
                     _x, _y, _z = base_entry["X"], base_entry["Y"], base_entry["Z"]
@@ -940,7 +1037,7 @@ def main():
         print(f"  busstop: '{label}' from mesh at world ({bx:,.0f}, {by:,.0f}, {bz:,.0f})")
     if bus_stop_meshes:
         print(f"  busstop: {len(bus_stop_meshes)} station(s) placed from "
-              f"{BUS_STOP_MESH_PREFIX}* mesh names")
+              f"BusStop_* mesh names")
 
     # Zones, from zones.json. World coordinates; size comes from the brush
     # scale rather than from geometry, because the volume is a unit box.
@@ -970,18 +1067,68 @@ def main():
         _zones.append({
             "name": (_prev or {}).get("name", _zkey),
             "key": _zkey,
-            "world": [_cx, _cy, _cz],
+            # Centre. Markers give the bounding-box centre by default, but an
+            # explicit `world` in zones.json WINS -- the volume and the map
+            # label both hang off this point, and the box centre of a sprawling
+            # polygon can easily land on some quarry nobody would name the zone
+            # after.
+            "world": (_prev or {}).get("world") or [_cx, _cy, _cz],
             # 200 uu unit box, matching how the vanilla volumes are scaled.
-            "scale": [max(1.0, (max(_xs) - min(_xs)) / 200),
-                      max(1.0, (max(_ys) - min(_ys)) / 200),
-                      (_prev or {}).get("scale", [0, 0, 600])[2]],
+            # The bounding-box scale assumes a 200-unit BOX brush. A polygon
+            # brush has its own footprint, so an explicit scale in zones.json
+            # wins unless scale_from_markers is on.
+            "scale": ((_prev or {}).get("scale")
+                      if (_prev or {}).get("scale") and not (_prev or {}).get("scale_from_markers")
+                      else [max(1.0, (max(_xs) - min(_xs)) / 200),
+                            max(1.0, (max(_ys) - min(_ys)) / 200),
+                            (_prev or {}).get("scale", [0, 0, 600])[2]]),
             "outline_points": _pts,
             "color": (_prev or {}).get("color"),
+            # Carry the rest of the zones.json entry through. Rebuilding the
+            # dict from scratch silently dropped fill_boxes, so turning it off
+            # in the config changed nothing and the build kept shipping 12
+            # volumes -- a revert that reverted only the file.
+            **{k: v for k, v in (_prev or {}).items()
+               if k not in ("name", "key", "world", "scale", "outline_points", "color")},
         })
         print(f"  zone: '{_zkey}' from {len(_pts)} marker(s), "
               f"centre ({_cx:,.0f}, {_cy:,.0f}), "
               f"{(max(_xs)-min(_xs))/100000:.1f} x {(max(_ys)-min(_ys))/100000:.1f} km")
+    # MTMI_ZONE_FILL (default on): tile the zone's polygon with rotated boxes.
+    #
+    # A zone's fill is its brush and the brush is a BOX, so one volume can only
+    # ever draw a rectangle -- which against a diagonal coastline reads as a
+    # rectangle dropped on the map. Tiling gives the shape back: a turned box
+    # per edge traces the outline exactly, and inset bands fill behind it.
+    #
+    # Set MTMI_ZONE_FILL=0 for a single volume instead. Do that if a real brush
+    # is ever authored for the zone -- one volume with proper geometry beats any
+    # number of boxes, and this exists only because we cannot author one.
+    _zone_fill = os.environ.get("MTMI_ZONE_FILL", "1").strip().lower() not in ("0", "false", "no")
+    _zones_out = []
     for z in _zones:
+        _pp = z.get("outline_points")
+        if not (_zone_fill and _pp and len(_pp) >= 3):
+            _zones_out.append(z)
+            continue
+        _boxes = zone_fill_boxes([(float(a), float(b)) for a, b in _pp],
+                                 bands=int(z.get("fill_bands") or 12))
+        _zh = (z.get("scale") or [0, 0, 600])[2]
+        _zz = (z.get("world") or [0, 0, 0])[2]
+        for _cx, _cy, _w, _h in _boxes:
+            _zones_out.append({
+                "name": z.get("name"), "key": z.get("key"),
+                "world": [_cx, _cy, _zz],
+                "scale": [max(1.0, _w / 200.0), max(1.0, _h / 200.0), _zh],
+                "color": z.get("color"),
+                "_fill_only": True,
+            })
+        # One named volume carries the outline and the label; the tiles are
+        # anonymous, or the map would show a caption per box.
+        _zones_out.append({**z, "scale": [1.0, 1.0, _zh]})
+        print(f"  zone: '{z.get('key')}' tiled with {len(_boxes)} band(s) "
+              f"stepping along the border")
+    for z in _zones_out:
         w = z.get("world")
         if not (isinstance(w, (list, tuple)) and len(w) >= 3):
             print(f"  zone: '{z.get('name')}' world must be [X, Y, Z] — skipped")
@@ -989,13 +1136,13 @@ def main():
         sc = z.get("scale") or [1000, 1000, 500]
         parking.append({
             "X": float(w[0]), "Y": float(w[1]), "Z": float(w[2]),
-            "Pitch": 0.0, "Roll": 0.0, "Yaw": 0.0,
+            "Pitch": 0.0, "Roll": 0.0, "Yaw": float(z.get("yaw") or 0.0),
             "world_coords": True,
             "ScaleX": float(sc[0]), "ScaleY": float(sc[1]), "ScaleZ": float(sc[2]),
             "blueprint_path": "/Script/MotorTown",
             "blueprint_class": "MTAreaVolume",
             "asset_key": "AreaVolume",
-            "actor_label": z.get("name") or z.get("key") or "Zone",
+            "actor_label": "" if z.get("_fill_only") else (z.get("name") or z.get("key") or "Zone"),
             "zone_key": z.get("key") or z.get("name"),
             "outline": z.get("outline"),
             "outline_points": z.get("outline_points"),
