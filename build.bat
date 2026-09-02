@@ -467,6 +467,14 @@ if not "%MTMI_SKIP_VEHICLES%"=="1" (
     if errorlevel 1 exit /b 1
 ) else ( echo [%TIME%] [5b2] skipped ^(MTMI_SKIP_VEHICLES=1^) )
 
+rem Physical materials from materials.json. Same shape as vehicles: copy the
+rem asset the GAME loads, patch it, ship our copy over the top.
+if not "%MTMI_SKIP_MATERIALS%"=="1" (
+    echo [%TIME%] [5b3] Patching physical materials from materials.json...
+    python build_materials.py
+    if errorlevel 1 exit /b 1
+) else ( echo [%TIME%] [5b3] skipped ^(MTMI_SKIP_MATERIALS=1^) )
+
 if not "%MTMI_SKIP_CONFIG%"=="1" (
     echo [%TIME%] [5c] Merging console variables ^(mod-aware^)...
     python merge_config.py

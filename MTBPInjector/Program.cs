@@ -60,10 +60,15 @@ internal static class Program
                 "clone-vehicle-row" => CloneVehicleRow(args.Skip(1).ToArray()),
                 "vehicle-awd" => VehicleAllWheelDrive(args.Skip(1).ToArray()),
                 "vehicle-fuel-pump" => VehicleFuelPump(args.Skip(1).ToArray()),
+                "vehicle-constraint" => VehicleConstraint(args.Skip(1).ToArray()),
                 "vehicle-cargo-fuels" => VehicleCargoFuels(args.Skip(1).ToArray()),
                 "unlock-vehicles" => UnlockVehicles(args.Skip(1).ToArray()),
                 "dump-schema" => DumpSchema(args.Skip(1).ToArray()),
                 "dump-enum" => DumpEnum(args.Skip(1).ToArray()),
+                "set-props" => SetProps(args.Skip(1).ToArray()),
+                "set-row-slots" => SetRowSlots(args.Skip(1).ToArray()),
+                "vehicle-interactable" => VehicleInteractable(args.Skip(1).ToArray()),
+                "vehicle-crane-winch" => VehicleCraneWinch(args.Skip(1).ToArray()),
                 "dump-names" => DumpNames(args.Skip(1).ToArray()),
                 "dump-mesh-bounds" => DumpMeshBounds(args.Skip(1).ToArray()),
                 "set-export-prop" => SetExportProp(args.Skip(1).ToArray()),
@@ -341,6 +346,13 @@ internal static class Program
                 break;
             case UAssetAPI.PropertyTypes.Objects.StrPropertyData sp:
                 Console.WriteLine($"{indent}{field.Name}: \"{sp.Value}\""); break;
+            // Vector2D printed as its own type name and nothing else, which is
+            // how a physical material's DiggingDepth -- the range a wheel sinks
+            // into it -- stayed unreadable.
+            case UAssetAPI.PropertyTypes.Structs.Vector2DPropertyData v2:
+                Console.WriteLine($"{indent}{field.Name}: ({v2.Value.X}, {v2.Value.Y})"); break;
+            case UAssetAPI.PropertyTypes.Structs.LinearColorPropertyData lcp:
+                Console.WriteLine($"{indent}{field.Name}: rgba({lcp.Value.R}, {lcp.Value.G}, {lcp.Value.B}, {lcp.Value.A})"); break;
             case UAssetAPI.PropertyTypes.Objects.MapPropertyData mp:
                 Console.WriteLine($"{indent}{field.Name}: Map key={mp.KeyType} value={mp.ValueType} entries={mp.Value?.Count ?? 0}");
                 if (mp.Value != null)
@@ -841,6 +853,43 @@ internal static class Program
     // and says "no schema matching" for an enum, which reads like the enum
     // does not exist rather than like the wrong tool was used.
 
+
+    private static string Brief(PropertyData p) => p switch
+    {
+        UAssetAPI.PropertyTypes.Objects.EnumPropertyData e => e.Value.ToString(),
+        UAssetAPI.PropertyTypes.Objects.NamePropertyData n => n.Value.ToString(),
+        UAssetAPI.PropertyTypes.Objects.StrPropertyData st => st.Value?.ToString() ?? "",
+        UAssetAPI.PropertyTypes.Objects.BoolPropertyData b => b.Value ? "true" : "false",
+        UAssetAPI.PropertyTypes.Objects.SoftObjectPropertyData so => so.Value.AssetPath.PackageName.ToString(),
+        UAssetAPI.PropertyTypes.Structs.StructPropertyData sd =>
+            "{" + string.Join(",", (sd.Value ?? new System.Collections.Generic.List<PropertyData>()).Select(Brief)) + "}",
+        UAssetAPI.PropertyTypes.Objects.ArrayPropertyData a =>
+            "[" + string.Join(",", (a.Value ?? Array.Empty<PropertyData>()).Take(6).Select(Brief)) + "]",
+        _ => p.RawValue?.ToString() ?? "",
+    };
+
+    private static string DescribeSet(UAssetAPI.PropertyTypes.Objects.SetPropertyData sp)
+    {
+        var items = sp.Value ?? Array.Empty<PropertyData>();
+        if (items.Length == 0) return "{}";
+        return "{" + string.Join(", ", items.Take(12).Select(Brief))
+             + (items.Length > 12 ? $", +{items.Length - 12}" : "") + "}";
+    }
+
+    private static string DescribeMap(UAssetAPI.PropertyTypes.Objects.MapPropertyData mp)
+    {
+        if (mp.Value == null || mp.Value.Count == 0) return "{}";
+        var parts = new System.Collections.Generic.List<string>();
+        int n = 0;
+        foreach (var kv in mp.Value)
+        {
+            if (n++ >= 12) { parts.Add($"+{mp.Value.Count - 12}"); break; }
+            parts.Add($"{Brief(kv.Key)} -> {Brief(kv.Value)}");
+        }
+        return "{" + string.Join(", ", parts) + "}";
+    }
+
+
     // What an array actually CONTAINS, not just how many. "count=1" is the
     // answer to a question nobody asked -- reading an asset, the thing you
     // need is which enum members are in the set, or which actor the
@@ -886,6 +935,387 @@ internal static class Program
         Console.WriteLine($"# {map.Count} names");
         for (int i = 0; i < map.Count; i++)
             Console.WriteLine($"{i}	{map[i]}");
+        return 0;
+    }
+
+
+    // Set scalar properties on an asset's exports, creating them when absent.
+    //
+    //     set-props --uasset PM_Snow.uasset --set "DiggingSpeed=0.85"
+    //
+    // Unversioned serialization omits any property sitting at its default, so
+    // "absent" and "zero" look identical in a dump and the missing one is
+    // usually the interesting case. PM_Snow allows digging and declares a
+    // depth range, and simply has no DiggingSpeed -- which is why snow never
+    // gives under a wheel however hard it is driven.
+    // "(1,5)" -> FVector2D. Anything else -> null, so plain numbers still take
+    // the float path.
+    private static FVector2D? ParseVec2(string val, System.Globalization.CultureInfo ic)
+    {
+        val = val.Trim();
+        if (!val.StartsWith("(") || !val.EndsWith(")")) return null;
+        var parts = val[1..^1].Split(';', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2) return null;
+        if (!float.TryParse(parts[0].Trim(), System.Globalization.NumberStyles.Float, ic, out float x)) return null;
+        if (!float.TryParse(parts[1].Trim(), System.Globalization.NumberStyles.Float, ic, out float y)) return null;
+        return new FVector2D(x, y);
+    }
+
+    private static int SetProps(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
+        string? only = f.GetValueOrDefault("export", null);
+
+        var sets = new List<(string name, string val)>();
+        foreach (var pair in (f.GetValueOrDefault("set", "") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            int eq = pair.IndexOf('=');
+            if (eq <= 0) { Console.Error.WriteLine($"  bad --set '{pair}', want Name=Value"); return 1; }
+            sets.Add((pair[..eq].Trim(), pair[(eq + 1)..].Trim()));
+        }
+        if (sets.Count == 0) { Console.Error.WriteLine("  nothing to set"); return 1; }
+
+        int touched = 0;
+        foreach (var e in asset.Exports)
+        {
+            if (e is not NormalExport ne) continue;
+            if (only != null && ne.ObjectName.ToString() != only) continue;
+            foreach (var (name, val) in sets)
+            {
+                EnsureName(asset, name);
+                var cur = ne.Data.FirstOrDefault(p => p.Name.ToString() == name);
+                bool isBool = val.Equals("true", StringComparison.OrdinalIgnoreCase)
+                           || val.Equals("false", StringComparison.OrdinalIgnoreCase);
+                // "(X,Y)" writes a Vector2D struct. DiggingDepth is one, and a
+                // digging material without it sinks to a depth of zero -- which
+                // is why the float/bool gates alone changed nothing.
+                var vec = ParseVec2(val, ic);
+                if (vec != null)
+                {
+                    EnsureName(asset, "Vector2D");
+                    if (cur != null) ne.Data.Remove(cur);
+                    ne.Data.Add(new StructPropertyData(FName.FromString(asset, name),
+                                                       FName.FromString(asset, "Vector2D"))
+                    {
+                        Value = new List<PropertyData> {
+                            new Vector2DPropertyData(FName.FromString(asset, name)) { Value = (FVector2D)vec }
+                        }
+                    });
+                    Console.WriteLine($"  {ne.ObjectName}.{name}: {(cur == null ? "(absent)" : "struct")} -> {val}");
+                    touched++;
+                }
+                else if (cur is FloatPropertyData fp && !isBool)
+                {
+                    Console.WriteLine($"  {ne.ObjectName}.{name}: {fp.Value} -> {val}");
+                    fp.Value = float.Parse(val, ic); touched++;
+                }
+                else if (cur is BoolPropertyData bp && isBool)
+                {
+                    bool b = val.Equals("true", StringComparison.OrdinalIgnoreCase);
+                    Console.WriteLine($"  {ne.ObjectName}.{name}: {bp.Value} -> {b}");
+                    bp.Value = b; touched++;
+                }
+                else if (cur == null)
+                {
+                    // Created, not skipped. A property at its default is not
+                    // serialized, so the ones worth setting are usually the
+                    // ones that are not there.
+                    if (isBool)
+                        ne.Data.Add(new BoolPropertyData(FName.FromString(asset, name))
+                        { Value = val.Equals("true", StringComparison.OrdinalIgnoreCase) });
+                    else
+                        ne.Data.Add(new FloatPropertyData(FName.FromString(asset, name))
+                        { Value = float.Parse(val, ic) });
+                    Console.WriteLine($"  {ne.ObjectName}.{name}: (absent) -> {val}");
+                    touched++;
+                }
+                else
+                {
+                    Console.Error.WriteLine($"  {ne.ObjectName}.{name} is {cur.GetType().Name}, "
+                                          + $"which this verb does not write");
+                }
+            }
+        }
+        if (touched == 0) { Console.Error.WriteLine("  nothing matched"); return 1; }
+        asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        return 0;
+    }
+
+
+    // Add enum members to a Set field on a DataTable row.
+    //
+    //     set-row-slots --uasset Vehicles_Test.uasset --row Crany
+    //                   --field NotOptionalPartSlots
+    //                   --add "EMTVehiclePartSlot::Utility0,EMTVehiclePartSlot::Crane0"
+    //
+    // Crany's crane never pulls because MTCraneComponent.Winch is never set,
+    // and it is never set because a winch is not a component you author -- it
+    // is spawned at runtime from a PART fitted to a SLOT. Pulio, which winches
+    // cars for a living, declares:
+    //
+    //     NotOptionalPartSlots = {Utility0, Utility1, Crane0}
+    //
+    // Crany declares none, so there is nowhere for a winch to go. This writes
+    // that field, which is data -- no Blueprint surgery, and nothing bolted
+    // under an arm something else is already moving.
+    private static int SetRowSlots(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        string wantRow = f["row"], field = f["field"];
+        var add = f.GetValueOrDefault("add", "").Split(',', StringSplitOptions.RemoveEmptyEntries)
+                   .Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+        if (add.Count == 0) { Console.Error.WriteLine("  nothing to --add"); return 1; }
+
+        UAssetAPI.ExportTypes.DataTableExport? table = null;
+        foreach (var e in asset.Exports)
+            if (e is UAssetAPI.ExportTypes.DataTableExport dte) { table = dte; break; }
+        if (table == null) { Console.Error.WriteLine("  no DataTableExport"); return 1; }
+
+        foreach (var nm in add) EnsureName(asset, nm);
+        EnsureName(asset, field);
+        EnsureName(asset, "EnumProperty");
+
+        foreach (var row in table.Table.Data)
+        {
+            if (row.Name.ToString() != wantRow) continue;
+            var cur = row.Value.FirstOrDefault(p => p.Name.ToString() == field);
+            var have = new List<PropertyData>();
+            string enumType = add[0].Contains("::") ? add[0].Split("::")[0] : "";
+            EnsureName(asset, enumType);
+            if (cur is UAssetAPI.PropertyTypes.Objects.SetPropertyData sp && sp.Value != null)
+                have.AddRange(sp.Value);
+            var already = have.OfType<UAssetAPI.PropertyTypes.Objects.EnumPropertyData>()
+                              .Select(x => x.Value.ToString()).ToHashSet();
+            foreach (var nm in add)
+            {
+                if (already.Contains(nm)) { Console.WriteLine($"  {nm} already present"); continue; }
+                have.Add(new UAssetAPI.PropertyTypes.Objects.EnumPropertyData(
+                    FName.FromString(asset, field))
+                { EnumType = FName.FromString(asset, enumType), Value = FName.FromString(asset, nm) });
+            }
+            if (cur != null) row.Value.Remove(cur);
+            row.Value.Add(new UAssetAPI.PropertyTypes.Objects.SetPropertyData(
+                FName.FromString(asset, field))
+            { ArrayType = FName.FromString(asset, "EnumProperty"), Value = have.ToArray() });
+            asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+            Console.WriteLine($"  {wantRow}.{field} = {{{string.Join(", ", have.OfType<UAssetAPI.PropertyTypes.Objects.EnumPropertyData>().Select(x => x.Value.ToString()))}}}");
+            return 0;
+        }
+        Console.Error.WriteLine($"  row '{wantRow}' not in this table");
+        return 1;
+    }
+
+
+    // Give a vehicle an interactable exposing one or more interaction types.
+    //
+    //     vehicle-interactable --uasset Crany.uasset --name CraneControl
+    //                          --types "Crane0_In,Crane0_Out"
+    //
+    // Crany has a crane SEAT and no crane INTERACTION. GolimaRotator, whose
+    // crane works, carries CraneInteraction_L and _R as dedicated components;
+    // Crany's only interactables are DriverSeatInteractable and
+    // PassengerSeatInteractable. EMotorTownInteractableType has Crane0_In (50)
+    // and Crane0_Out (51) -- the winch in/out for crane slot 0, which is the
+    // slot the vehicle now declares -- and nothing on the vehicle exposes them.
+    private static int VehicleInteractable(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        string varName = f.GetValueOrDefault("name", "MTInteractableExtra");
+        var types = f["types"].Split(',', StringSplitOptions.RemoveEmptyEntries)
+                     .Select(x => x.Trim()).Where(x => x.Length > 0).ToArray();
+
+        NormalExport scs = null, sampleNode = null, sampleTpl = null;
+        foreach (var e in asset.Exports)
+        {
+            if (e is not NormalExport ne) continue;
+            string n = ne.ObjectName.ToString();
+            if (n == varName + "_GEN_VARIABLE")
+            { Console.WriteLine("  " + varName + " already present"); return 0; }
+            if (n.StartsWith("SimpleConstructionScript", StringComparison.Ordinal)) scs = ne;
+            else if (n.StartsWith("SCS_Node", StringComparison.Ordinal)) sampleNode ??= ne;
+            else if (n.EndsWith("_GEN_VARIABLE", StringComparison.Ordinal)) sampleTpl ??= ne;
+        }
+        if (scs == null || sampleNode == null || sampleTpl == null)
+        { Console.Error.WriteLine("  no SCS/node/template to model on"); return 1; }
+
+        int pkg = FindOrAddImport(asset, "/Script/MotorTown", 0, "/Script/CoreUObject", "Package");
+        int cls = FindOrAddImport(asset, "MTInteractableComponent", pkg, "/Script/CoreUObject", "Class");
+        int cdo = FindOrAddImport(asset, "Default__MTInteractableComponent", pkg,
+                                  "/Script/MotorTown", "MTInteractableComponent");
+        foreach (var nm in new[] { varName, varName + "_GEN_VARIABLE", "SCS_Node_" + varName,
+                                   "InteractionParams", "InteractionType", "MTInteractionParams",
+                                   "bHideOnList", "StructProperty" })
+            EnsureName(asset, nm);
+        foreach (var t in types) EnsureName(asset, t);
+
+        var prm = new ArrayPropertyData(FName.FromString(asset, "InteractionParams"))
+        { ArrayType = FName.FromString(asset, "StructProperty") };
+        prm.Value = types.Select(t => (PropertyData)new StructPropertyData(
+                FName.FromString(asset, "InteractionParams"),
+                FName.FromString(asset, "MTInteractionParams"))
+        {
+            Value = new List<PropertyData> {
+                // BARE member name: a byte index inside a struct, the same
+                // serialization the fuel pump slots use.
+                new EnumPropertyData(FName.FromString(asset, "InteractionType")) {
+                    EnumType = FName.FromString(asset, "EMotorTownInteractableType"),
+                    Value    = FName.FromString(asset, t) },
+                new BoolPropertyData(FName.FromString(asset, "bHideOnList")) { Value = false },
+            }
+        }).ToArray();
+
+        var tpl = (NormalExport)CloneExport(sampleTpl, asset);
+        tpl.ObjectName = FName.FromString(asset, varName + "_GEN_VARIABLE");
+        tpl.ClassIndex = new FPackageIndex(cls);
+        tpl.TemplateIndex = new FPackageIndex(cdo);
+        tpl.Data = new List<PropertyData> { prm };
+        tpl.Extras = new byte[4];
+        tpl.bNotForClient = false; tpl.bNotForServer = true;
+        asset.Exports.Add(tpl);
+        int tplIdx = asset.Exports.Count;
+
+        var node = (NormalExport)CloneExport(sampleNode, asset);
+        node.ObjectName = FName.FromString(asset, "SCS_Node_" + varName);
+        node.Data = sampleNode.Data.Select(DeepCloneProp).ToList();
+        node.Extras = sampleNode.Extras != null ? (byte[])sampleNode.Extras.Clone() : null;
+        foreach (var q in node.Data)
+        {
+            switch (q.Name.ToString())
+            {
+                case "ComponentTemplate" when q is ObjectPropertyData qo:
+                    qo.Value = new FPackageIndex(tplIdx); break;
+                case "ComponentClass" when q is ObjectPropertyData qc:
+                    qc.Value = new FPackageIndex(cls); break;
+                case "InternalVariableName" when q is NamePropertyData qn:
+                    qn.Value = FName.FromString(asset, varName); break;
+                case "VariableGuid" when q is StructPropertyData qg && qg.Value != null:
+                    foreach (var g in qg.Value)
+                        if (g is GuidPropertyData gd) gd.Value = Guid.NewGuid();
+                    break;
+                case "ChildNodes" when q is ArrayPropertyData qa:
+                    qa.Value = Array.Empty<PropertyData>(); break;
+            }
+        }
+        asset.Exports.Add(node);
+        int nodeIdx = asset.Exports.Count;
+
+        int reg = 0;
+        foreach (var q in scs.Data)
+            if (q is ArrayPropertyData qa2
+                && (q.Name.ToString() == "RootNodes" || q.Name.ToString() == "AllNodes"))
+            {
+                var list = (qa2.Value ?? Array.Empty<PropertyData>()).ToList();
+                list.Add(new ObjectPropertyData(qa2.Name) { Value = new FPackageIndex(nodeIdx) });
+                qa2.Value = list.ToArray();
+                reg++;
+            }
+        if (reg < 2) { Console.Error.WriteLine($"  registered in {reg} of 2 arrays; refusing"); return 1; }
+
+        asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        Console.WriteLine($"  + {varName} exposing {string.Join(", ", types)}");
+        return 0;
+    }
+
+
+    // Give a vehicle's crane an actual Winch object to drive.
+    //
+    // MTCraneComponent has a Winch ObjectProperty and Crany never sets it. The
+    // symptom that names the cause: the rope's tension refreshes the moment the
+    // controller is picked up and never changes in between. So tension IS
+    // computed -- on discrete interaction events -- and nothing updates it
+    // per-frame. A crane with a null Winch has nothing to tick.
+    //
+    // MTWinchComponent is a real class (StaticMeshComponent, 20 properties), so
+    // it can be added like any other component and the crane pointed at it,
+    // rather than waiting for one the vehicle's Blueprint never spawns.
+    private static int VehicleCraneWinch(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        string varName = f.GetValueOrDefault("name", "MTWinch");
+        string craneName = f.GetValueOrDefault("crane", "MTCrane_GEN_VARIABLE");
+
+        NormalExport scs = null, sampleNode = null, sampleTpl = null, crane = null;
+        foreach (var e in asset.Exports)
+        {
+            if (e is not NormalExport ne) continue;
+            string n = ne.ObjectName.ToString();
+            if (n == varName + "_GEN_VARIABLE")
+            { Console.WriteLine("  " + varName + " already present"); return 0; }
+            if (n == craneName) crane = ne;
+            if (n.StartsWith("SimpleConstructionScript", StringComparison.Ordinal)) scs = ne;
+            else if (n.StartsWith("SCS_Node", StringComparison.Ordinal)) sampleNode ??= ne;
+            else if (n.EndsWith("_GEN_VARIABLE", StringComparison.Ordinal)) sampleTpl ??= ne;
+        }
+        if (crane == null) { Console.Error.WriteLine($"  no '{craneName}' on this vehicle"); return 1; }
+        if (scs == null || sampleNode == null || sampleTpl == null)
+        { Console.Error.WriteLine("  no SCS/node/template to model on"); return 1; }
+
+        int pkg = FindOrAddImport(asset, "/Script/MotorTown", 0, "/Script/CoreUObject", "Package");
+        int cls = FindOrAddImport(asset, "MTWinchComponent", pkg, "/Script/CoreUObject", "Class");
+        int cdo = FindOrAddImport(asset, "Default__MTWinchComponent", pkg,
+                                  "/Script/MotorTown", "MTWinchComponent");
+        foreach (var nm in new[] { varName, varName + "_GEN_VARIABLE", "SCS_Node_" + varName, "Winch" })
+            EnsureName(asset, nm);
+
+        var tpl = (NormalExport)CloneExport(sampleTpl, asset);
+        tpl.ObjectName = FName.FromString(asset, varName + "_GEN_VARIABLE");
+        tpl.ClassIndex = new FPackageIndex(cls);
+        tpl.TemplateIndex = new FPackageIndex(cdo);
+        tpl.Data = new List<PropertyData>();      // everything at its default
+        tpl.Extras = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 };
+        asset.Exports.Add(tpl);
+        int tplIdx = asset.Exports.Count;
+
+        var node = (NormalExport)CloneExport(sampleNode, asset);
+        node.ObjectName = FName.FromString(asset, "SCS_Node_" + varName);
+        node.Data = sampleNode.Data.Select(DeepCloneProp).ToList();
+        node.Extras = sampleNode.Extras != null ? (byte[])sampleNode.Extras.Clone() : null;
+        foreach (var q in node.Data)
+        {
+            switch (q.Name.ToString())
+            {
+                case "ComponentTemplate" when q is ObjectPropertyData qo:
+                    qo.Value = new FPackageIndex(tplIdx); break;
+                case "ComponentClass" when q is ObjectPropertyData qc:
+                    qc.Value = new FPackageIndex(cls); break;
+                case "InternalVariableName" when q is NamePropertyData qn:
+                    qn.Value = FName.FromString(asset, varName); break;
+                case "VariableGuid" when q is StructPropertyData qg && qg.Value != null:
+                    foreach (var g in qg.Value)
+                        if (g is GuidPropertyData gd) gd.Value = Guid.NewGuid();
+                    break;
+                case "ChildNodes" when q is ArrayPropertyData qa:
+                    qa.Value = Array.Empty<PropertyData>(); break;
+            }
+        }
+        asset.Exports.Add(node);
+        int nodeIdx = asset.Exports.Count;
+
+        int reg = 0;
+        foreach (var q in scs.Data)
+            if (q is ArrayPropertyData qa2
+                && (q.Name.ToString() == "RootNodes" || q.Name.ToString() == "AllNodes"))
+            {
+                var list = (qa2.Value ?? Array.Empty<PropertyData>()).ToList();
+                list.Add(new ObjectPropertyData(qa2.Name) { Value = new FPackageIndex(nodeIdx) });
+                qa2.Value = list.ToArray();
+                reg++;
+            }
+        if (reg < 2) { Console.Error.WriteLine($"  registered in {reg} of 2 arrays; refusing"); return 1; }
+
+        // The point of the whole exercise: the crane now has something to tick.
+        var w = crane.Data.FirstOrDefault(q => q.Name.ToString() == "Winch");
+        if (w is ObjectPropertyData wop) wop.Value = new FPackageIndex(tplIdx);
+        else crane.Data.Add(new ObjectPropertyData(FName.FromString(asset, "Winch"))
+        { Value = new FPackageIndex(tplIdx) });
+
+        asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        Console.WriteLine($"  + {varName} (MTWinchComponent), and {craneName}.Winch -> #{tplIdx}");
         return 0;
     }
 
@@ -1276,6 +1706,136 @@ internal static class Program
             return 0;
         }
         asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        return 0;
+    }
+
+
+
+    // Give a vehicle a hydraulic constraint between two of its components.
+    //
+    // Crany's boom moves but pulls nothing: it is driven kinematically by
+    // MTCraneComponent, whose Winch property is never set, so the rope is
+    // decoration and raising the arm applies no force to whatever is hooked.
+    // Every wrecker that DOES lift -- Brutus_Wrecker with 4, GolimaRotator
+    // with 24 -- builds its arm out of MTConstraintComponent instead, and
+    // tension is then a physical consequence rather than something to author.
+    //
+    // The shape is copied from Brutus_Wrecker, which is the closest working
+    // example in scale. Its rotating joints are the simple case and the one
+    // worth starting from:
+    //
+    //     UpperArm <-> Mesh       bHydraulic, AngularSpeed 0.015
+    //     LowerArm <-> UpperArm   bHydraulic, AngularSpeed 0.05
+    //
+    // Note what is NOT there: no OverridePos2. An angular constraint just
+    // names two components, which matters because Crany's booms carry no
+    // authored transforms at all -- MTCraneComponent positions them from
+    // BoomParams lengths at runtime, so there is no pivot geometry to hang a
+    // linear constraint off yet.
+    private static int VehicleConstraint(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        string n1 = f["component1"], n2 = f["component2"];
+        string varName = f.GetValueOrDefault("name", "Constraint_" + n1);
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
+        float angSpeed = float.Parse(f.GetValueOrDefault("angular-speed", "0.03"), ic);
+
+        NormalExport scs = null, sampleNode = null, sampleTpl = null;
+        foreach (var e in asset.Exports)
+        {
+            if (e is not NormalExport ne) continue;
+            string n = ne.ObjectName.ToString();
+            if (n == varName + "_GEN_VARIABLE")
+            { Console.WriteLine("  " + varName + " already present - nothing to do"); return 0; }
+            if (n.StartsWith("SimpleConstructionScript", StringComparison.Ordinal)) scs = ne;
+            else if (n.StartsWith("SCS_Node", StringComparison.Ordinal)) sampleNode ??= ne;
+            else if (n.EndsWith("_GEN_VARIABLE", StringComparison.Ordinal)) sampleTpl ??= ne;
+        }
+        if (scs == null || sampleNode == null || sampleTpl == null)
+        {
+            Console.Error.WriteLine("  need a SimpleConstructionScript, an SCS_Node and a "
+                                  + "_GEN_VARIABLE to model the constraint on");
+            return 1;
+        }
+
+        int pkg = FindOrAddImport(asset, "/Script/MotorTown", 0, "/Script/CoreUObject", "Package");
+        int cls = FindOrAddImport(asset, "MTConstraintComponent", pkg, "/Script/CoreUObject", "Class");
+        int cdo = FindOrAddImport(asset, "Default__MTConstraintComponent", pkg,
+                                  "/Script/MotorTown", "MTConstraintComponent");
+
+        foreach (var nm in new[] { varName, varName + "_GEN_VARIABLE", "SCS_Node_" + varName,
+                                   "bHydraulic", "AngularSpeed", "ComponentName1", "ComponentName2",
+                                   "ComponentName", "ConstrainComponentPropName", n1, n2 })
+            EnsureName(asset, nm);
+
+        StructPropertyData Side(string prop, string comp) =>
+            new StructPropertyData(FName.FromString(asset, prop),
+                                   FName.FromString(asset, "ConstrainComponentPropName"))
+            {
+                Value = new List<PropertyData> {
+                    new NamePropertyData(FName.FromString(asset, "ComponentName"))
+                        { Value = FName.FromString(asset, comp) } }
+            };
+
+        var tpl = (NormalExport)CloneExport(sampleTpl, asset);
+        tpl.ObjectName = FName.FromString(asset, varName + "_GEN_VARIABLE");
+        tpl.ClassIndex = new FPackageIndex(cls);
+        tpl.TemplateIndex = new FPackageIndex(cdo);
+        tpl.Data = new List<PropertyData> {
+            new BoolPropertyData(FName.FromString(asset, "bHydraulic")) { Value = true },
+            new FloatPropertyData(FName.FromString(asset, "AngularSpeed")) { Value = angSpeed },
+            Side("ComponentName1", n1),
+            Side("ComponentName2", n2),
+        };
+        tpl.Extras = new byte[4];
+        asset.Exports.Add(tpl);
+        int tplIdx = asset.Exports.Count;
+
+        var node = (NormalExport)CloneExport(sampleNode, asset);
+        node.ObjectName = FName.FromString(asset, "SCS_Node_" + varName);
+        node.Data = sampleNode.Data.Select(DeepCloneProp).ToList();
+        node.Extras = sampleNode.Extras != null ? (byte[])sampleNode.Extras.Clone() : null;
+        foreach (var p in node.Data)
+        {
+            switch (p.Name.ToString())
+            {
+                case "ComponentTemplate" when p is ObjectPropertyData op:
+                    op.Value = new FPackageIndex(tplIdx); break;
+                case "ComponentClass" when p is ObjectPropertyData cp:
+                    cp.Value = new FPackageIndex(cls); break;
+                case "InternalVariableName" when p is NamePropertyData np:
+                    np.Value = FName.FromString(asset, varName); break;
+                case "VariableGuid" when p is StructPropertyData gp && gp.Value != null:
+                    foreach (var gg in gp.Value)
+                        if (gg is GuidPropertyData gd) gd.Value = Guid.NewGuid();
+                    break;
+                case "ChildNodes" when p is ArrayPropertyData cn:
+                    cn.Value = Array.Empty<PropertyData>(); break;
+            }
+        }
+        asset.Exports.Add(node);
+        int nodeIdx = asset.Exports.Count;
+
+        int reg = 0;
+        foreach (var p in scs.Data)
+            if (p is ArrayPropertyData ap
+                && (p.Name.ToString() == "RootNodes" || p.Name.ToString() == "AllNodes"))
+            {
+                var list = (ap.Value ?? Array.Empty<PropertyData>()).ToList();
+                list.Add(new ObjectPropertyData(ap.Name) { Value = new FPackageIndex(nodeIdx) });
+                ap.Value = list.ToArray();
+                reg++;
+            }
+        if (reg < 2)
+        {
+            Console.Error.WriteLine("  registered in " + reg + " of 2 node arrays - the constraint "
+                                  + "would not be constructed; refusing to write");
+            return 1;
+        }
+
+        asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        Console.WriteLine($"  + {varName}: {n1} <-> {n2}, hydraulic, angular speed {angSpeed}");
         return 0;
     }
 
@@ -1830,7 +2390,15 @@ internal static class Program
                         SoftObjectPropertyData so => so.Value.AssetPath.PackageName.ToString(),
                         BoolPropertyData bp => bp.Value ? "true" : "false",
                         StructPropertyData sp2 => $"<struct {sp2.StructType}>",
-                        ArrayPropertyData ap2 => $"[array {ap2.ArrayType} x{ap2.Value?.Length ?? 0}]",
+                        // Sets and maps were rendered as nothing at all, which
+                        // is how a vehicle's PART SLOTS stayed invisible: the
+                        // fields that say which winch a truck can carry are a
+                        // Set and two Maps, and every one printed blank.
+                        // SetPropertyData derives from ArrayPropertyData, so it
+                        // has to be matched BEFORE it or the arm is dead.
+                        UAssetAPI.PropertyTypes.Objects.SetPropertyData stp => DescribeSet(stp),
+                        UAssetAPI.PropertyTypes.Objects.MapPropertyData mp => DescribeMap(mp),
+                        ArrayPropertyData ap2 => DescribeArray(ap2),
                         _ => p.RawValue?.ToString() ?? "",
                     };
                     Console.WriteLine($"  {p.Name,-40} {p.GetType().Name,-24} {val}");
@@ -3483,7 +4051,12 @@ internal static class Program
 
                 // Same source has no AreaName, and the label patch below only
                 // fills a property that already exists. Create one to write into.
-                if (!zoneExp.Data.Any(q => q.Name.ToString() == "AreaName"))
+                // Only when this volume is actually named. A zone tiled out of
+                // several boxes has one labelled volume and the rest carry the
+                // key alone -- an empty AreaName on each would put a blank
+                // label on the map per box.
+                if (!string.IsNullOrEmpty((string?)s["actor_label"])
+                    && !zoneExp.Data.Any(q => q.Name.ToString() == "AreaName"))
                 {
                     EnsureName(dst, "AreaName");
                     zoneExp.Data.Add(new TextPropertyData(FName.FromString(dst, "AreaName"))
@@ -3498,7 +4071,14 @@ internal static class Program
             // scaled. Redraw it as a rectangle around the zone's centre.
             double? outX = (double?)s["outline_x"];
             double? outY = (double?)s["outline_y"];
-            if (outX != null && outY != null && newActor is NormalExport tvExp)
+            // An explicit polygon is enough on its own. Gating this on the
+            // half-extent meant a marker-authored zone -- which supplies
+            // outline_points and no extent -- skipped the block entirely and
+            // silently kept the SOURCE volume's outline. Twelve borders drew
+            // Nobong Landfill's rectangle.
+            var polyEarly = s["outline_points"] as Newtonsoft.Json.Linq.JArray;
+            if (((outX != null && outY != null) || (polyEarly != null && polyEarly.Count >= 3))
+                && newActor is NormalExport tvExp)
             {
                 EnsureName(dst, "TopViewLines");
                 EnsureName(dst, "Vector");
@@ -3511,8 +4091,8 @@ internal static class Program
                 var corners = poly != null && poly.Count >= 3
                     ? poly.Select(pt => (dx: (double)pt[0]! - tx, dy: (double)pt[1]! - ty)).ToArray()
                     : new (double dx, double dy)[] {
-                        (-outX.Value, -outY.Value), ( outX.Value, -outY.Value),
-                        ( outX.Value,  outY.Value), (-outX.Value,  outY.Value),
+                        (-(outX ?? 0), -(outY ?? 0)), ( (outX ?? 0), -(outY ?? 0)),
+                        ( (outX ?? 0),  (outY ?? 0)), (-(outX ?? 0),  (outY ?? 0)),
                     };
                 // TopViewLines is SEGMENTS, stored as point PAIRS -- not a
                 // polygon ring. Every vanilla zone has an even count (Jeju 8,
@@ -3541,9 +4121,14 @@ internal static class Program
                     tvExp.Data.Add(new ArrayPropertyData(FName.FromString(dst, "TopViewLines"))
                     { ArrayType = FName.FromString(dst, "StructProperty"), Value = pts });
                 }
+                // Size from the CORNERS, not from the extent -- a polygon-only
+                // zone has no extent, and reading .Value off it threw
+                // "Nullable object must have a value" after the guard above
+                // stopped requiring one.
+                double wKm = (corners.Max(c => c.dx) - corners.Min(c => c.dx)) / 100000.0;
+                double hKm = (corners.Max(c => c.dy) - corners.Min(c => c.dy)) / 100000.0;
                 Console.WriteLine($"  TopViewLines -> {corners.Length} corners / {pts.Length} points, "
-                                + $"{outX.Value * 2 / 100000.0:0.#} x {outY.Value * 2 / 100000.0:0.#} km "
-                                + $"around ({tx:0}, {ty:0})");
+                                + $"{wKm:0.#} x {hKm:0.#} km around ({tx:0}, {ty:0})");
             }
 
             // Zone colour. Cloned from Gangjung, it drew in Gangjung's colour,
@@ -6197,7 +6782,14 @@ internal static class Program
                 int dot = assetPath.IndexOf('.', lastSlash < 0 ? 0 : lastSlash);
                 string pkgPath = dot >= 0 ? assetPath.Substring(0, dot) : assetPath;
                 string? exportName = (string?)entry["asset_key"];
-                if (string.IsNullOrEmpty(exportName)) exportName = pkgPath[(pkgPath.LastIndexOf('/') + 1)..];
+                // A substituted mesh must carry the SUBSTITUTE's object name.
+                // asset_key still holds the original's, so keeping it built an
+                // import for object "SM_Prop_Sign_Number_5" inside package
+                // ".../SM_96_192_Hills_01_Dirt" -- a name that does not exist
+                // there, so the debug mesh silently failed to load and the
+                // probe looked exactly like the bug it was meant to diagnose.
+                if (substituted || string.IsNullOrEmpty(exportName))
+                    exportName = pkgPath[(pkgPath.LastIndexOf('/') + 1)..];
                 if (!meshCache.TryGetValue(pkgPath, out int meshImp))
                 {
                     int mp = FindOrAddImport(asset, pkgPath, 0, "/Script/CoreUObject", "Package");

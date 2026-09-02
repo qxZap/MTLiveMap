@@ -1,0 +1,48 @@
+{
+  "_README": [
+    "Physical materials we alter. Copied from vanilla and patched, so the mod's",
+    "copy overrides the game's.",
+    "",
+    "        material       offroad  digSpeed  resist  depth",
+    "        PM_Mud         True     0.5       3       (1, 10)",
+    "        PM_MudPuddle   True     2         3       (5, 20)",
+    "        PM_Sand        True     2         6       (5, 35)",
+    "        PM_Dirt        True     0.5       -       (0.5, 3)",
+    "        PM_Snow        ABSENT   ABSENT    5       (1, 5)",
+    "        PM_SnowRoad    ABSENT   ABSENT    ABSENT  ABSENT",
+    "",
+    "PM_SnowRoad is the one that matters. Arini's ground is Mat_Road_Snow on 38 of",
+    "64 ground/path meshes, and that material's PhysMaterial is PM_SnowRoad -- NOT",
+    "PM_Snow. PM_SnowRoad has no digging properties at all: it is a road surface,",
+    "friction 0.4, rolling resistance 2. Three rounds of patching PM_Snow changed",
+    "nothing because nothing on the island uses it.",
+    "",
+    "A Vector2D is written as (X;Y) with a SEMICOLON -- --set splits its pairs on",
+    "commas, so a comma there would be read as two properties.",
+    "",
+    "This edits VANILLA PM_SnowRoad, so every snow road in Jeju digs too. That is",
+    "deliberate for now: feel the numbers first, then move them to a new material",
+    "applied only where wanted and swap our meshes over to it."
+  ],
+  "materials": [
+    {
+      "asset": "Physics/PM_SnowRoad.uasset",
+      "set": {
+        "bAllowDigging": true,
+        "DiggingDepth": "(12.5;50)",
+        "DiggingSpeed": 3,
+        "DiggingResistForceMultiplier": 2,
+        "bIsOffroad": true
+      },
+      "_": "Every property here is absent in vanilla: PM_SnowRoad is a ROAD surface with no digging block at all, and an absent property is its default -- zero for a float, false for a bool. bIsOffroad is the GATE; without it none of the rest is read. DELIBERATELY PAST VANILLA: the deepest surface in the game is Sand at (5,35) speed 2 resist 6, and MudPuddle's exact numbers (5,20)/2/3 still read as 'not sinking enough'. (12.5,50) speed 3 resist 2 -- (10,40) read as 'good, 25% more and it's perfect', so this is that 25%. Far past vanilla's deepest (Sand, (5,35)) -- if this is dramatic, dial back; if it is still subtle, the limit is not in these numbers and the question becomes whether digging works on static-mesh roads at all. SurfaceType is NOT the gate (Dirt digs at 2, Sand at 10, Mud at 11), so it stays 7."
+    },
+    {
+      "asset": "Physics/PM_Snow.uasset",
+      "set": {
+        "bIsOffroad": true,
+        "DiggingSpeed": 0.5
+      },
+      "_": "Kept from the earlier rounds. PM_Snow already declares bAllowDigging and depth (1,5) and only lacks the two gates. Nothing on Arini references it today, but deep-snow surfaces elsewhere do, and the patch costs one asset."
+    }
+  ]
+}
