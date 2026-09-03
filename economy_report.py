@@ -154,8 +154,13 @@ def main() -> int:
                 fmt = lambda m: ", ".join(f"{n}&times;{v}" for n, v in m.items())
                 left = fmt(i) if i else '<em class="free">nothing &mdash; it just grows</em>'
                 boost = ' <span class="tag hot">5&times;</span>' if r.get("speed", 1) >= 5 else ""
+                # time_seconds is optional in the game -- absent means the
+                # recipe runs the moment its inputs land. Indexing it crashed
+                # the report on the first recipe that left it out.
+                ts = r.get("time_seconds")
+                when = f"{ts:.0f}s" if ts else "instant"
                 recs.append(f"<li>{left} &rarr; <b>{fmt(o)}</b>"
-                            f" <span class=t>{r['time_seconds']:.0f}s</span>{boost}</li>")
+                            f" <span class=t>{when}</span>{boost}</li>")
             out.append(f'<article><h3>{e(lab[k])}</h3><ul>{"".join(recs)}</ul></article>')
         return "\n".join(out)
 
