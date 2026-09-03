@@ -304,17 +304,14 @@ from bp_registry import REGISTRY as _BP_REGISTRY, asset_keys as _bp_asset_keys
 # Excluded here rather than fixed in the editor on purpose. The mesh is
 # legitimately part of the scene and should stay in it; what is wrong is
 # exporting it, so the build is where it gets dropped.
+#
+# NOTHING ELSE GETS DROPPED. The harbour's vessels used to be listed here on
+# the theory that a boat-shaped prop invites you to board it. That was not a
+# call this build gets to make: the user placed them, so they ship. Both keys
+# below break the RENDER rather than merely reading oddly, which is the only
+# bar for being in this set.
 SKIP_KEYS = {
     "SM_SkySphere", "SM_Env_Unreal_Water_DC",
-    # The harbour's vessels. They are scenery-shaped but vehicle-sized, and
-    # sitting in open water 1.66 km off the coast they read as props you ought
-    # to be able to board. Dropped at the build rather than deleted from the
-    # scene, so the harbour keeps its layout and they come back by removing a
-    # line here.
-    # The container ship and its containers are back by request. Every ship
-    # actor in the scene -- labelled _2, _3, _4 in the outliner -- uses the one
-    # asset below, so dropping the key dropped the whole harbour's shipping.
-    "SM_Veh_Tugboat_01_Preset", "SM_Veh_Boat_01_Preset",
 }
 
 # Placeholder asset_keys (from bp_registry) become blueprint_actors entries
