@@ -2481,6 +2481,204 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Covert": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Crany": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "DumpBed": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "EmptyDumpBed": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "FloodLight": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Gravel": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "PowerLineCable": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "PrefabScaffold": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Sheetrock": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "SoilDumpBed": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "SteelCable": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "TelecomTower": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "TelecomTowerBase": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "TelecomTowerBase1": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "forklift": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "genflatbed": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "house": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "logging": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "roller": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "tele": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "tetrapod": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "utilitypole": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
       }
     ],
     "template": "warehouse"
@@ -3766,6 +3964,69 @@
         "inputs": {},
         "outputs": {
           "DinghyP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "BullD": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "digger": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "loader": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "balerplanter": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "harvester": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "plough": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "tractorFL": 1
         },
         "speed": 1.0,
         "time_seconds": 300.0,
