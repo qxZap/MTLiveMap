@@ -131,8 +131,25 @@ def main() -> int:
     def _has(substr: str) -> bool:
         return any(substr in e for e in entries)
 
-    # The map is always rebuilt, so it's always required.
-    if _has("Maps/Jeju/Jeju_World.umap"):
+    # A compat layer patches data and must ship NO map. It mounts after the
+    # base pak, so a map here overrides the island's own -- which is how a
+    # layer built with foliage skipped erased the base build's foliage. For
+    # the base layer the map is still mandatory.
+    try:
+        from mods import load as _mods_load, active_layer as _active_layer
+        _is_delta = bool((_mods_load()[1].get(_active_layer()) or {}).get("delta"))
+    except Exception:
+        _is_delta = False
+
+    if _is_delta:
+        stowaways = [e for e in entries if "/Maps/" in e or e.endswith(".umap")]
+        if stowaways:
+            _fail(f"delta layer ships {len(stowaways)} map file(s), starting with "
+                  f"{stowaways[0]} — it loads after the base pak and would "
+                  f"override the island")
+        else:
+            _ok("delta layer ships no map, as it must")
+    elif _has("Maps/Jeju/Jeju_World.umap"):
         _ok("pak contains Maps/Jeju/Jeju_World.umap")
     else:
         _fail("pak missing Maps/Jeju/Jeju_World.umap")
@@ -145,6 +162,8 @@ def main() -> int:
     later = []
     for other in sorted(GAME_PAKDIR.glob("*.pak"), key=lambda p: p.name.lower()):
         if other.name.lower() <= DEPLOYED_PAK.name.lower():
+            continue
+        if _is_delta and other.name.lower() == DEPLOYED_PAK.name.lower():
             continue
         if any("Maps/Jeju/Jeju_World.umap" in e for e in _repak_list(other)):
             later.append(other.name)

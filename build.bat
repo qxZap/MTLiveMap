@@ -339,6 +339,18 @@ if defined MTMI_LAYER (
     set "GENDIR=!MODCONTENT!\Maps\Jeju\Jeju_World\_Generated_"
     set "DEPLOYED=%MTMI_GAME_PAKDIR%\zzzz_!MTMI_MOD_NAME!.pak"
     echo   layer !MTMI_LAYER!: building !MTMI_MOD_NAME!, hiding !MTMI_EXCLUDE_PAKS!
+
+    rem A compat layer patches DATA. It must not build the island: it mounts
+    rem after the base pak, so any cell it ships wins, and one built with
+    rem foliage skipped took the base build's foliage down with it. Skipping
+    rem the map steps also turns a 20-minute 900 MB build into a short one.
+    for /f "usebackq delims=" %%i in (`python mods.py --layer %MTMI_LAYER% --delta`) do set "MTMI_DELTA=%%i"
+    if "!MTMI_DELTA!"=="1" (
+        set "STEP_MESHES=0"
+        set "STEP_CONVERT=0"
+        set "STEP_FOLIAGE=0"
+        echo   layer !MTMI_LAYER! is a delta: data only, no map
+    )
 )
 
 if "%PULL_MAP%"=="1" (
@@ -505,6 +517,15 @@ if not "%MTMI_SKIP_CONFIG%"=="1" (
     python merge_config.py
     if errorlevel 1 exit /b 1
 ) else ( echo [%TIME%] [5c] skipped ^(MTMI_SKIP_CONFIG=1^) )
+
+rem Step 3 writes a map on its way to producing the Mod* classes, so a delta
+rem layer has one staged even with the map steps off. Strip it here rather
+rem than trusting every step to have stayed in its lane.
+if "%MTMI_DELTA%"=="1" (
+    echo [%TIME%] [5d] Pruning !MTMI_MOD_NAME! to the delta...
+    python prune_delta.py "%MODCONTENT%"
+    if errorlevel 1 exit /b 1
+)
 
 if "%STEP_PACK%"=="1" (
     echo [%TIME%] [6/7] Packing and deploying...

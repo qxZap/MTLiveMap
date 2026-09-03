@@ -111,9 +111,12 @@ def main() -> int:
             print(f"  layer '{key}' needs {missing}, which is not installed here",
                   file=sys.stderr)
             return 1
-        # --mod-name prints the pak identity instead of the exclusions, so
-        # build.bat can ask for either without parsing.
-        if "--mod-name" in sys.argv:
+        # --mod-name prints the pak identity and --delta whether this layer
+        # ships only patched data, so build.bat can ask for any of the three
+        # without parsing.
+        if "--delta" in sys.argv:
+            print("1" if layers[key].get("delta") else "0")
+        elif "--mod-name" in sys.argv:
             print(layers[key].get("mod_name", ""))
         else:
             print(",".join(exclusions(key, mods, layers)))

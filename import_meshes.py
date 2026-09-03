@@ -311,7 +311,9 @@ SKIP_KEYS = {
     # to be able to board. Dropped at the build rather than deleted from the
     # scene, so the harbour keeps its layout and they come back by removing a
     # line here.
-    "SM_Veh_ContainerShip_01", "SM_Veh_ContainerShip_Containers_01",
+    # The container ship and its containers are back by request. Every ship
+    # actor in the scene -- labelled _2, _3, _4 in the outliner -- uses the one
+    # asset below, so dropping the key dropped the whole harbour's shipping.
     "SM_Veh_Tugboat_01_Preset", "SM_Veh_Boat_01_Preset",
 }
 

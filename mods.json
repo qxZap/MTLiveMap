@@ -30,7 +30,17 @@
     "  zzzz_Arini_CapEcon_P sorts BEFORE zzzz_Arini_P, because 'C' < 'P', so the",
     "  base would have overridden its own layer.",
     "  Hence the z prefixes: _zCapEcon and _zProxy sort after _P, and _zz for the",
-    "  combined layer sorts after both singles."
+    "  combined layer sorts after both singles.",
+    "",
+    "A LAYER IS A DELTA",
+    "  Only the base layer builds the island. A compat layer ships the cargo",
+    "  tables and the delivery-point classes and NOTHING else -- no map, no",
+    "  cells, no meshes, no foliage. It mounts after the base pak, so any map",
+    "  it carried would override the base's, and a layer built with foliage",
+    "  skipped took the island's foliage down with it.",
+    "  The Mod* class name is sha1(delivery point key), so it is identical in",
+    "  every layer: the base map's actors already point at the class the layer",
+    "  overrides. That is what makes the delta land."
   ],
   "mods": {
     "self": {
@@ -79,7 +89,8 @@
         "moretuning"
       ],
       "mod_name": "Arini_P",
-      "_": "The base release. Sees the stock game and nothing else."
+      "_": "The base release. Sees the stock game and nothing else.",
+      "delta": false
     },
     "capitalist": {
       "skip": [
@@ -90,7 +101,8 @@
         "capitalist"
       ],
       "mod_name": "Arini_zCapEcon_P",
-      "_": "For players running Capitalist Economy."
+      "_": "For players running Capitalist Economy.",
+      "delta": true
     },
     "proxy": {
       "skip": [
@@ -101,7 +113,8 @@
         "proxy"
       ],
       "mod_name": "Arini_zProxy_P",
-      "_": "For players running Proxy's oversized cargo."
+      "_": "For players running Proxy's oversized cargo.",
+      "delta": true
     },
     "proxy_capitalist": {
       "skip": [
@@ -112,7 +125,8 @@
         "proxy"
       ],
       "mod_name": "Arini_zzProxyCapEcon_P",
-      "_": "Both. The ecosystem already ships this shape -- ZZZ_qxZap_CapitalistEconomy_ProxyOversizedCargos_P.pak is exactly a two-mod bridge, and it holds four files."
+      "_": "Both. The ecosystem already ships this shape -- ZZZ_qxZap_CapitalistEconomy_ProxyOversizedCargos_P.pak is exactly a two-mod bridge, and it holds four files.",
+      "delta": true
     }
   }
 }
