@@ -70,9 +70,40 @@ WEIGHTS = REPO / "CargoImport" / "cargos" / "weights.tsv"
 # progressive where the game is regressive and needed a hand-tuned knee.
 # One exponent matching the game's own curve replaces both.
 WEIGHT_EXP  = 0.63
-RATE        = 150.0    # coins per kg^0.63 at batch 1 on a zero-length run
+RATE        = 300.0    # coins per kg^0.63 at batch 1 on a zero-length run
+# Doubled from 150 on 2026-09-03. Hauling on Arini is longer and rougher than
+# on Jeju's road network, and the old level made a full container worth less
+# than a short shuttle between two adjacent yards.
 FLOOR       = 1000     # no delivery ever pays less than this
 KM_DOUBLES  = 5.0      # a run this long doubles the pay
+
+# OVERSIZED LOADS. Weight alone underprices these badly: a 250 kL tank and a
+# 20 MVA transformer weigh what a container weighs but take a specialist rig,
+# block a lane, and cannot be stacked. The weight curve cannot see volume, so
+# it is applied here instead of pretending kg captures it.
+# TERRAIN. Distance is not difficulty. The dish tower sits at the top of the
+# island and Dorna is up the valley behind it -- getting a loaded rig to either
+# is the hardest driving on Arini, and a straight-line kilometre says nothing
+# about that. `difficulty` on a delivery point multiplies what arriving there
+# pays, so the premium lands on hauls that earn it.
+#
+# The premium SCALES WITH WEIGHT, because that is what the difficulty actually
+# is. A 30 t transformer up to the dish tower is the hardest run on the island;
+# 800 kg of water over the same road is a normal drive, and paying it a climb
+# premium just makes a short haul farmable. So a load at or above HEAVY_KG gets
+# the full multiplier and anything lighter gets a proportional share of it.
+DEFAULT_DIFFICULTY = 1.0
+HEAVY_KG = 10_000.0    # a steel coil: the weight at which a climb is properly hard
+
+
+def terrain_mult(difficulty: float, kg: float) -> float:
+    if difficulty <= 1.0:
+        return 1.0
+    share = min(1.0, kg / HEAVY_KG)
+    return 1.0 + (difficulty - 1.0) * share
+
+OVERSIZE_MULT = 10.0
+OVERSIZE = {"Transformer_20MVAX", "Tank_250kLX"}
 DEFAULT_KG  = 500.0    # cargo with no weight anywhere in the game data
 
 # Licence batch by cargo type: what size of vehicle the load actually needs.
@@ -146,8 +177,11 @@ def shortest_run(cargo: str, prod: dict, cons: dict, co: dict) -> tuple[float, s
     return best
 
 
-def price(kg: float, batch: int, km: float) -> int:
-    return max(FLOOR, round(weight_value(kg) * RATE * batch * (1 + km / KM_DOUBLES)))
+def price(kg: float, batch: int, km: float, name: str = "", difficulty: float = 1.0) -> int:
+    mult = OVERSIZE_MULT if name in OVERSIZE else 1.0
+    return max(FLOOR, round(weight_value(kg) * RATE * batch
+                            * (1 + km / KM_DOUBLES) * mult
+                            * terrain_mult(difficulty, kg)))
 
 
 def compute() -> tuple[list[tuple], dict, dict, dict]:
@@ -168,7 +202,13 @@ def compute() -> tuple[list[tuple], dict, dict, dict]:
         if "base_payment" in c:      # explicit escape hatch, e.g. contraband
             pay, note = int(c["base_payment"]), "fixed"
         else:
-            pay, note = price(kg, batch, km), ""
+            dest = run[2] if run else None
+            diff = float((dps.get(dest) or {}).get("difficulty", DEFAULT_DIFFICULTY)) if dest else 1.0
+            pay = price(kg, batch, km, name, diff)
+            note = "oversize x10" if name in OVERSIZE else ""
+            eff = terrain_mult(diff, kg)
+            if eff > 1.001:
+                note = (note + " " if note else "") + f"terrain x{eff:.2f}"
         route = f"{run[1]}->{run[2]}" if run else "NO ROUTE"
         rows.append((name, kg, batch, km, pay, route, note))
         updates[name] = (pay, kg, batch, km, route)

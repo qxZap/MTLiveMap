@@ -1,48 +1,141 @@
 {
   "_README": [
-    "Physical materials we alter. Copied from vanilla and patched, so the mod's",
-    "copy overrides the game's.",
+    "Physical materials, and materials DERIVED from vanilla ones.",
     "",
-    "        material       offroad  digSpeed  resist  depth",
-    "        PM_Mud         True     0.5       3       (1, 10)",
-    "        PM_MudPuddle   True     2         3       (5, 20)",
-    "        PM_Sand        True     2         6       (5, 35)",
-    "        PM_Dirt        True     0.5       -       (0.5, 3)",
-    "        PM_Snow        ABSENT   ABSENT    5       (1, 5)",
-    "        PM_SnowRoad    ABSENT   ABSENT    ABSENT  ABSENT",
+    "  materials[]  patches a VANILLA asset in place -- changes that surface",
+    "               everywhere in the game. Only to feel a number out. Anything",
+    "               shipped from here that is no longer declared gets pruned, or",
+    "               the override outlives the decision to make it.",
+    "  derived[]    builds NEW assets beside the vanilla ones. Two shapes:",
+    "                 material.existing  -- a material authored in the editor;",
+    "                                       we only wire its PhysMaterial.",
+    "                 material.template  -- clone a vanilla INSTANCE and reparent.",
     "",
-    "PM_SnowRoad is the one that matters. Arini's ground is Mat_Road_Snow on 38 of",
-    "64 ground/path meshes, and that material's PhysMaterial is PM_SnowRoad -- NOT",
-    "PM_Snow. PM_SnowRoad has no digging properties at all: it is a road surface,",
-    "friction 0.4, rolling resistance 2. Three rounds of patching PM_Snow changed",
-    "nothing because nothing on the island uses it.",
+    "WHY AN INSTANCE. A Material carries compiled shaders and no pak pipeline can",
+    "compile one. An INSTANCE is pure data: it inherits its parent's shaders and",
+    "overrides only what it names, and PhysMaterial is overridable.",
     "",
-    "A Vector2D is written as (X;Y) with a SEMICOLON -- --set splits its pairs on",
-    "commas, so a comma there would be read as two properties.",
+    "AN INSTANCE WITH NO PhysMaterial INHERITS ITS PARENT'S. Mat_Snow and",
+    "Mat_Road_Snow are parented to MI_curbWhite, so without this wiring they would",
+    "drive like a kerb -- silently, since nothing reports it.",
     "",
-    "This edits VANILLA PM_SnowRoad, so every snow road in Jeju digs too. That is",
-    "deliberate for now: feel the numbers first, then move them to a new material",
-    "applied only where wanted and swap our meshes over to it."
+    "PARENT MATTERS AS MUCH AS PhysMaterial. An instance with no overrides looks",
+    "exactly like its parent, so these are parented to the vanilla snow material --",
+    "authored against MI_curbWhite they rendered as grey kerb.",
+    "A Vector2D is written (X;Y) with a SEMICOLON: --set splits pairs on commas.",
+    "",
+    "fx_map_entries patches DataAsset/FX.uasset, which maps a surface to the wheel",
+    "effect the game spawns on it. Vanilla maps Dirt, Grass, Sand and Mud and has",
+    "NO ENTRY FOR SNOW -- that, and nothing else, is why snow threw no particles.",
+    "EMotorTownSurface::Snow exists (7) and our physical materials already report",
+    "it; the table just never used it.",
+    "",
+    "This is a VANILLA override, so snow sprays everywhere in the game, not only on",
+    "Arini. The effect is the dirt one for now because the game ships no white",
+    "spray of its own."
   ],
-  "materials": [
+  "materials": [],
+  "derived": [
     {
-      "asset": "Physics/PM_SnowRoad.uasset",
-      "set": {
-        "bAllowDigging": true,
-        "DiggingDepth": "(12.5;50)",
-        "DiggingSpeed": 3,
-        "DiggingResistForceMultiplier": 2,
-        "bIsOffroad": true
+      "key": "Arini_SnowRoad",
+      "physmat": {
+        "from": "Physics/PM_SnowRoad",
+        "to": "DC/Physics/PM_Arini_SnowRoad",
+        "set": {
+          "bAllowDigging": true,
+          "DiggingDepth": "(9.375;37.5)",
+          "DiggingSpeed": 3,
+          "DiggingResistForceMultiplier": 2,
+          "bIsOffroad": true
+        }
       },
-      "_": "Every property here is absent in vanilla: PM_SnowRoad is a ROAD surface with no digging block at all, and an absent property is its default -- zero for a float, false for a bool. bIsOffroad is the GATE; without it none of the rest is read. DELIBERATELY PAST VANILLA: the deepest surface in the game is Sand at (5,35) speed 2 resist 6, and MudPuddle's exact numbers (5,20)/2/3 still read as 'not sinking enough'. (12.5,50) speed 3 resist 2 -- (10,40) read as 'good, 25% more and it's perfect', so this is that 25%. Far past vanilla's deepest (Sand, (5,35)) -- if this is dramatic, dial back; if it is still subtle, the limit is not in these numbers and the question becomes whether digging works on static-mesh roads at all. SurfaceType is NOT the gate (Dirt digs at 2, Sand at 10, Mud at 11), so it stays 7."
+      "material": {
+        "existing": "DC/Materials/Mat_Road_Snow",
+        "parent": "/Game/PolygonTown/Materials/Misc/Mat_Road_Snow",
+        "parent_class": "Material"
+      },
+      "_": "Packed snow where people drive: 25% shallower than the agreed (12.5,50). 15 path meshes."
     },
     {
-      "asset": "Physics/PM_Snow.uasset",
-      "set": {
-        "bIsOffroad": true,
-        "DiggingSpeed": 0.5
+      "key": "Arini_SnowWild",
+      "physmat": {
+        "from": "Physics/PM_SnowRoad",
+        "to": "DC/Physics/PM_Arini_SnowWild",
+        "set": {
+          "bAllowDigging": true,
+          "DiggingDepth": "(13.75;55)",
+          "DiggingSpeed": 3,
+          "DiggingResistForceMultiplier": 2,
+          "bIsOffroad": true
+        }
       },
-      "_": "Kept from the earlier rounds. PM_Snow already declares bAllowDigging and depth (1,5) and only lacks the two gates. Nothing on Arini references it today, but deep-snow surfaces elsewhere do, and the patch costs one asset."
+      "material": {
+        "existing": "DC/Materials/Mat_Snow",
+        "parent": "/Game/PolygonTown/Materials/Misc/Mat_Road_Snow",
+        "parent_class": "Material"
+      },
+      "_": "Untouched wilderness snow: 10% deeper than the agreed (12.5,50). 23 landscape/path meshes. Speed and resistance stay as tuned -- only DEPTH is scaled, since depth is what reads as sinking."
+    },
+    {
+      "key": "Arini_DirtRoad",
+      "physmat": {
+        "from": "Physics/PM_DirtRoad",
+        "to": "DC/Physics/PM_Arini_DirtRoad",
+        "set": {
+          "bAllowDigging": true,
+          "DiggingDepth": "(3.12;12.5)",
+          "DiggingSpeed": 3,
+          "DiggingResistForceMultiplier": 2,
+          "bIsOffroad": true
+        }
+      },
+      "material": {
+        "existing": "DC/Materials/MI_DC_DirtRoad"
+      },
+      "_": "Dirt is snow divided by three: (9.375;37.5) -> (3.12;12.5). Vanilla ships PM_DirtRoad with NO digging block at all and PM_Dirt at depth 0.5-3, which is why the dirt reads as solid and bumpy. Resistance matches snow so depth is the only variable between the two surfaces. PARENT LEFT ALONE: unlike the snow instances, these are authored -- two scalar parameters, a vector parameter and base property overrides on M_BaseColor. Reparenting them to a vanilla dirt material would discard that look. Only the PhysMaterial is wired here."
+    },
+    {
+      "key": "Arini_DirtBase",
+      "physmat": {
+        "from": "Physics/PM_Dirt",
+        "to": "DC/Physics/PM_Arini_DirtBase",
+        "set": {
+          "bAllowDigging": true,
+          "DiggingDepth": "(4.58;18.3)",
+          "DiggingSpeed": 3,
+          "DiggingResistForceMultiplier": 2,
+          "bIsOffroad": true
+        }
+      },
+      "material": {
+        "existing": "DC/Materials/MI_DC_DirtBase"
+      },
+      "_": "Dirt is snow divided by three: (13.75;55) -> (4.58;18.3). Vanilla ships PM_DirtRoad with NO digging block at all and PM_Dirt at depth 0.5-3, which is why the dirt reads as solid and bumpy. Resistance matches snow so depth is the only variable between the two surfaces. PARENT LEFT ALONE: unlike the snow instances, these are authored -- two scalar parameters, a vector parameter and base property overrides on M_BaseColor. Reparenting them to a vanilla dirt material would discard that look. Only the PhysMaterial is wired here."
+    }
+  ],
+  "fx_map_entries": [
+    {
+      "asset": "DataAsset/FX.uasset",
+      "prop": "WheelSurfaceParticles",
+      "key": "EMotorTownSurface::Snow",
+      "object": "/Game/DC/Particles/P_Arini_SnowSpray",
+      "object_class": "ParticleSystem"
+    },
+    {
+      "asset": "DataAsset/FX.uasset",
+      "prop": "WheelSurfaceDebrisParticles",
+      "key": "EMotorTownSurface::Snow",
+      "object": "/Game/DC/Particles/P_Arini_SnowSpray",
+      "object_class": "ParticleSystem"
+    }
+  ],
+  "particle_variants": [
+    {
+      "template": "Cars/Particles/P_TireSmoke.uasset",
+      "to": "DC/Particles/P_Arini_SnowSpray",
+      "color": "1,1,1",
+      "_": "Snow spray cloned from P_TireSmoke, not the dirt effect. Tire smoke is already a white smoke sheet -- the right SHAPE for kicked-up powder -- where the dirt effect is clods that stay reading as dirt however you tint them. Colour and spawn rate are still data, so both are tunable here.",
+      "spawn_scale": 3.0
     }
   ]
 }

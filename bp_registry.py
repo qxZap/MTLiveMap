@@ -225,7 +225,44 @@ def _load_set(path: _Path) -> set[str]:
     if not path.exists(): return set()
     return {line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
 
-_VALID_CARGO_NAMES = _load_set(_CARGO_NAMES_PATH)
+def _mod_cargo_rows() -> set[str]:
+    """Row names from the cargo table of every mod this layer can see.
+
+    CargoImport is generated from VANILLA Cargos.uasset, so a recipe naming a
+    row another mod ships -- Proxy's `stackjunkcars`, which its construction
+    sites are the only source of -- looked unknown and was silently dropped.
+    The lane vanished at build time and nothing failed. mods.json already
+    declares each mod's tables under `provides`; this just reads them.
+    """
+    try:
+        import subprocess as _sp
+        from mods import load as _mods_load, visible_mods as _vis
+        from mt_paths import MAPPINGS as _MAP, effective_asset as _eff
+    except Exception:
+        return set()
+    inj = _Path("MTBPInjector/bin/Release/net8.0/MTBPInjector.exe")
+    if not inj.is_file():
+        return set()
+    mods, _ = _mods_load()
+    rows: set[str] = set()
+    for key in _vis():
+        for rel in (mods.get(key) or {}).get("provides") or []:
+            if "cargo" not in rel.lower():
+                continue
+            if not rel.endswith(".uasset"):
+                rel += ".uasset"
+            try:
+                src = _eff(rel)
+                r = _sp.run([str(inj), "dump-table", "--mappings", str(_MAP),
+                             "--uasset", str(src)], capture_output=True, text=True)
+            except Exception:
+                continue
+            if r.returncode == 0:
+                rows |= {ln.strip() for ln in r.stdout.splitlines() if ln.strip()}
+    return rows
+
+
+_VALID_CARGO_NAMES = _load_set(_CARGO_NAMES_PATH) | _mod_cargo_rows()
 _VALID_CARGO_TYPES = _load_set(_CARGO_TYPES_PATH)
 
 
@@ -387,14 +424,27 @@ def _load_delivery_points():
         print(f"  [delivery_points.json] parse error: {e}", file=_sys.stderr); return
     # Register new_cargos ids FIRST so recipe validation accepts them when
     # the per-DP entries get expanded below.
+    # A `requires` entry belongs only to the layers that can see the mod it
+    # names. The builder used to ignore this -- the verifier and the economy
+    # report honoured layers, the thing writing the pak did not -- so a
+    # vanilla build shipped Proxy's recipes with their inputs validated away,
+    # leaving producers with no input at all.
+    try:
+        from mods import wants as _wants
+    except Exception:
+        _wants = lambda e: True
     for nc in cfg.get("new_cargos") or []:
-        if isinstance(nc, dict) and nc.get("new_id"):
+        if isinstance(nc, dict) and nc.get("new_id") and _wants(nc):
             _NEW_CARGO_IDS.add(nc["new_id"])
     for name, dp in cfg.items():
         if name.startswith("_"): continue   # skip _doc, _comment etc.
         # Top-level non-DP keys (new_cargos list, etc.) are consumed by
         # clone_bp_actors directly. Only dict values map to DP entries.
         if not isinstance(dp, dict): continue
+        if not _wants(dp): continue
+        if isinstance(dp.get("recipes"), list):
+            dp = dict(dp)
+            dp["recipes"] = [r for r in dp["recipes"] if _wants(r)]
         # Scene placeholder convention: DeliveryPoint_<key>
         REGISTRY[f"DeliveryPoint_{name}"] = _expand_dp_entry(name, dp)
 

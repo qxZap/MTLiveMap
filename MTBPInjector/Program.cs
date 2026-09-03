@@ -34,6 +34,12 @@ internal static class Program
                 "inject-foliage-probe" => InjectFoliageProbe(args.Skip(1).ToArray()),
                 "make-foliage-cell" => MakeFoliageCell(args.Skip(1).ToArray()),
                 "make-stringtable" => MakeStringTable(args.Skip(1).ToArray()),
+                "make-material-instance" => MakeMaterialInstance(args.Skip(1).ToArray()),
+                "rename-package" => RenamePackageCmd(args.Skip(1).ToArray()),
+                "add-map-entry" => AddMapEntry(args.Skip(1).ToArray()),
+                "make-particle-variant" => MakeParticleVariant(args.Skip(1).ToArray()),
+                "set-material-physmat" => SetMaterialPhysMat(args.Skip(1).ToArray()),
+                "remap-mesh-material" => RemapMeshMaterial(args.Skip(1).ToArray()),
                 "clone-actor"  => CloneActor(args.Skip(1).ToArray()),
                 "clone-cross-cell" => CloneCrossCell(args.Skip(1).ToArray()),
                 "clone-batch"      => CloneBatch(args.Skip(1).ToArray()),
@@ -898,7 +904,7 @@ internal static class Program
     {
         var v = ap.Value;
         string head = $" [Array {ap.ArrayType} count={v?.Length ?? 0}]";
-        if (v == null || v.Length == 0 || v.Length > 8) return head;
+        if (v == null || v.Length == 0 || v.Length > ArrayDumpLimit) return head;
 
         if (v.All(x => x is UAssetAPI.PropertyTypes.Objects.EnumPropertyData
                     || x is UAssetAPI.PropertyTypes.Objects.NamePropertyData))
@@ -917,6 +923,11 @@ internal static class Program
                     string.Join(",", (sp.Value ?? new System.Collections.Generic.List<PropertyData>())
                         .Select(q => q is UAssetAPI.PropertyTypes.Objects.EnumPropertyData qe ? qe.Value.ToString()
                                    : q is UAssetAPI.PropertyTypes.Objects.NamePropertyData qn ? qn.Value.ToString()
+                                   // A recipe's cargo lists are Maps nested in a struct array. Printing
+                                   // just the field name says "there is a recipe" and nothing about what
+                                   // it makes, which is the only part anyone reads this for.
+                                   : q is UAssetAPI.PropertyTypes.Objects.MapPropertyData qm ? $"{q.Name}={DescribeMap(qm)}"
+                                   : q is UAssetAPI.PropertyTypes.Objects.ArrayPropertyData qa && (qa.Value?.Length ?? 0) > 0 ? $"{q.Name}={DescribeArray(qa)}"
                                    : q.Name.ToString())))) + "}";
         return head;
     }
@@ -2390,6 +2401,10 @@ internal static class Program
                         SoftObjectPropertyData so => so.Value.AssetPath.PackageName.ToString(),
                         BoolPropertyData bp => bp.Value ? "true" : "false",
                         StructPropertyData sp2 => $"<struct {sp2.StructType}>",
+                        // Same dead-arm bug as the Set/Map ones below: an enum
+                        // has no RawValue, so CargoType -- which decides whether
+                        // a warehouse ever generates the cargo -- printed blank.
+                        UAssetAPI.PropertyTypes.Objects.EnumPropertyData ep => ep.Value.ToString(),
                         // Sets and maps were rendered as nothing at all, which
                         // is how a vehicle's PART SLOTS stayed invisible: the
                         // fields that say which winch a truck can carry are a
@@ -5471,6 +5486,10 @@ internal static class Program
                         UAssetAPI.PropertyTypes.Objects.IntPropertyData ip => $" = {ip.Value}",
                         UAssetAPI.PropertyTypes.Objects.NamePropertyData np => $" = \"{np.Value}\"",
                         UAssetAPI.PropertyTypes.Objects.ArrayPropertyData ap => DescribeArray(ap),
+                        // A Map printed as bare "(MapPropertyData)", which hid
+                        // the surface-to-particle table entirely -- the one
+                        // thing worth reading in DataAsset/FX.uasset.
+                        UAssetAPI.PropertyTypes.Objects.MapPropertyData mp => DescribeMap(mp),
                         // Enum / byte / bool / string printed nothing, so a dump
                         // could show that MaterialDomain EXISTS while hiding
                         // whether it says MD_Volume or MD_Surface -- which is the
@@ -7520,6 +7539,453 @@ internal static class Program
         schema.ModulePath = modulePath;
         asset.Mappings.Schemas[className] = schema;
         asset.Mappings.Schemas[modulePath + "." + className] = schema;
+    }
+
+    // Clone a Cascade particle system under a new name and recolour it.
+    //
+    //     make-particle-variant --template P_WheelGroundEffect_Dirt.uasset
+    //                           --output   P_Arini_SnowSpray.uasset
+    //                           --name P_Arini_SnowSpray --package /Game/DC/Particles
+    //                           --color 1,1,1
+    //
+    // WHY NOT JUST COOK ONE. You should not have to: a particle's colour is
+    // DATA. Every ParticleModuleColor carries a StartColor RawDistributionVector
+    // holding MinValue/MaxValue floats and MinValueVec/MaxValueVec vectors, and
+    // those are what make the dirt spray brown. Setting them to white turns the
+    // same system into snow spray with no editor round trip.
+    //
+    // (UAssetGUI's JSON round trip cannot rewrite this asset -- it throws in
+    // EnumPropertyData.Write even with no edits -- so this goes through
+    // UAssetAPI directly.)
+    private static int MakeParticleVariant(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["template"], EngineVer, LoadMappings(f["mappings"]));
+        string newName = f["name"];
+        string newPkg = f["package"].TrimEnd('/') + "/" + newName;
+        string oldName = Path.GetFileNameWithoutExtension(f["template"]);
+
+        // rename: the package in the name map, the summary's FolderName, and
+        // the export that shares the asset's name.
+        EnsureName(asset, newName);
+        var map = asset.GetNameMapIndexList();
+        for (int i = 0; i < map.Count; i++)
+        {
+            string v = map[i].Value;
+            if (v.EndsWith("/" + oldName, StringComparison.Ordinal))
+                asset.SetNameReference(i, new FString(newPkg));
+            else if (v == oldName)
+                asset.SetNameReference(i, new FString(newName));
+        }
+        asset.FolderName = new FString(newPkg);
+
+        float r = 1f, g = 1f, b = 1f;
+        if (f.TryGetValue("color", out var cs))
+        {
+            var parts = cs.Split(',');
+            if (parts.Length == 3)
+            {
+                var ic = System.Globalization.CultureInfo.InvariantCulture;
+                float.TryParse(parts[0], System.Globalization.NumberStyles.Float, ic, out r);
+                float.TryParse(parts[1], System.Globalization.NumberStyles.Float, ic, out g);
+                float.TryParse(parts[2], System.Globalization.NumberStyles.Float, ic, out b);
+            }
+        }
+
+        // Swap the emitter materials. Tinting a DIRT sprite white still reads as
+        // dirt, because the texture under the tint is a clod. Snow spray is
+        // powder, so the emitters are repointed at a soft smoke material and the
+        // white tint then does what it should.
+        int mats = 0;
+        if (f.TryGetValue("material", out var matPath) && !string.IsNullOrWhiteSpace(matPath))
+        {
+            string mObj = matPath[(matPath.LastIndexOf('/') + 1)..];
+            int mPkg = FindOrAddImport(asset, matPath, 0, "/Script/CoreUObject", "Package");
+            int mIdx = FindOrAddImport(asset, mObj, mPkg, "/Script/Engine", "Material");
+            foreach (var e in asset.Exports)
+            {
+                if (e is not NormalExport ne2) continue;
+                if (!ne2.ObjectName.ToString().StartsWith("ParticleModuleRequired", StringComparison.Ordinal)) continue;
+                if (ne2.Data.FirstOrDefault(q => q.Name.ToString() == "Material") is ObjectPropertyData mp2)
+                { mp2.Value = new FPackageIndex(mIdx); mats++; }
+            }
+        }
+
+        // Density. Rate and RateScale carry inline Min/Max floats on every
+        // ParticleModuleSpawn, so the fog-behind-the-truck look is a multiplier
+        // rather than a re-author.
+        int rates = 0;
+        double spawnScale = 1.0;
+        if (f.TryGetValue("spawn-scale", out var ss))
+            double.TryParse(ss, System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out spawnScale);
+        if (spawnScale != 1.0)
+        {
+            foreach (var e in asset.Exports)
+            {
+                if (e is not NormalExport ne3) continue;
+                if (!ne3.ObjectName.ToString().StartsWith("ParticleModuleSpawn", StringComparison.Ordinal)) continue;
+                foreach (var p in ne3.Data)
+                {
+                    if (p is not StructPropertyData rsp) continue;
+                    if (p.Name.ToString() is not ("Rate" or "RateScale")) continue;
+                    foreach (var inner in rsp.Value)
+                        if (inner is FloatPropertyData rf
+                            && inner.Name.ToString() is "MinValue" or "MaxValue")
+                        { rf.Value = (float)(rf.Value * spawnScale); rates++; }
+                }
+            }
+        }
+
+        int mods = 0;
+        foreach (var e in asset.Exports)
+        {
+            if (e is not NormalExport ne) continue;
+            foreach (var p in ne.Data)
+            {
+                if (p is not StructPropertyData sp) continue;
+                if (p.Name.ToString() != "StartColor") continue;
+                foreach (var inner in sp.Value)
+                {
+                    if (inner is FloatPropertyData fpd
+                        && inner.Name.ToString() is "MinValue" or "MaxValue")
+                        fpd.Value = 1f;
+                    else if (inner is StructPropertyData vsp
+                             && inner.Name.ToString() is "MinValueVec" or "MaxValueVec")
+                        foreach (var vv in vsp.Value)
+                            if (vv is UAssetAPI.PropertyTypes.Structs.VectorPropertyData vpd)
+                                vpd.Value = new FVector(r, g, b);
+                }
+                mods++;
+            }
+        }
+        asset.Write(f["output"]);
+        Console.WriteLine($"  {oldName} -> {newName}: {mods} colour module(s) set to ({r:0.##},{g:0.##},{b:0.##})"
+                        + (mats > 0 ? $", {mats} emitter material(s) swapped" : "")
+                        + (rates > 0 ? $", {rates} spawn value(s) x{spawnScale:0.##}" : ""));
+        return 0;
+    }
+
+    // Add one entry to a Map property whose keys are an enum and whose values
+    // are object references.
+    //
+    //     add-map-entry --uasset FX.uasset --prop WheelSurfaceLoopNSs
+    //                   --key EMotorTownSurface::Snow
+    //                   --object /Game/Cars/Particles/NS_WheelGroundEffect_Rain
+    //                   --object-class NiagaraSystem
+    //
+    // WHY THIS EXISTS. Motor Town picks a wheel effect from a surface->effect
+    // map in DataAsset/FX.uasset. Dirt, Grass, Sand and Mud have entries; SNOW
+    // HAS NONE, which is the entire reason snow throws nothing while dirt
+    // sprays. The game does define EMotorTownSurface::Snow and our physical
+    // materials already report it -- the table just never mapped it.
+    //
+    // An existing key is REPLACED, so re-running a build does not stack
+    // duplicates.
+    private static int AddMapEntry(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        string propName = f["prop"], keyName = f["key"], objPath = f["object"];
+        string objClass = f.GetValueOrDefault("object-class", "NiagaraSystem");
+
+        NormalExport? host = null;
+        UAssetAPI.PropertyTypes.Objects.MapPropertyData? map = null;
+        foreach (var e in asset.Exports)
+        {
+            if (e is not NormalExport ne) continue;
+            var p = ne.Data.FirstOrDefault(q => q.Name.ToString() == propName);
+            if (p is UAssetAPI.PropertyTypes.Objects.MapPropertyData m) { host = ne; map = m; break; }
+        }
+        if (map == null) { Console.Error.WriteLine($"  no Map property named {propName}"); return 1; }
+
+        string obj = objPath[(objPath.LastIndexOf('/') + 1)..];
+        int pkgIdx = FindOrAddImport(asset, objPath, 0, "/Script/CoreUObject", "Package");
+        int objIdx = FindOrAddImport(asset, obj, pkgIdx, "/Script/Engine", objClass);
+
+        EnsureName(asset, keyName);
+        // Keys in these tables serialize as the enum member's NAME.
+        var key = new BytePropertyData(FName.FromString(asset, propName))
+        { ByteType = BytePropertyType.FName, EnumValue = FName.FromString(asset, keyName) };
+        var val = new ObjectPropertyData(FName.FromString(asset, propName))
+        { Value = new FPackageIndex(objIdx) };
+
+        var existing = map.Value.Keys.FirstOrDefault(k => Brief(k).Contains(keyName, StringComparison.Ordinal));
+        if (existing != null) { map.Value[existing] = val; Console.WriteLine($"  {propName}: {keyName} replaced -> {objPath}"); }
+        else { map.Value.Add(key, val); Console.WriteLine($"  {propName}: {keyName} -> {objPath}"); }
+
+        asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        return 0;
+    }
+
+    // Put a physical material on a material we already own.
+    //
+    //     set-material-physmat --uasset Mat_Road_Snow.uasset
+    //                          --physmat /Game/DC/Physics/PM_Arini_SnowRoad
+    //
+    // For materials authored in the editor rather than derived here. A material
+    // INSTANCE with no PhysMaterial of its own inherits its parent's -- so a
+    // snow instance parented to a curb material gets CURB physics, which is
+    // silent and wrong. This writes the property, creating it when absent.
+    //
+    // Safe on our own assets only. Doing this to a vanilla path would ship an
+    // override of it, which is what deriving a material exists to avoid.
+    private static int SetMaterialPhysMat(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        string pm = f["physmat"];
+        string obj = pm[(pm.LastIndexOf('/') + 1)..];
+
+        NormalExport? mat = null;
+        foreach (var e in asset.Exports)
+            if (e is NormalExport ne && ne.Data.Any(p => p.Name.ToString() is "Parent" or "PhysMaterial"))
+            { mat = ne; break; }
+        if (mat == null) { Console.Error.WriteLine("  no material export found"); return 1; }
+
+        int pkgIdx = FindOrAddImport(asset, pm, 0, "/Script/CoreUObject", "Package");
+        int idx = FindOrAddImport(asset, obj, pkgIdx, "/Script/Engine", "MotorTownPhysicalMaterial");
+        if (mat.Data.FirstOrDefault(q => q.Name.ToString() == "PhysMaterial") is ObjectPropertyData phys)
+            phys.Value = new FPackageIndex(idx);
+        else
+        {
+            EnsureName(asset, "PhysMaterial");
+            mat.Data.Add(new ObjectPropertyData(FName.FromString(asset, "PhysMaterial"))
+            { Value = new FPackageIndex(idx) });
+        }
+
+        // Optionally repoint the PARENT too. An instance with no overrides of
+        // its own looks exactly like whatever it inherits from, so parenting a
+        // snow instance to a kerb material makes snow render as grey kerb. This
+        // is how an editor-authored instance gets the right surface without
+        // re-authoring it.
+        if (f.TryGetValue("parent", out var par) && !string.IsNullOrWhiteSpace(par))
+        {
+            string pobj = par[(par.LastIndexOf('/') + 1)..];
+            int ppkg = FindOrAddImport(asset, par, 0, "/Script/CoreUObject", "Package");
+            int pidx = FindOrAddImport(asset, pobj, ppkg, "/Script/Engine",
+                                       f.GetValueOrDefault("parent-class", "Material"));
+            if (mat.Data.FirstOrDefault(q => q.Name.ToString() == "Parent") is ObjectPropertyData pp)
+                pp.Value = new FPackageIndex(pidx);
+            else
+            {
+                EnsureName(asset, "Parent");
+                mat.Data.Add(new ObjectPropertyData(FName.FromString(asset, "Parent"))
+                { Value = new FPackageIndex(pidx) });
+            }
+            Console.WriteLine($"  {mat.ObjectName}: Parent -> {par}");
+        }
+        asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        Console.WriteLine($"  {mat.ObjectName}: PhysMaterial -> {pm}");
+        return 0;
+    }
+
+    // Give a cloned asset its own identity.
+    //
+    //     rename-package --uasset PM_Arini_SnowRoad.uasset
+    //                    --name PM_Arini_SnowRoad --package /Game/DC/Physics
+    //
+    // A copied .uasset still calls itself by its SOURCE's package path, so it
+    // ships as a mod-priority override of the very asset it was copied from --
+    // which is the opposite of deriving a new one. The path is written twice:
+    // in the name map, and again in the summary's FolderName, and UE reads the
+    // second. Renaming only one is how a cloned StringTable went out still
+    // claiming to be the vanilla table.
+    private static int RenamePackageCmd(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        string newName = f["name"];
+        string newPkg = f["package"].TrimEnd('/') + "/" + newName;
+
+        NormalExport? main = null;
+        foreach (var e in asset.Exports) if (e is NormalExport ne) { main = ne; break; }
+        if (main == null) { Console.Error.WriteLine("  no NormalExport to rename"); return 1; }
+
+        string oldObj = main.ObjectName.ToString();
+        EnsureName(asset, newName);
+        var map = asset.GetNameMapIndexList();
+        bool renamed = false;
+        for (int i = 0; i < map.Count; i++)
+        {
+            string v = map[i].Value;
+            if (v.StartsWith("/", StringComparison.Ordinal) && v.EndsWith("/" + oldObj, StringComparison.Ordinal))
+            {
+                asset.SetNameReference(i, new FString(newPkg));
+                Console.WriteLine($"  package {v} -> {newPkg}");
+                renamed = true;
+            }
+        }
+        asset.FolderName = new FString(newPkg);
+        main.ObjectName = FName.FromString(asset, newName);
+        if (!renamed) Console.WriteLine($"  (no package entry in the name map; FolderName set to {newPkg})");
+        asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        Console.WriteLine($"  {oldObj} -> {newName}");
+        return 0;
+    }
+
+    // Build a MaterialInstanceConstant that looks exactly like its parent but
+    // carries OUR physical material.
+    //
+    //     make-material-instance --template MI_DirtRoad_02.uasset
+    //                            --output  MI_Arini_SnowRoad.uasset
+    //                            --name    MI_Arini_SnowRoad
+    //                            --package /Game/DC/Materials
+    //                            --parent  /Game/PolygonTown/Materials/Misc/Mat_Road_Snow
+    //                            --physmat /Game/DC/Physics/PM_Arini_SnowRoad
+    //
+    // WHY AN INSTANCE. A Material carries compiled shaders and nothing in a pak
+    // pipeline can compile one -- that is exactly why a hand-made standalone
+    // Material rendered nothing. An INSTANCE is pure data: it inherits the
+    // parent's shaders and overrides only the fields it names. PhysMaterial is
+    // one of those fields, which is the whole trick.
+    //
+    // WHY A TEMPLATE. Rather than build an export from nothing, clone a vanilla
+    // instance that already has the shape -- MI_DirtRoad_02 carries both Parent
+    // and PhysMaterial -- then rename it and repoint those two.
+    //
+    // EVERY OTHER OVERRIDE IS DROPPED. The template is a DIRT road, so its
+    // scalar/vector/texture parameters are dirt's; keeping them would paint
+    // dirt settings onto snow. Cleared, the instance renders identically to its
+    // parent and differs only in physics.
+    private static int MakeMaterialInstance(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["template"], EngineVer, LoadMappings(f["mappings"]));
+        string newName = f["name"];
+        string newPkg = f["package"].TrimEnd('/') + "/" + newName;
+        string parentPath = f["parent"];
+        string outPath = f["output"];
+
+        NormalExport? mi = null;
+        foreach (var e in asset.Exports)
+            if (e is NormalExport ne && ne.Data.Any(p => p.Name.ToString() == "Parent")) { mi = ne; break; }
+        if (mi == null) { Console.Error.WriteLine("  template has no export with a Parent property"); return 1; }
+
+        // Rename the package in BOTH places it is written: the name map, and
+        // the summary's FolderName. That second copy is the one UE reads the
+        // asset's identity from -- renaming only the first shipped a
+        // StringTable that still called itself by its vanilla name.
+        string oldObj = mi.ObjectName.ToString();
+        EnsureName(asset, newName);
+        var map = asset.GetNameMapIndexList();
+        for (int i = 0; i < map.Count; i++)
+        {
+            string v = map[i].Value;
+            if (v.StartsWith("/", StringComparison.Ordinal) && v.EndsWith("/" + oldObj, StringComparison.Ordinal))
+            {
+                asset.SetNameReference(i, new FString(newPkg));
+                Console.WriteLine($"  package {v} -> {newPkg}");
+            }
+        }
+        asset.FolderName = new FString(newPkg);
+        mi.ObjectName = FName.FromString(asset, newName);
+
+        string[] overrideProps = {
+            "ScalarParameterValues", "VectorParameterValues", "TextureParameterValues",
+            "FontParameterValues", "RuntimeVirtualTextureParameterValues",
+            "DoubleVectorParameterValues", "StaticParameters", "StaticParametersRuntime",
+            "CachedReferencedTextures", "BasePropertyOverrides",
+            // Both describe the TEMPLATE's own cooked shader permutation and
+            // its dirt textures. bHasStaticPermutationResource is the dangerous
+            // one: left True it claims a compiled permutation belonging to the
+            // static parameters we just dropped. Absent, it defaults to false
+            // and the instance simply uses its parent's shaders, which is the
+            // entire point of deriving one.
+            "bHasStaticPermutationResource", "TextureStreamingData",
+        };
+        foreach (var nm in overrideProps)
+        {
+            var p = mi.Data.FirstOrDefault(q => q.Name.ToString() == nm);
+            if (p != null) { mi.Data.Remove(p); Console.WriteLine($"  dropped {nm} (the template's own)"); }
+        }
+
+        int Link(string fullPath, string className)
+        {
+            string obj = fullPath[(fullPath.LastIndexOf('/') + 1)..];
+            int pkgIdx = FindOrAddImport(asset, fullPath, 0, "/Script/CoreUObject", "Package");
+            return FindOrAddImport(asset, obj, pkgIdx, "/Script/Engine", className);
+        }
+
+        if (mi.Data.FirstOrDefault(q => q.Name.ToString() == "Parent") is not ObjectPropertyData parentProp)
+        { Console.Error.WriteLine("  no Parent property"); return 1; }
+        parentProp.Value = new FPackageIndex(Link(parentPath, f.GetValueOrDefault("parent-class", "Material")));
+        Console.WriteLine($"  Parent -> {parentPath}");
+
+        if (f.TryGetValue("physmat", out var pm) && !string.IsNullOrWhiteSpace(pm))
+        {
+            int idx = Link(pm, "MotorTownPhysicalMaterial");
+            if (mi.Data.FirstOrDefault(q => q.Name.ToString() == "PhysMaterial") is ObjectPropertyData phys)
+                phys.Value = new FPackageIndex(idx);
+            else
+            {
+                EnsureName(asset, "PhysMaterial");
+                mi.Data.Add(new ObjectPropertyData(FName.FromString(asset, "PhysMaterial"))
+                { Value = new FPackageIndex(idx) });
+            }
+            Console.WriteLine($"  PhysMaterial -> {pm}");
+        }
+
+        asset.Write(outPath);
+        Console.WriteLine($"  wrote {outPath}");
+        return 0;
+    }
+
+    // Re-point a mesh's material reference without touching the mesh itself.
+    //
+    //     remap-mesh-material --uasset SM_Env_SnowRoad_Corner_01.uasset
+    //                         --from /Game/PolygonTown/Materials/Misc/Mat_Road_Snow
+    //                         --to   /Game/DC/Materials/MI_Arini_SnowRoad
+    //
+    // A cooked mesh names its material through a package import plus an object
+    // import outered to it. Rewriting those two names swaps the material for
+    // every slot that used it -- no re-cook, and no editor pass over 38 meshes.
+    private static int RemapMeshMaterial(string[] args)
+    {
+        var f = ParseFlags(args);
+        var asset = new UAsset(f["uasset"], EngineVer, LoadMappings(f["mappings"]));
+        string from = f["from"], to = f["to"];
+        string fromObj = from[(from.LastIndexOf('/') + 1)..];
+        string toObj = to[(to.LastIndexOf('/') + 1)..];
+        string toClass = f.GetValueOrDefault("to-class", "MaterialInstanceConstant");
+
+        int hits = 0;
+        foreach (var imp in asset.Imports)
+        {
+            string on = imp.ObjectName.ToString();
+            if (on == from)
+            {
+                EnsureName(asset, to);
+                imp.ObjectName = FName.FromString(asset, to);
+                hits++;
+            }
+            else if (on == fromObj)
+            {
+                string cn = imp.ClassName.ToString();
+                if (cn != "Material" && cn != "MaterialInstanceConstant") continue;
+                EnsureName(asset, toObj);
+                EnsureName(asset, toClass);
+                imp.ObjectName = FName.FromString(asset, toObj);
+                imp.ClassName = FName.FromString(asset, toClass);
+                hits++;
+            }
+        }
+        string shortName = Path.GetFileName(f["uasset"]);
+        if (hits == 0)
+        {
+            // Already pointing at the target is SUCCESS, not failure. A build
+            // re-runs this over meshes a previous run already converted -- and
+            // treating that as an error failed the whole build on the three
+            // meshes that happened not to be re-copied that time.
+            bool done = asset.Imports.Any(i => i.ObjectName.ToString() == to
+                                            || i.ObjectName.ToString() == toObj);
+            if (done) { Console.WriteLine($"  {shortName}: already {toObj}"); return 0; }
+            Console.Error.WriteLine($"  {shortName}: no import for {from}");
+            return 1;
+        }
+        asset.Write(f.GetValueOrDefault("output", f["uasset"]));
+        Console.WriteLine($"  {shortName}: {fromObj} -> {toObj} ({hits} import(s))");
+        return 0;
     }
 
     private static int FindOrAddImport(UAsset asset, string objectName, int outerIndex,

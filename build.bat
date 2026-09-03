@@ -251,6 +251,7 @@ if /i "%~1"=="--skip-foliage-cells" set "STEP_FOLIAGE=0" & shift & goto parse_ar
 if /i "%~1"=="--skip-actors"  set "STEP_ACTORS=0"  & shift & goto parse_args
 if /i "%~1"=="--skip_actors"  set "STEP_ACTORS=0"  & shift & goto parse_args
 if /i "%~1"=="--skip-pack"    set "STEP_PACK=0"    & shift & goto parse_args
+if /i "%~1"=="--layer"        set "MTMI_LAYER=%~2" & shift & shift & goto parse_args
 if /i "%~1"=="--skip-cargo"   set "MTMI_SKIP_CARGO=1" & shift & goto parse_args
 if /i "%~1"=="--skip-cache-mesh" set "MTMI_SKIP_CACHE_MESH=1" & shift & goto parse_args
 if /i "%~1"=="--skip-cache"   set "MTMI_SKIP_CACHE_MESH=1" & shift & goto parse_args
@@ -315,6 +316,30 @@ endlocal
 exit /b 0
 
 :after_args
+
+rem ----- Build LAYER. A layer decides which other mods this build may see.
+rem mt_paths resolves vanilla assets through the installed paks, so a mod that
+rem overrides Cargos or Vehicles silently becomes our baseline -- right when
+rem building the layer FOR that mod, wrong for the plain release. mods.py turns
+rem a layer name into the pak exclusions and the mod identity.
+if defined MTMI_LAYER (
+    for /f "usebackq delims=" %%i in (`python mods.py --layer %MTMI_LAYER%`) do set "MTMI_EXCLUDE_PAKS=%%i"
+    for /f "usebackq delims=" %%i in (`python mods.py --layer %MTMI_LAYER% --mod-name`) do set "MTMI_MOD_NAME=%%i"
+    if errorlevel 1 (
+        echo   layer "%MTMI_LAYER%" could not be resolved -- see mods.json
+        exit /b 1
+    )
+    rem EVERY path derived from the mod name has to be recomputed, not just the
+    rem staging root. UMAP and GENDIR are set near the top from the default name,
+    rem so a layer that only re-set MODCONTENT wrote its map into the BASE
+    rem folder -- silently overwriting the base build's map with one built while
+    rem another mod was visible, and shipping a layer pak with no map at all.
+    set "MODCONTENT=!MTMI_MOD_NAME!\MotorTown\Content"
+    set "UMAP=!MODCONTENT!\Maps\Jeju\Jeju_World.umap"
+    set "GENDIR=!MODCONTENT!\Maps\Jeju\Jeju_World\_Generated_"
+    set "DEPLOYED=%MTMI_GAME_PAKDIR%\zzzz_!MTMI_MOD_NAME!.pak"
+    echo   layer !MTMI_LAYER!: building !MTMI_MOD_NAME!, hiding !MTMI_EXCLUDE_PAKS!
+)
 
 if "%PULL_MAP%"=="1" (
     echo [%TIME%] Pulling vanilla map from extracted content...

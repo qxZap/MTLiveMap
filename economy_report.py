@@ -27,8 +27,24 @@ SHARDS = REPO / "static_meshes_parts"
 def load():
     d = json.loads(DP_JSON.read_text(encoding="utf-8"))
     cat = {r["Name"]: r for r in json.loads(CATALOG.read_text(encoding="utf-8"))}
-    custom = {c["new_id"]: c for c in d.get("new_cargos") or []}
-    dps = {k: v for k, v in d.items() if isinstance(v, dict) and "recipes" in v}
+
+    # Drop anything this build layer must not see. An entry with `requires`
+    # names the mod whose cargo rows it depends on; without that mod the row
+    # does not exist and every route through it would dangle. Filtering HERE
+    # covers pricing, the route page and the build in one place.
+    from mods import wants
+    d["new_cargos"] = [c for c in (d.get("new_cargos") or []) if wants(c)]
+    custom = {c["new_id"]: c for c in d["new_cargos"]}
+    dps = {}
+    for k, v in d.items():
+        if not (isinstance(v, dict) and "recipes" in v):
+            continue
+        if not wants(v):
+            continue
+        v = dict(v)
+        v["recipes"] = [r for r in v["recipes"] if wants(r)]
+        d[k] = v
+        dps[k] = v
     return d, cat, custom, dps
 
 

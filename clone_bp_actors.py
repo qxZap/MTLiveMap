@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 
 from bp_registry import REGISTRY, template_for_class
+from mods import wants
 from mt_paths import (GAME_CONTENT, CELLS_DIR, JEJU_MAIN, MAPPINGS,
                       MOD_CONTENT_ROOT, effective_asset)
 
@@ -127,7 +128,12 @@ def load_new_cargos() -> list[dict]:
         print(f"  delivery_points.json parse error: {e}", file=sys.stderr)
         return []
     out = cfg.get("new_cargos") or []
-    return [c for c in out if isinstance(c, dict) and c.get("new_id")]
+    # `requires` names a mod, and only the layers that can see that mod may
+    # ship the cargo. Without this the vanilla pak carried Proxy's rows,
+    # whose copy_from resolves to nothing -- each one a silent skip line,
+    # not a failure.
+    return [c for c in out
+            if isinstance(c, dict) and c.get("new_id") and wants(c)]
 
 
 def materialize_new_cargos(new_cargos: list[dict]) -> bool:
@@ -206,26 +212,50 @@ def materialize_new_cargos(new_cargos: list[dict]) -> bool:
             e["display_table"] = f"/Game/DataAsset/StringTables/{MOD_STRINGTABLE}.{MOD_STRINGTABLE}"
     import tempfile
     MOD_CARGOS_01.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
-        json.dump(spec, tf); spec_path = tf.name
-    try:
-        r = subprocess.run([
-            str(INJECTOR), "mutate-cargos",
-            "--mappings",   MAPPINGS,
-            # Base = whatever the game actually loads for Cargos_01: a
-            # cargo/economy mod's copy if one is installed, else vanilla.
-            # Mutating vanilla here would make our late pak revert theirs.
-            "--src-uasset", str(effective_asset("DataAsset/Cargos_01.uasset")),
-            "--dst-uasset", str(MOD_CARGOS_01),
-            "--spec",       spec_path,
-        ], capture_output=True, text=True)
-        if r.returncode != 0:
-            print(r.stdout); print(r.stderr, file=sys.stderr); return False
-        for line in r.stdout.splitlines():
-            if line.strip(): print(f"  {line}")
-    finally:
-        try: os.unlink(spec_path)
-        except OSError: pass
+
+    # A clone is made INSIDE its source table, never across two.
+    #
+    # copy_from is resolved against the rows of one asset, and a row carries
+    # ObjectProperty values that index THAT asset's import table -- the mesh the
+    # cargo shows, above all. Copying a row into a different asset would carry
+    # those indices with it and point them at whatever happens to sit at the
+    # same slot. So a cargo cloned from Proxy's table is written back into a
+    # copy of Proxy's table, which is exactly what the CapitalistEconomy x Proxy
+    # bridge pak does -- it ships Cargos_Proxy.uasset and nothing else.
+    #
+    # `source_table` on a new_cargos entry names the asset; default Cargos_01.
+    groups: dict[str, list] = {}
+    for e in spec:
+        groups.setdefault(e.pop("source_table", "DataAsset/Cargos_01.uasset"), []).append(e)
+
+    for rel, entries in groups.items():
+        dst = MOD_CARGOS_01 if rel == "DataAsset/Cargos_01.uasset" else (MOD_CONTENT_ROOT / rel)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        src = effective_asset(rel)
+        if not Path(src).is_file():
+            print(f"  {rel} not installed -- {len(entries)} cargo(s) skipped", file=sys.stderr)
+            continue
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tf:
+            json.dump(entries, tf); spec_path = tf.name
+        try:
+            r = subprocess.run([
+                str(INJECTOR), "mutate-cargos",
+                "--mappings",   MAPPINGS,
+                # Base = whatever the game actually loads for this table: a
+                # cargo/economy mod's copy if one is installed, else vanilla.
+                # Mutating vanilla here would make our late pak revert theirs.
+                "--src-uasset", str(src),
+                "--dst-uasset", str(dst),
+                "--spec",       spec_path,
+            ], capture_output=True, text=True)
+            if r.returncode != 0:
+                print(r.stdout); print(r.stderr, file=sys.stderr); return False
+            print(f"  {rel} -> {dst.name} ({len(entries)} cargo(s))")
+            for line in r.stdout.splitlines():
+                if line.strip(): print(f"  {line}")
+        finally:
+            try: os.unlink(spec_path)
+            except OSError: pass
     return True
 
 

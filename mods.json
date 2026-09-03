@@ -1,0 +1,118 @@
+{
+  "_README": [
+    "Which other mods the build is allowed to SEE, and the named layers we ship.",
+    "",
+    "WHY THIS EXISTS",
+    "  mt_paths resolves every vanilla asset through the installed paks, so a mod",
+    "  that overrides Cargos.uasset silently becomes our baseline. That is right",
+    "  when we are building the layer FOR that mod and wrong when we are building",
+    "  the plain one -- the vanilla release would ship prices computed against",
+    "  Capitalist Economy's table.",
+    "",
+    "  MTMI_EXCLUDE_PAKS already skips paks by filename substring. This file just",
+    "  names the sets, so a build says `--layer vanilla` instead of listing pak",
+    "  fragments by hand.",
+    "",
+    "OUR OWN OUTPUT IS ALWAYS SKIPPED",
+    "  zzzz_Arini_P.pak and the tanker compat are ours. Reading our own last",
+    "  build as if it were vanilla is how a value gets baked in twice.",
+    "",
+    "ADDING A MOD",
+    "  `match` is a case-insensitive substring of the pak FILENAME, not a path.",
+    "  Check it against the real folder before trusting it -- Proxy ships five",
+    "  paks and only one of them carries cargo.",
+    "",
+    "PAK NAME ORDER IS THE WHOLE POINT",
+    "  Unreal mounts paks in filename order and the LAST one wins, so a compat",
+    "  layer must sort after both the mod it patches and our own base pak.",
+    "  modp.bat prefixes everything with zzzz_, which already clears the other",
+    "  mods (X_, ZZZ_, zz... all sort before zzzz_). What it does NOT clear is us:",
+    "  zzzz_Arini_CapEcon_P sorts BEFORE zzzz_Arini_P, because 'C' < 'P', so the",
+    "  base would have overridden its own layer.",
+    "  Hence the z prefixes: _zCapEcon and _zProxy sort after _P, and _zz for the",
+    "  combined layer sorts after both singles."
+  ],
+  "mods": {
+    "self": {
+      "label": "our own output",
+      "match": [
+        "zzzz_Arini",
+        "TankersFuelPump_Arini"
+      ],
+      "always_skip": true,
+      "_": "Never read our own pak back as source. Not optional."
+    },
+    "capitalist": {
+      "label": "Capitalist Economy",
+      "match": [
+        "qxZap_CapitalistEconomy"
+      ],
+      "provides": [
+        "DataAsset/Vehicles"
+      ],
+      "_": "Overrides every Vehicles*.uasset. Visible in any build log as the [mt_paths] mod-override lines."
+    },
+    "proxy": {
+      "label": "Proxy Oversized Cargo",
+      "match": [
+        "ProxysOversizeCargo",
+        "ProxyOversizedCargos"
+      ],
+      "provides": [
+        "DataAsset/Cargos_Proxy"
+      ],
+      "_": "90 cargo rows, 50 kg to 300 t. The cargo pak is zzProxysOversizeCargoV4; the Tech/Wheels ones carry no cargo and are irrelevant here."
+    },
+    "moretuning": {
+      "label": "MoreTuning",
+      "match": [
+        "qxZap_MoreTuning"
+      ],
+      "_": "Vehicle parts only. Listed so a layer can exclude it deliberately rather than by omission."
+    }
+  },
+  "layers": {
+    "vanilla": {
+      "skip": [
+        "capitalist",
+        "proxy",
+        "moretuning"
+      ],
+      "mod_name": "Arini_P",
+      "_": "The base release. Sees the stock game and nothing else."
+    },
+    "capitalist": {
+      "skip": [
+        "proxy",
+        "moretuning"
+      ],
+      "requires": [
+        "capitalist"
+      ],
+      "mod_name": "Arini_zCapEcon_P",
+      "_": "For players running Capitalist Economy."
+    },
+    "proxy": {
+      "skip": [
+        "capitalist",
+        "moretuning"
+      ],
+      "requires": [
+        "proxy"
+      ],
+      "mod_name": "Arini_zProxy_P",
+      "_": "For players running Proxy's oversized cargo."
+    },
+    "proxy_capitalist": {
+      "skip": [
+        "moretuning"
+      ],
+      "requires": [
+        "capitalist",
+        "proxy"
+      ],
+      "mod_name": "Arini_zzProxyCapEcon_P",
+      "_": "Both. The ecosystem already ships this shape -- ZZZ_qxZap_CapitalistEconomy_ProxyOversizedCargos_P.pak is exactly a two-mod bridge, and it holds four files."
+    }
+  }
+}

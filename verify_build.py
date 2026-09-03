@@ -178,16 +178,34 @@ def main() -> int:
         new_cargos = []
         _ok("--skip-cargo: cargo checks skipped")
     else:
+        # Honour the build LAYER. A cargo marked `requires` belongs to another
+        # mod's layer and is deliberately absent from this pak -- checking for
+        # it here fails a build that is correct, which is exactly what happened
+        # the first time the vanilla layer ran with Proxy cargo declared.
+        from mods import wants
         new_cargos = [c for c in (cfg.get("new_cargos") or [])
-                      if isinstance(c, dict) and c.get("new_id")]
+                      if isinstance(c, dict) and c.get("new_id") and wants(c)]
+        _skipped = [c["new_id"] for c in (cfg.get("new_cargos") or [])
+                    if isinstance(c, dict) and c.get("new_id") and not wants(c)]
+        if _skipped:
+            _ok(f"layer excludes {len(_skipped)} cargo(s) from other mods")
 
-    # Cargos_01 only ships when there are new_cargos (or overrides). If none
+    # A cargo cloned from another mod's table is written back into a copy of
+    # THAT table, not ours -- a row carries import indices into the asset it
+    # came from. So the pak may ship two cargo tables, and each cargo is only
+    # ever found in its own.
+    _tables: dict[str, list] = {}
+    for c in new_cargos:
+        _tables.setdefault(c.get("source_table", "DataAsset/Cargos_01.uasset"), []).append(c)
+
+    # A cargo table only ships when there are new_cargos for it. If none
     # declared, its absence is correct.
     if new_cargos:
-        if _has("DataAsset/Cargos_01.uasset"):
-            _ok("pak contains DataAsset/Cargos_01.uasset")
-        else:
-            _fail("pak missing DataAsset/Cargos_01.uasset (new_cargos declared)")
+        for rel in _tables:
+            if _has(rel):
+                _ok(f"pak contains {rel}")
+            else:
+                _fail(f"pak missing {rel} (new_cargos declared)")
     else:
         _ok("no new_cargos — Cargos_01 not expected")
 
@@ -205,23 +223,30 @@ def main() -> int:
         _ok("no new_cargos declared — skipping cargo round-trip")
     else:
         tmp = Path(tempfile.mkdtemp(prefix="mtmi_verify_", dir=str(WORK_DIR)))
-        cargos_uasset = tmp / "Cargos_01.uasset"
-        entry = next((e for e in entries if e.endswith("DataAsset/Cargos_01.uasset")), None)
-        # repak get also needs the .uexp sibling for UAssetAPI to parse.
-        uexp_entry = entry[:-7] + ".uexp" if entry else None
-        got = False
-        if entry and uexp_entry:
-            got = (_repak_get(DEPLOYED_PAK, entry, cargos_uasset)
-                   and _repak_get(DEPLOYED_PAK, uexp_entry, tmp / "Cargos_01.uexp"))
-        if not got:
-            _fail("could not extract Cargos_01 from the pak for verification")
-        else:
-            _ok("extracted Cargos_01 from the pak")
+        extracted: dict[str, Path] = {}
+        for rel in _tables:
+            stem = Path(rel).stem
+            dst = tmp / f"{stem}.uasset"
+            entry = next((e for e in entries if e.endswith(rel)), None)
+            # repak get also needs the .uexp sibling for UAssetAPI to parse.
+            uexp_entry = entry[:-7] + ".uexp" if entry else None
+            if entry and uexp_entry and (_repak_get(DEPLOYED_PAK, entry, dst)
+                                         and _repak_get(DEPLOYED_PAK, uexp_entry, tmp / f"{stem}.uexp")):
+                extracted[rel] = dst
+                _ok(f"extracted {stem} from the pak")
+            else:
+                _fail(f"could not extract {stem} from the pak for verification")
+
+        if extracted:
             for c in new_cargos:
                 nid = c["new_id"]
-                row = _dump_row(cargos_uasset, nid)
+                rel = c.get("source_table", "DataAsset/Cargos_01.uasset")
+                if rel not in extracted:
+                    continue
+                stem = Path(rel).stem
+                row = _dump_row(extracted[rel], nid)
                 if row is None:
-                    _fail(f"cargo '{nid}' not found in packed Cargos_01")
+                    _fail(f"cargo '{nid}' not found in packed {stem}")
                     continue
                 bad = []
                 for k, v in c.items():
