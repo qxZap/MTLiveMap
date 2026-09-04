@@ -419,7 +419,10 @@ def main() -> int:
     _lr = os.environ.get("MTMI_WP_LOADING_RANGE", "").strip()
     if _lr:
         try:
-            lr = float(_lr)
+            # A cell claims bounds CELL_PAD larger than its contents, so it
+            # loads that much earlier. Judging the cull against the bare
+            # loading range reports on a build we are not making.
+            lr = float(_lr) + CELL_PAD
             worst = max((resolve_cull(mesh_paths[k], settings.get(k) or {})[1]
                          for k in mesh_paths), default=0)
             if worst == 0:

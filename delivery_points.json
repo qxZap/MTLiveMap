@@ -134,7 +134,8 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "base_payment": 60000
+      "base_payment": 60000,
+      "CargoType": "None"
     },
     {
       "copy_from": "Fuel",
@@ -197,7 +198,8 @@
       "SpawnProbability": 6,
       "VolumeSize": 1,
       "_": "800 kg on a B2 rig over 2.12 km (South_Barn->Valley_Trailer) = 57,621 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "weight_kg": 800
+      "weight_kg": 800,
+      "CargoType": "None"
     },
     {
       "copy_from": "IronOre",
@@ -276,7 +278,8 @@
       "base_payment": 100000,
       "BasePayment": 100000,
       "_": "500 kg on a B2 rig over 6.50 km (Dorna_Beer_Factory->Braila_Port) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 2
+      "batch": 2,
+      "CargoType": "None"
     },
     {
       "copy_from": "BoxPallete_01",
@@ -293,7 +296,8 @@
       "base_payment": 20000,
       "BasePayment": 20000,
       "_": "300 kg on a B2 rig over 2.55 km (Water_Storage_Depot->Dorna_Supermarket) = 20,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 2
+      "batch": 2,
+      "CargoType": "None"
     },
     {
       "copy_from": "BreadBox",
@@ -310,7 +314,8 @@
       "base_payment": 50000,
       "BasePayment": 50000,
       "_": "500 kg on a B1 rig over 2.93 km (Old_Trailer->Dorna_Old_Market) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 1
+      "batch": 1,
+      "CargoType": "None"
     },
     {
       "copy_from": "CheeseBox",
@@ -327,7 +332,8 @@
       "base_payment": 50000,
       "BasePayment": 50000,
       "_": "500 kg on a B1 rig over 2.10 km (Dorna_Old_Market->Cheese_Shop) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 1
+      "batch": 1,
+      "CargoType": "None"
     },
     {
       "copy_from": "CheesePallet",
@@ -344,7 +350,8 @@
       "base_payment": 100000,
       "BasePayment": 100000,
       "_": "500 kg on a B2 rig over 2.16 km (Cheese_Factory->Dorna_Old_Market) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 2
+      "batch": 2,
+      "CargoType": "None"
     },
     {
       "copy_from": "Container_20ft_01",
@@ -356,7 +363,7 @@
       "PaymentPer1Km": 0,
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
-      "MinDeliveryDistance": 0,
+      "MinDeliveryDistance": 900000,
       "MaxDeliveryDistance": 0,
       "base_payment": 250000,
       "BasePayment": 250000,
@@ -373,7 +380,7 @@
       "PaymentPer1Km": 0,
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
-      "MinDeliveryDistance": 0,
+      "MinDeliveryDistance": 900000,
       "MaxDeliveryDistance": 0,
       "base_payment": 250000,
       "BasePayment": 250000,
@@ -412,7 +419,8 @@
       "base_payment": 100000,
       "BasePayment": 100000,
       "_": "500 kg on a B2 rig over 6.04 km (GrainTrailer->South_Barn) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 2
+      "batch": 2,
+      "CargoType": "None"
     },
     {
       "copy_from": "GlassBottleBox",
@@ -429,7 +437,8 @@
       "base_payment": 50000,
       "BasePayment": 50000,
       "_": "500 kg on a B1 rig over 3.70 km (East_Gas_Station->Dorna_Beer_Factory) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 1
+      "batch": 1,
+      "CargoType": "None"
     },
     {
       "copy_from": "MeatBox",
@@ -446,7 +455,8 @@
       "base_payment": 50000,
       "BasePayment": 50000,
       "_": "500 kg on a B1 rig over 4.12 km (South_Barn->Abandoned_Market) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 1
+      "batch": 1,
+      "CargoType": "None"
     },
     {
       "copy_from": "PlasticPipes_6m",
@@ -480,7 +490,8 @@
       "base_payment": 100000,
       "BasePayment": 100000,
       "_": "500 kg on a B2 rig over 6.48 km (Aerotyne_International->Dish_Tower) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 2
+      "batch": 2,
+      "CargoType": "None"
     },
     {
       "copy_from": "SmallBox",
@@ -497,7 +508,8 @@
       "base_payment": 50000,
       "BasePayment": 50000,
       "_": "500 kg on a B1 rig over 5.37 km (Dish_Tower->Braila_Port) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 1
+      "batch": 1,
+      "CargoType": "None"
     },
     {
       "copy_from": "SunflowerSeed",

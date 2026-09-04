@@ -2738,6 +2738,26 @@ internal static class Program
                         np.Value = FName.FromString(asset, (string)value!);
                         Console.WriteLine($"  {fieldName}={np.Value} {label}");
                         return true;
+                    // CargoType is an enum, and a delivery point that accepts a
+                    // TYPE takes every row wearing it -- 20 Jeju points accept
+                    // LargePackage. Clearing the type is how a cargo is kept to
+                    // the island, so it has to be settable.
+                    case UAssetAPI.PropertyTypes.Objects.EnumPropertyData ep:
+                    {
+                        string want = (string)value!;
+                        // Keep whatever qualification the existing value used:
+                        // some enums serialize bare ("None"), others fully
+                        // ("EDeliveryCargoType::None"), and writing the wrong
+                        // shape resolves to nothing at all.
+                        string cur = ep.Value.ToString() ?? "";
+                        int sep = cur.LastIndexOf("::", StringComparison.Ordinal);
+                        if (sep >= 0 && !want.Contains("::"))
+                            want = cur[..(sep + 2)] + want;
+                        EnsureName(asset, want);
+                        ep.Value = FName.FromString(asset, want);
+                        Console.WriteLine($"  {fieldName}={ep.Value} {label}");
+                        return true;
+                    }
                     default:
                         Console.Error.WriteLine($"  WARN: field '{fieldName}' on {label} is type {p.GetType().Name} — not supported by mutate-cargos generic setter");
                         return false;
