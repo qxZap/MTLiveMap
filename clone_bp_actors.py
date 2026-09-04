@@ -886,11 +886,17 @@ def main():
             # map; without it MT's mission/save subsystems can't key the actor.
             if tpl.get("inject_into_main"):
                 spec["main_inject"] = True
-            # Optional per-instance ProductionConfigs override (delivery-point
-            # recipe table). MT may or may not honor instance overrides for
-            # this property — if not, we'd need a full BP class clone.
-            if tpl.get("production_recipes"):
-                spec["production_recipes"] = tpl["production_recipes"]
+            # Recipes live in the Mod* class CDO and NOWHERE else.
+            #
+            # They used to be written here as a per-instance override too, back
+            # when it was unclear whether MT honoured the CDO. It does -- every
+            # delivery point gets its own generated class -- and the duplicate
+            # was what broke compat layers: a serialized instance property wins
+            # over the CDO, the instance lives in the MAP, and a compat layer
+            # ships no map. So the layer's CDO was correct, shipped, and mounted
+            # last, and the base map's baked-in copy overrode it anyway.
+            # Galati read its vanilla recipes with the Proxy pak sitting right
+            # there holding the other 54.
             # Per-PLACEMENT label wins over the template's. A registry entry
             # carries one label for the whole asset type, which is right for a
             # delivery point (one entry, one point) and wrong for bus stops,
