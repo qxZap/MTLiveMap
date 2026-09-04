@@ -154,6 +154,30 @@ def batch_for(name: str, row: dict, kg: float) -> int:
     return 5
 
 
+# What one cargo slot's worth of space is, in kg. MEASURED: the median
+# kg-per-slot across every vanilla row that declares both (VolumeSize is 1.0
+# on all of them, so this is just the median vanilla cargo weight). It is the
+# break-even point -- a load denser than this is paid for its mass, a load
+# lighter than this is paid for the space it ties up.
+KG_PER_SLOT = 1_700.0
+
+
+def chargeable_kg(kg: float, volume: float) -> float:
+    """What a load costs to move: the greater of what it weighs and what it
+    displaces.
+
+    A truck fills by weight or by space, whichever runs out first, so paying
+    purely by mass underpays anything bulky and light -- a dinghy is 50 kg and
+    takes up a boat's worth of deck. This is the freight trade's chargeable
+    weight, and it is a max() rather than a product on purpose: a load that is
+    both heavy AND bulky already gets paid for the heavy part, and multiplying
+    the two would bill it twice for one trip.
+    """
+    if volume and volume > 0:
+        return max(kg, volume * KG_PER_SLOT)
+    return kg
+
+
 def weight_value(kg: float) -> float:
     """What a load is worth by weight, on the game's own curve.
 
@@ -198,7 +222,13 @@ def compute() -> tuple[list[tuple], dict, dict, dict]:
         run = shortest_run(name, prod, cons, co)
         km = run[0] if run else 0.0
         kg = float(c.get("weight_kg") or kgs.get(name) or kgs.get(c.get("copy_from", "")) or DEFAULT_KG)
+        # Licence tier comes from what the load WEIGHS -- that is what decides
+        # the truck you need. Volume decides what you are PAID for the space it
+        # ties up. Feeding chargeable weight into both compounded them: a 50 kg
+        # dinghy went from a B1 van to a B4 rig and priced at 73x.
         batch = int(c.get("batch") or batch_for(name, c, kg))
+        # VolumeSize is the slot count the row declares; absent means one slot.
+        kg = chargeable_kg(kg, float(c.get("VolumeSize") or 1.0))
         if "base_payment" in c:      # explicit escape hatch, e.g. contraband
             pay, note = int(c["base_payment"]), "fixed"
         else:

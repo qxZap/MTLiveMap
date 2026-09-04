@@ -108,7 +108,7 @@
       "BasePayment": 8000,
       "SpawnProbability": 14,
       "VolumeSize": 1,
-      "_": "800 kg on a B5 rig over 2.58 km (Water_Storage->Dorna_Beer_Factory) = 8,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B5 rig over 2.58 km (Water_Storage->Dorna_Beer_Factory) = 8,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "display_name": "Water",
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
@@ -127,7 +127,7 @@
       "VolumeSize": 1,
       "NumCargoMin": 1,
       "NumCargoMax": 1,
-      "_": "500 kg on a B1 rig over 2.31 km (Trap_Cave->Abandoned_Market) = 60,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B1 rig over 2.31 km (Trap_Cave->Abandoned_Market) = 60,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "display_name": "Pezzi",
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
@@ -143,10 +143,10 @@
       "display_source": "Fuel",
       "display_name": "Jet Fuel",
       "PaymentPer1Km": 0,
-      "BasePayment": 185249,
+      "BasePayment": 297846,
       "SpawnProbability": 6,
       "VolumeSize": 1,
-      "_": "800 kg on a B5 rig over 4.16 km (Fuel_Rafinery->Aerotyne_International) = 185,249 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B5 rig over 4.16 km (Fuel_Rafinery->Aerotyne_International) = 297,846 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
       "PaymentSqrtRatioMinCapcity": 0,
@@ -162,7 +162,7 @@
       "BasePayment": 47000,
       "SpawnProbability": 5,
       "VolumeSize": 1,
-      "_": "800 kg on a B5 rig over 4.22 km (Fuel_Rafinery->Water_Storage_Depot) = 47,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B5 rig over 4.22 km (Fuel_Rafinery->Water_Storage_Depot) = 47,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
       "PaymentSqrtRatioMinCapcity": 0,
@@ -176,10 +176,10 @@
       "display_source": "Fuel",
       "display_name": "Liquid Nitrogen",
       "PaymentPer1Km": 0,
-      "BasePayment": 236514,
+      "BasePayment": 380270,
       "SpawnProbability": 4,
       "VolumeSize": 1,
-      "_": "800 kg on a B5 rig over 6.69 km (Aerotyne_International->Alpine_Rescue_Post) = 236,514 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B5 rig over 6.69 km (Aerotyne_International->Alpine_Rescue_Post) = 380,270 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
       "PaymentSqrtRatioMinCapcity": 0,
@@ -191,13 +191,13 @@
       "new_id": "HempBale",
       "display_source": "HempPallet",
       "display_name": "Hemp Bales",
-      "BasePayment": 57621,
+      "BasePayment": 92644,
       "PaymentPer1Km": 0,
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
       "SpawnProbability": 6,
       "VolumeSize": 1,
-      "_": "800 kg on a B2 rig over 2.12 km (South_Barn->Valley_Trailer) = 57,621 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 2.12 km (South_Barn->Valley_Trailer) = 92,644 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "weight_kg": 800,
       "CargoType": "None"
     },
@@ -277,7 +277,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 100000,
       "BasePayment": 100000,
-      "_": "500 kg on a B2 rig over 6.50 km (Dorna_Beer_Factory->Braila_Port) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 6.50 km (Dorna_Beer_Factory->Braila_Port) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 2,
       "CargoType": "None"
     },
@@ -295,7 +295,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 20000,
       "BasePayment": 20000,
-      "_": "300 kg on a B2 rig over 2.55 km (Water_Storage_Depot->Dorna_Supermarket) = 20,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 2.55 km (Water_Storage_Depot->Dorna_Supermarket) = 20,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 2,
       "CargoType": "None"
     },
@@ -313,7 +313,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 50000,
       "BasePayment": 50000,
-      "_": "500 kg on a B1 rig over 2.93 km (Old_Trailer->Dorna_Old_Market) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B1 rig over 2.93 km (Old_Trailer->Dorna_Old_Market) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 1,
       "CargoType": "None"
     },
@@ -331,7 +331,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 50000,
       "BasePayment": 50000,
-      "_": "500 kg on a B1 rig over 2.10 km (Dorna_Old_Market->Cheese_Shop) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B1 rig over 2.10 km (Dorna_Old_Market->Cheese_Shop) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 1,
       "CargoType": "None"
     },
@@ -349,7 +349,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 100000,
       "BasePayment": 100000,
-      "_": "500 kg on a B2 rig over 2.16 km (Cheese_Factory->Dorna_Old_Market) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 2.16 km (Cheese_Factory->Dorna_Old_Market) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 2,
       "CargoType": "None"
     },
@@ -420,7 +420,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 100000,
       "BasePayment": 100000,
-      "_": "500 kg on a B2 rig over 6.04 km (GrainTrailer->South_Barn) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 6.04 km (GrainTrailer->South_Barn) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 2,
       "CargoType": "None"
     },
@@ -438,7 +438,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 50000,
       "BasePayment": 50000,
-      "_": "500 kg on a B1 rig over 3.70 km (East_Gas_Station->Dorna_Beer_Factory) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B1 rig over 3.70 km (East_Gas_Station->Dorna_Beer_Factory) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 1,
       "CargoType": "None"
     },
@@ -456,7 +456,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 50000,
       "BasePayment": 50000,
-      "_": "500 kg on a B1 rig over 4.12 km (South_Barn->Abandoned_Market) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B1 rig over 4.12 km (South_Barn->Abandoned_Market) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 1,
       "CargoType": "None"
     },
@@ -474,7 +474,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 10000,
       "BasePayment": 10000,
-      "_": "500 kg on a B1 rig over 4.22 km (Water_Storage_Depot->Fuel_Rafinery) = 10,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B1 rig over 4.22 km (Water_Storage_Depot->Fuel_Rafinery) = 10,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 1
     },
     {
@@ -491,7 +491,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 100000,
       "BasePayment": 100000,
-      "_": "500 kg on a B2 rig over 6.48 km (Aerotyne_International->Dish_Tower) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 6.48 km (Aerotyne_International->Dish_Tower) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 2,
       "CargoType": "None"
     },
@@ -509,7 +509,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 50000,
       "BasePayment": 50000,
-      "_": "500 kg on a B1 rig over 5.37 km (Dish_Tower->Braila_Port) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B1 rig over 5.37 km (Dish_Tower->Braila_Port) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 1,
       "CargoType": "None"
     },
@@ -527,7 +527,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 50000,
       "BasePayment": 50000,
-      "_": "450 kg on a B1 rig over 6.04 km (GrainTrailer->South_Barn) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B1 rig over 6.04 km (GrainTrailer->South_Barn) = 50,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 1
     },
     {
@@ -615,8 +615,8 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 197514,
-      "_": "2400 kg on a B3 rig over 3.14 km (Trap_Cave->Abbandoned_Gas_Station) = 197,514 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "BasePayment": 245979,
+      "_": "3400 kg on a B3 rig over 3.14 km (Trap_Cave->Abbandoned_Gas_Station) = 245,979 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "Cement",
@@ -632,8 +632,8 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 101994,
-      "_": "1500 kg on a B2 rig over 2.57 km (Abbandoned_Gas_Station->Dorna_Wood_Storage) = 101,994 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "BasePayment": 270335,
+      "_": "3400 kg on a B2 rig over 8.42 km (Abbandoned_Gas_Station->South_Depot) = 270,335 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "CopperOre",
@@ -649,8 +649,8 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 239081,
-      "_": "2800 kg on a B3 rig over 3.94 km (South_Iron_Quary->South_Depot) = 239,081 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "BasePayment": 270189,
+      "_": "3400 kg on a B3 rig over 3.94 km (South_Iron_Quary->South_Depot) = 270,189 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "Log_20ft",
@@ -1324,7 +1324,8 @@
       "BasePayment": 6165407,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "80000 kg on a B5 rig over 11.75 km (Braila_Port->South_Depot) = 6,165,407 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "80000 kg on a B5 rig over 11.75 km (Braila_Port->South_Depot) = 6,165,407 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "BullD",
@@ -1342,7 +1343,8 @@
       "BasePayment": 3570279,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "52700 kg on a B5 rig over 7.61 km (Galati_Port->South_Iron_Quary) = 3,570,279 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "52700 kg on a B5 rig over 7.61 km (Galati_Port->South_Iron_Quary) = 3,570,279 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "pipesandgen",
@@ -1360,7 +1362,8 @@
       "BasePayment": 3449553,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "52000 kg on a B5 rig over 7.29 km (Braila_Port->Fuel_Rafinery) = 3,449,553 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "52000 kg on a B5 rig over 7.29 km (Braila_Port->Fuel_Rafinery) = 3,449,553 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "Cat797Bed",
@@ -1378,7 +1381,8 @@
       "BasePayment": 3819568,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "45000 kg on a B5 rig over 9.91 km (Galati_Port->Trap_Cave) = 3,819,568 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "45000 kg on a B5 rig over 9.91 km (Galati_Port->Trap_Cave) = 3,819,568 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "digger",
@@ -1396,7 +1400,8 @@
       "BasePayment": 3533567,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "40000 kg on a B5 rig over 9.85 km (Braila_Port->South_Iron_Quary) = 3,533,567 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "40000 kg on a B5 rig over 9.85 km (Braila_Port->South_Iron_Quary) = 3,533,567 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "loader",
@@ -1414,7 +1419,8 @@
       "BasePayment": 3546404,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "40000 kg on a B5 rig over 9.91 km (Galati_Port->Trap_Cave) = 3,546,404 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "40000 kg on a B5 rig over 9.91 km (Galati_Port->Trap_Cave) = 3,546,404 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "harvester",
@@ -1432,7 +1438,8 @@
       "BasePayment": 1621859,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "15000 kg on a B5 rig over 7.65 km (Galati_Port->South_Barn) = 1,621,859 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "15000 kg on a B5 rig over 7.65 km (Galati_Port->South_Barn) = 1,621,859 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "balerplanter",
@@ -1450,7 +1457,8 @@
       "BasePayment": 841201,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "8000 kg on a B4 rig over 7.18 km (Galati_Port->GrainTrailer) = 841,201 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "8000 kg on a B4 rig over 7.18 km (Galati_Port->GrainTrailer) = 841,201 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "tractorFL",
@@ -1465,10 +1473,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 205514,
+      "BasePayment": 370648,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "2000 kg on a B3 rig over 4.50 km (Braila_Port->South_Barn) = 205,514 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "5100 kg on a B3 rig over 4.50 km (Braila_Port->South_Barn) = 370,648 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "plough",
@@ -1483,10 +1492,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 139309,
+      "BasePayment": 301169,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1000 kg on a B2 rig over 9.96 km (Braila_Port->GrainTrailer) = 139,309 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B2 rig over 9.96 km (Braila_Port->GrainTrailer) = 301,169 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "apc",
@@ -1504,7 +1514,8 @@
       "BasePayment": 2216675,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "40000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 2,216,675 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "40000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 2,216,675 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "rockettruck",
@@ -1522,7 +1533,8 @@
       "BasePayment": 2742993,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "24000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 2,742,993 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "24000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 2,742,993 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "stricker",
@@ -1540,7 +1552,8 @@
       "BasePayment": 2323795,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "17000 kg on a B5 rig over 11.75 km (Braila_Port->South_Depot) = 2,323,795 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "17000 kg on a B5 rig over 11.75 km (Braila_Port->South_Depot) = 2,323,795 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "MillitaryCargo",
@@ -1558,7 +1571,8 @@
       "BasePayment": 2025070,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "25000 kg on a B5 rig over 6.45 km (Galati_Port->Alpine_Rescue_Post) = 2,025,070 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "25000 kg on a B5 rig over 6.45 km (Galati_Port->Alpine_Rescue_Post) = 2,025,070 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "Covert",
@@ -1576,7 +1590,8 @@
       "BasePayment": 226544,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "2000 kg on a B3 rig over 5.48 km (Braila_Port->Alpine_Rescue_Post) = 226,544 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "2000 kg on a B3 rig over 5.48 km (Braila_Port->Alpine_Rescue_Post) = 226,544 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "BridgePart",
@@ -1594,7 +1609,8 @@
       "BasePayment": 4257813,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "44452 kg on a B5 rig over 11.75 km (South_Depot->Braila_Port) = 4,257,813 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "44452 kg on a B5 rig over 11.75 km (South_Depot->Braila_Port) = 4,257,813 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "TelecomTowerBase",
@@ -1612,7 +1628,8 @@
       "BasePayment": 3157025,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "30000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 3,157,025 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "30000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 3,157,025 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "TelecomTowerBase1",
@@ -1630,7 +1647,8 @@
       "BasePayment": 3157025,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "30000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 3,157,025 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "30000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 3,157,025 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "tele",
@@ -1648,7 +1666,8 @@
       "BasePayment": 1194928,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "15000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 1,194,928 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "15000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 1,194,928 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "utilitypole",
@@ -1663,10 +1682,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 72177,
+      "BasePayment": 229099,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1016 kg on a B2 rig over 2.67 km (Dorna_Lumberjack->MicroVille) = 72,177 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B2 rig over 6.38 km (Dorna_Lumberjack->Braila_Port) = 229,099 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "PrefabScaffold",
@@ -1681,10 +1701,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 150320,
+      "BasePayment": 324974,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1000 kg on a B2 rig over 11.14 km (South_Depot->Beach_Lumbering) = 150,320 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B2 rig over 11.14 km (South_Depot->Beach_Lumbering) = 324,974 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "conbarrier20ft",
@@ -1699,10 +1720,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 370030,
+      "BasePayment": 458422,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "3630 kg on a B4 rig over 3.82 km (Abbandoned_Gas_Station->Braila_Port) = 370,030 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "5100 kg on a B4 rig over 3.82 km (Abbandoned_Gas_Station->Braila_Port) = 458,422 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "conbarrier10ft",
@@ -1717,10 +1739,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 266767,
+      "BasePayment": 396161,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1815 kg on a B3 rig over 8.11 km (Abbandoned_Gas_Station->Galati_Port) = 266,767 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B3 rig over 8.11 km (Abbandoned_Gas_Station->Galati_Port) = 396,161 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "cinderblocks",
@@ -1738,7 +1761,8 @@
       "BasePayment": 272962,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1814 kg on a B3 rig over 8.42 km (Abbandoned_Gas_Station->South_Depot) = 272,962 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1814 kg on a B3 rig over 8.42 km (Abbandoned_Gas_Station->South_Depot) = 272,962 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "bricks",
@@ -1753,10 +1777,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 73745,
+      "BasePayment": 109553,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "907 kg on a B2 rig over 3.42 km (Abbandoned_Gas_Station->MicroVille) = 73,745 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1700 kg on a B2 rig over 3.42 km (Abbandoned_Gas_Station->MicroVille) = 109,553 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "Sheetrock",
@@ -1774,7 +1799,8 @@
       "BasePayment": 212313,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1721 kg on a B3 rig over 4.49 km (Beach_Lumbering->Dorna_Wood_Storage) = 212,313 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1721 kg on a B3 rig over 4.49 km (Beach_Lumbering->Dorna_Wood_Storage) = 212,313 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "tetrapod",
@@ -1789,10 +1815,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 235945,
+      "BasePayment": 271496,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "2721 kg on a B3 rig over 3.99 km (Trap_Cave->Braila_Port) = 235,945 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B3 rig over 3.99 km (Trap_Cave->Braila_Port) = 271,496 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "Gravel",
@@ -1807,10 +1834,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 235384,
+      "BasePayment": 244548,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1600 kg on a B3 rig over 7.53 km (South_Iron_Quary->Abbandoned_Gas_Station) = 235,384 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1700 kg on a B3 rig over 7.53 km (South_Iron_Quary->Abbandoned_Gas_Station) = 244,548 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "PowerLineCable",
@@ -1828,7 +1856,8 @@
       "BasePayment": 819223,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "4000 kg on a B4 rig over 6.48 km (Aerotyne_International->Dish_Tower) = 819,223 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "4000 kg on a B4 rig over 6.48 km (Aerotyne_International->Dish_Tower) = 819,223 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "WireSpool",
@@ -1843,10 +1872,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 148167,
+      "BasePayment": 206983,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1000 kg on a B2 rig over 10.91 km (Braila_Port->Aerotyne_International) = 148,167 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1700 kg on a B2 rig over 10.91 km (Braila_Port->Aerotyne_International) = 206,983 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "FloodLight",
@@ -1861,10 +1891,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 191289,
+      "BasePayment": 320320,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1500 kg on a B2 rig over 10.91 km (Braila_Port->Aerotyne_International) = 191,289 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B2 rig over 10.91 km (Braila_Port->Aerotyne_International) = 320,320 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "SteelCable",
@@ -1882,7 +1913,8 @@
       "BasePayment": 859916,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "5000 kg on a B4 rig over 11.75 km (South_Depot->Braila_Port) = 859,916 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "5000 kg on a B4 rig over 11.75 km (South_Depot->Braila_Port) = 859,916 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "CraneProtector",
@@ -1900,7 +1932,8 @@
       "BasePayment": 2601267,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "20000 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 2,601,267 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "20000 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 2,601,267 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "CraneWheel",
@@ -1918,7 +1951,8 @@
       "BasePayment": 1344702,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "10000 kg on a B4 rig over 11.92 km (Galati_Port->Braila_Port) = 1,344,702 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "10000 kg on a B4 rig over 11.92 km (Galati_Port->Braila_Port) = 1,344,702 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "PTS797Wheel",
@@ -1936,7 +1970,8 @@
       "BasePayment": 1432363,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "20000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 1,432,363 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "20000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 1,432,363 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "SoilDumpBed",
@@ -1954,7 +1989,8 @@
       "BasePayment": 3108212,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "30000 kg on a B5 rig over 10.66 km (Trap_Cave->South_Iron_Quary) = 3,108,212 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "30000 kg on a B5 rig over 10.66 km (Trap_Cave->South_Iron_Quary) = 3,108,212 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "EmptyDumpBed",
@@ -1969,10 +2005,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 830609,
+      "BasePayment": 841037,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "5000 kg on a B4 rig over 11.17 km (South_Depot->Trap_Cave) = 830,609 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "5100 kg on a B4 rig over 11.17 km (South_Depot->Trap_Cave) = 841,037 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "BigTrailer",
@@ -1987,10 +2024,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 286628,
+      "BasePayment": 363350,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "3500 kg on a B3 rig over 4.32 km (Galati_Port->South_Depot) = 286,628 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "5100 kg on a B3 rig over 4.32 km (Galati_Port->South_Depot) = 363,350 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "SmallTrailer",
@@ -2005,10 +2043,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 139788,
+      "BasePayment": 234079,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1500 kg on a B2 rig over 6.62 km (Braila_Port->Valley_Trailer) = 139,788 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B2 rig over 6.62 km (Braila_Port->Valley_Trailer) = 234,079 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "genflatbed",
@@ -2026,7 +2065,8 @@
       "BasePayment": 1593509,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "14498 kg on a B5 rig over 7.69 km (Galati_Port->Abandoned_Market) = 1,593,509 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "14498 kg on a B5 rig over 7.69 km (Galati_Port->Abandoned_Market) = 1,593,509 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 4
     },
     {
       "copy_from": "Dinghy",
@@ -2041,10 +2081,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 11152,
+      "BasePayment": 159159,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "50 kg on a B1 rig over 10.81 km (Braila_Port->East_Water_Store) = 11,152 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B1 rig over 10.81 km (Braila_Port->East_Water_Store) = 159,159 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "dingys",
@@ -2059,10 +2100,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 93617,
+      "BasePayment": 246064,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1100 kg on a B2 rig over 4.46 km (Galati_Port->Water_Storage) = 93,617 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "5100 kg on a B2 rig over 4.46 km (Galati_Port->Water_Storage) = 246,064 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 3
     },
     {
       "copy_from": "Lead",
@@ -2080,7 +2122,8 @@
       "BasePayment": 830609,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "5000 kg on a B4 rig over 11.17 km (Trap_Cave->South_Depot) = 830,609 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "5000 kg on a B4 rig over 11.17 km (Trap_Cave->South_Depot) = 830,609 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "iron",
@@ -2095,10 +2138,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 83319,
+      "BasePayment": 116393,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1000 kg on a B2 rig over 3.94 km (South_Iron_Quary->South_Depot) = 83,319 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1700 kg on a B2 rig over 3.94 km (South_Iron_Quary->South_Depot) = 116,393 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "Trees",
@@ -2113,10 +2157,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 86590,
+      "BasePayment": 274238,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1200 kg on a B2 rig over 2.56 km (Serpent_Lumberjack->Dorna_Wood_Storage) = 86,590 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "3400 kg on a B2 rig over 8.62 km (Serpent_Lumberjack->South_Depot) = 274,238 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 2
     },
     {
       "copy_from": "gengoods",
@@ -2131,10 +2176,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 54989,
+      "BasePayment": 96172,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "700 kg on a B2 rig over 2.39 km (Dorna_Supermarket->MicroVille) = 54,989 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1700 kg on a B2 rig over 2.39 km (Dorna_Supermarket->MicroVille) = 96,172 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "MrBunsCarParts",
@@ -2149,10 +2195,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 64394,
+      "BasePayment": 89955,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1000 kg on a B2 rig over 1.91 km (Abandoned_Market->East_Gas_Station) = 64,394 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1700 kg on a B2 rig over 1.91 km (Abandoned_Market->East_Gas_Station) = 89,955 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     },
     {
       "copy_from": "UnKnownCargo",
@@ -2167,10 +2214,11 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 118247,
+      "BasePayment": 165186,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1000 kg on a B2 rig over 7.69 km (Galati_Port->Abandoned_Market) = 118,247 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1700 kg on a B2 rig over 7.69 km (Galati_Port->Abandoned_Market) = 165,186 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "VolumeSize": 1
     }
   ],
   "Galati_Port": {
@@ -3371,6 +3419,23 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "CementX": 2
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 150.0
+      },
+      {
+        "inputs": {
+          "TreesP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
       }
     ],
     "template": "warehouse"
@@ -4043,6 +4108,15 @@
         },
         "speed": 5.0,
         "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "utilitypoleP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
       }
     ],
     "template": "warehouse"
@@ -4732,14 +4806,6 @@
       },
       {
         "inputs": {
-          "CementX": 2
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 150.0
-      },
-      {
-        "inputs": {
           "houseP": 1
         },
         "outputs": {},
@@ -4750,15 +4816,6 @@
       {
         "inputs": {
           "SheetrockP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "TreesP": 1
         },
         "outputs": {},
         "speed": 1.0,
@@ -5116,15 +5173,6 @@
         },
         "speed": 1.0,
         "time_seconds": 150.0
-      },
-      {
-        "inputs": {
-          "utilitypoleP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
       },
       {
         "inputs": {
