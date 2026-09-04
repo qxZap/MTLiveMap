@@ -277,7 +277,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 100000,
       "BasePayment": 100000,
-      "_": "1700 kg on a B2 rig over 0.00 km (NO ROUTE) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 6.50 km (Dorna_Beer_Factory->Braila_Port) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 2,
       "CargoType": "None"
     },
@@ -4120,6 +4120,14 @@
       {
         "inputs": {
           "Container_40ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "BottlePalleteX": 2
         },
         "outputs": {},
         "speed": 1.0,
