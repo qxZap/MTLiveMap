@@ -352,6 +352,12 @@ internal static class Program
                 break;
             case UAssetAPI.PropertyTypes.Objects.StrPropertyData sp:
                 Console.WriteLine($"{indent}{field.Name}: \"{sp.Value}\""); break;
+            // Third place an enum fell through to the type-name default, and
+            // the one that mattered: verify_build reads rows through here, so
+            // a build that correctly cleared CargoType failed its own
+            // integrity check with "(EnumPropertyData) (want None)".
+            case UAssetAPI.PropertyTypes.Objects.EnumPropertyData ep:
+                Console.WriteLine($"{indent}{field.Name}: {ep.Value}"); break;
             // Vector2D printed as its own type name and nothing else, which is
             // how a physical material's DiggingDepth -- the range a wheel sinks
             // into it -- stayed unreadable.
