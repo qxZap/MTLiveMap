@@ -79,8 +79,12 @@ def closure(content: Path) -> tuple[set[str], dict[str, list[Path]]]:
         if p.is_file():
             files.setdefault(stem_key(p, content), []).append(p)
 
+    # Dotfiles are the pipeline's own bookkeeping (.vehicles_staged.json marks
+    # what the vehicle pass already staged). They are not content and nothing
+    # references them by package path, so they would look unreachable forever.
     frontier = {k for k in files
-                if any(k == d or k.startswith(d + "/") for d in ROOT_DIRS)}
+                if any(k == d or k.startswith(d + "/") for d in ROOT_DIRS)
+                or k.rsplit("/", 1)[-1].startswith(".")}
     seen: set[str] = set()
     while frontier:
         key = frontier.pop()

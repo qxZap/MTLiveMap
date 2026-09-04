@@ -518,6 +518,17 @@ if not "%MTMI_SKIP_CONFIG%"=="1" (
     if errorlevel 1 exit /b 1
 ) else ( echo [%TIME%] [5c] skipped ^(MTMI_SKIP_CONFIG=1^) )
 
+rem The clean step wipes three folders and nothing else, so an asset painted
+rem into the scene once and removed later keeps shipping forever -- the pak only
+rem ever grows. This walks the package references out of the maps and data
+rem assets and drops whatever nothing can reach. Delta layers skip it: they are
+rem pruned to the data files anyway, and they ship no map to walk from.
+if not "%MTMI_DELTA%"=="1" (
+    echo [%TIME%] [5e] Dropping staged assets nothing references...
+    python prune_unused_assets.py "%MODCONTENT%" --apply
+    if errorlevel 1 exit /b 1
+)
+
 rem Step 3 writes a map on its way to producing the Mod* classes, so a delta
 rem layer has one staged even with the map steps off. Strip it here rather
 rem than trusting every step to have stayed in its lane.
