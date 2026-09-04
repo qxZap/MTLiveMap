@@ -75,6 +75,21 @@ tr:has(.tag.abuse) td{background:color-mix(in srgb,var(--flag) 7%,transparent)}
 .note .rate{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--flag)}
 .note .fix{display:block;margin-top:10px;padding-top:9px;border-top:1px solid var(--rule-soft)}
 .empty{padding:28px 12px;color:var(--dim);text-align:center}
+/* Offshore trade: same Barlow condensed caps as the masthead, one step down,
+   so the section reads as part of the document rather than a bolted-on table. */
+.offshore{margin:34px 0 0;border-top:2px solid var(--ink);padding:20px 0 0}
+.offshore h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;
+  font-weight:600;font-size:24px;letter-spacing:.02em;text-transform:uppercase;
+  margin:0 0 4px}
+.offshore h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;
+  font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;
+  margin:22px 0 0;color:var(--steel);display:flex;align-items:baseline;gap:8px}
+.offshore h3 .t{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;
+  color:var(--dim);letter-spacing:0}
+.offshore .sub{margin:4px 0 10px}
+.offshore table{font-size:13px}
+.offshore code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;
+  background:var(--amber-bg);color:var(--amber);padding:1px 5px;border-radius:2px}
 footer{margin:26px 0 0;color:var(--dim);font-size:12px}
 </style>
 <div class="wrap">
@@ -120,6 +135,8 @@ footer{margin:26px 0 0;color:var(--dim);font-size:12px}
 </div>
 
 <div class="note"><b>2 routes are farmable.</b> Pay is flat, so these earn a full load&rsquo;s fee over a distance you can drive in seconds &mdash; and each has a return leg, so they can be shuttled indefinitely. Two-way trade is fine on its own; it is the combination of short and lucrative (over 100,000/km) that breaks.<ul><li><b>TelecomTowerBase1P</b> &middot; Arini South Depot &rarr; Arini Aerotyne International &middot; 2.0 km for 1,389,668 (<span class='rate'>694,244/km</span>)</li><li><b>TelecomTowerBaseP</b> &middot; Arini South Depot &rarr; Arini Aerotyne International &middot; 2.0 km for 1,389,668 (<span class='rate'>694,244/km</span>)</li></ul><span class="fix">To close one: remove the recipe that pairs those two points, or move one of them. Raising the price makes it worse.</span></div>
+
+<section class=offshore><h2>Trade with Jeju</h2><h3>Made here, wanted there <span class=t>29</span></h3><p class=sub>Jeju's construction sites, mines and farms ask for these and nothing in the game produces them. Pay is Proxy's own per-km rate, so the run across the water sets the fee.</p><div class=tablewrap><table><thead><tr><th>Cargo</th><th>On Arini</th></tr></thead><tbody><tr><td><code>BullD</code></td><td>Arini Braila Port</td></tr><tr><td><code>Covert</code></td><td>Arini Galati Port</td></tr><tr><td><code>Crany</code></td><td>Arini Galati Port</td></tr><tr><td><code>DumpBed</code></td><td>Arini Galati Port</td></tr><tr><td><code>EmptyDumpBed</code></td><td>Arini Galati Port</td></tr><tr><td><code>FloodLight</code></td><td>Arini Galati Port</td></tr><tr><td><code>Gravel</code></td><td>Arini Galati Port</td></tr><tr><td><code>PowerLineCable</code></td><td>Arini Galati Port</td></tr><tr><td><code>PrefabScaffold</code></td><td>Arini Galati Port</td></tr><tr><td><code>Sheetrock</code></td><td>Arini Galati Port</td></tr><tr><td><code>SoilDumpBed</code></td><td>Arini Galati Port</td></tr><tr><td><code>SteelCable</code></td><td>Arini Galati Port</td></tr><tr><td><code>TelecomTower</code></td><td>Arini Galati Port</td></tr><tr><td><code>TelecomTowerBase</code></td><td>Arini Galati Port</td></tr><tr><td><code>TelecomTowerBase1</code></td><td>Arini Galati Port</td></tr><tr><td><code>balerplanter</code></td><td>Arini Braila Port</td></tr><tr><td><code>digger</code></td><td>Arini Braila Port</td></tr><tr><td><code>forklift</code></td><td>Arini Galati Port</td></tr><tr><td><code>genflatbed</code></td><td>Arini Galati Port</td></tr><tr><td><code>harvester</code></td><td>Arini Braila Port</td></tr><tr><td><code>house</code></td><td>Arini Galati Port</td></tr><tr><td><code>loader</code></td><td>Arini Braila Port</td></tr><tr><td><code>logging</code></td><td>Arini Galati Port</td></tr><tr><td><code>plough</code></td><td>Arini Braila Port</td></tr><tr><td><code>roller</code></td><td>Arini Galati Port</td></tr><tr><td><code>tele</code></td><td>Arini Galati Port</td></tr><tr><td><code>tetrapod</code></td><td>Arini Galati Port</td></tr><tr><td><code>tractorFL</code></td><td>Arini Braila Port</td></tr><tr><td><code>utilitypole</code></td><td>Arini Galati Port</td></tr></tbody></table></div><h3>Made there, taken here <span class=t>10</span></h3><p class=sub>The only cargo Jeju actually produces that Arini buys. Same per-km rate on the way over.</p><div class=tablewrap><table><thead><tr><th>Cargo</th><th>On Arini</th></tr></thead><tbody><tr><td><code>BreadPallet</code></td><td>Arini Old Trailer</td></tr><tr><td><code>DumpBedGarbage</code></td><td>Arini Galati Port</td></tr><tr><td><code>Garbo</code></td><td>Arini Galati Port</td></tr><tr><td><code>HempPallet</code></td><td>Arini Trap Cave, Arini Valley Trailer</td></tr><tr><td><code>RicePallet</code></td><td>Arini Abandoned Market</td></tr><tr><td><code>Stone</code></td><td>Arini Galati Port</td></tr><tr><td><code>ToyBoxes</code></td><td>Arini Dorna Market</td></tr><tr><td><code>busjunk</code></td><td>Arini Galati Port</td></tr><tr><td><code>singlecarjunk</code></td><td>Arini Galati Port</td></tr><tr><td><code>stackjunkcars</code></td><td>Arini Galati Port</td></tr></tbody></table></div></section>
 
 <footer>Showing <span id="count">0</span> hauls. Click any column to sort.
 Regenerate with <code>python cargo_routes.py</code> after moving a delivery point

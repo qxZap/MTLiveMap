@@ -40,7 +40,10 @@ OUT = pathlib.Path(__file__).resolve().parent / "cargo_routes.html"
 # 3,635/km and p90 is 37,468, so 100,000 is roughly 27x typical. Below that and
 # you are flagging ordinary short hauls; the real offenders sit at 128,614 and
 # 723,588.
-ABUSE_RATE = 100_000
+# 100,000 was set by eye and sat above every route anyone actually objected
+# to -- a 30 t tower on a 2 km run bills 694,000/km, but so does steel at
+# 75,000, and neither tripped it.
+ABUSE_RATE = 50_000
 # ...and it has to be CLOSE. A loop is not the test: Braila <-> Galati trades
 # both ways across 12 km and is exactly what the island is for, while a 2 km
 # one-way haul paying 500,000 is farmable whether or not anything comes back.
@@ -99,7 +102,58 @@ def collect(layer: str | None = None):
         r["loop"] = (r["to"], r["from"]) in pairs
         r["abuse"] = bool(r["perkm"] and r["perkm"] > ABUSE_RATE and r["km"] < NEAR_KM)
     rows.sort(key=lambda r: -r["pay"])
+
+    # Trade that leaves or enters the island has only one end here, so it forms
+    # no producer-to-consumer row and was invisible on this page -- which is
+    # most of what the compat layers add. Jeju's construction sites, mines and
+    # farms ask for 30 of Proxy's cargos that nothing in the world produces;
+    # Arini makes them. These price on Proxy's own per-km rate, not ours, so
+    # there is no flat figure to show -- the distance sets it.
+    global OFFSHORE
+    OFFSHORE = []
+    for name in sorted(set(list(prod) + list(cons))):
+        if name in custom:
+            continue          # ours end to end; already a row above
+        here_p = {p for p, _ in prod.get(name, [])}
+        here_c = {q for q, _ in cons.get(name, [])}
+        if here_p and not here_c:
+            OFFSHORE.append({"cargo": name, "dir": "out",
+                             "where": ", ".join(sorted(label(k) for k in here_p))})
+        elif here_c and not here_p:
+            OFFSHORE.append({"cargo": name, "dir": "in",
+                             "where": ", ".join(sorted(label(k) for k in here_c))})
     return rows
+
+
+OFFSHORE: list = []
+
+
+def offshore_html() -> str:
+    if not OFFSHORE:
+        return ""
+    out = [r for r in OFFSHORE if r["dir"] == "out"]
+    inn = [r for r in OFFSHORE if r["dir"] == "in"]
+    def block(title, note, items):
+        if not items:
+            return ""
+        rows = "".join(
+            f"<tr><td><code>{html.escape(r['cargo'])}</code></td>"
+            f"<td>{html.escape(r['where'])}</td></tr>" for r in items)
+        return (f"<h3>{title} <span class=t>{len(items)}</span></h3>"
+                f"<p class=sub>{note}</p>"
+                f"<div class=tablewrap><table><thead><tr><th>Cargo</th>"
+                f"<th>On Arini</th></tr></thead><tbody>{rows}</tbody></table></div>")
+    return ("<section class=offshore><h2>Trade with Jeju</h2>"
+            + block("Made here, wanted there",
+                    "Jeju's construction sites, mines and farms ask for these and "
+                    "nothing in the game produces them. Pay is Proxy's own per-km "
+                    "rate, so the run across the water sets the fee.",
+                    out)
+            + block("Made there, taken here",
+                    "The only cargo Jeju actually produces that Arini buys. "
+                    "Same per-km rate on the way over.",
+                    inn)
+            + "</section>")
 
 
 CSS = """
@@ -175,6 +229,21 @@ tr:has(.tag.abuse) td{background:color-mix(in srgb,var(--flag) 7%,transparent)}
 .note .rate{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--flag)}
 .note .fix{display:block;margin-top:10px;padding-top:9px;border-top:1px solid var(--rule-soft)}
 .empty{padding:28px 12px;color:var(--dim);text-align:center}
+/* Offshore trade: same Barlow condensed caps as the masthead, one step down,
+   so the section reads as part of the document rather than a bolted-on table. */
+.offshore{margin:34px 0 0;border-top:2px solid var(--ink);padding:20px 0 0}
+.offshore h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;
+  font-weight:600;font-size:24px;letter-spacing:.02em;text-transform:uppercase;
+  margin:0 0 4px}
+.offshore h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;
+  font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;
+  margin:22px 0 0;color:var(--steel);display:flex;align-items:baseline;gap:8px}
+.offshore h3 .t{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;
+  color:var(--dim);letter-spacing:0}
+.offshore .sub{margin:4px 0 10px}
+.offshore table{font-size:13px}
+.offshore code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;
+  background:var(--amber-bg);color:var(--amber);padding:1px 5px;border-radius:2px}
 footer{margin:26px 0 0;color:var(--dim);font-size:12px}
 """
 
@@ -352,6 +421,8 @@ def render(rows) -> str:
 
 {abuse_block}
 
+{offshore_html()}
+
 <footer>Showing <span id="count">0</span> hauls. Click any column to sort.
 Regenerate with <code>python cargo_routes.py</code> after moving a delivery point
 or re-running <code>pricing.py</code>.</footer>
@@ -364,7 +435,11 @@ or re-running <code>pricing.py</code>.</footer>
 def main() -> int:
     import sys
     rows = collect_all()
-    bad = [r for r in rows if r["abuse"] and r.get("layer") == "base"]
+    # Every layer, not just base. The compat layers carry the heaviest cargo on
+    # the island, so exempting them from the kill switch meant the two worst
+    # routes in the whole economy -- 1,389,668 over 2.0 km -- passed the check
+    # clean and shipped.
+    bad = [r for r in rows if r["abuse"]]
 
     # --check is the kill switch: a build can call this and stop, instead of a
     # warning nobody reads. Flat pay means a farmable route cannot be fixed by

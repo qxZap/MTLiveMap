@@ -143,10 +143,10 @@
       "display_source": "Fuel",
       "display_name": "Jet Fuel",
       "PaymentPer1Km": 0,
-      "BasePayment": 142306,
+      "BasePayment": 185249,
       "SpawnProbability": 6,
       "VolumeSize": 1,
-      "_": "800 kg on a B5 rig over 2.03 km (Fuel_Rafinery->South_East_Gas_Station) = 142,306 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "800 kg on a B5 rig over 4.16 km (Fuel_Rafinery->Aerotyne_International) = 185,249 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
       "PaymentSqrtRatioMinCapcity": 0,
@@ -228,8 +228,8 @@
       "PaymentSqrtRatio": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 151400,
-      "_": "2000 kg on a B3 rig over 2.00 km (South_Depot->Aerotyne_International) = 151,400 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "BasePayment": 231891,
+      "_": "2000 kg on a B3 rig over 5.72 km (South_Depot->Fuel_Rafinery) = 231,891 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "SteelCoil_10t",
@@ -363,12 +363,13 @@
       "PaymentPer1Km": 0,
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
-      "MinDeliveryDistance": 900000,
+      "MinDeliveryDistance": 400000,
       "MaxDeliveryDistance": 0,
       "base_payment": 250000,
       "BasePayment": 250000,
-      "_": "30000 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 250,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 5
+      "_": "30000 kg on a B5 rig over 5.49 km (Galati_Port->Dorna_Beer_Factory) = 250,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "batch": 5,
+      "CargoType": "None"
     },
     {
       "copy_from": "Container_40ft_01",
@@ -380,12 +381,13 @@
       "PaymentPer1Km": 0,
       "PaymentPer1KmMultiplierByMaxWeight": 0,
       "PaymentSqrtRatio": 0,
-      "MinDeliveryDistance": 900000,
+      "MinDeliveryDistance": 400000,
       "MaxDeliveryDistance": 0,
       "base_payment": 250000,
       "BasePayment": 250000,
-      "_": "30000 kg on a B5 rig over 11.75 km (Braila_Port->South_Depot) = 250,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
-      "batch": 5
+      "_": "30000 kg on a B5 rig over 6.50 km (Braila_Port->Dorna_Beer_Factory) = 250,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "batch": 5,
+      "CargoType": "None"
     },
     {
       "copy_from": "CopperRodCoil_2t",
@@ -401,7 +403,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 150000,
       "BasePayment": 150000,
-      "_": "2000 kg on a B3 rig over 2.00 km (South_Depot->Aerotyne_International) = 150,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "2000 kg on a B3 rig over 6.75 km (South_Depot->Dish_Tower) = 150,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 3
     },
     {
@@ -560,7 +562,7 @@
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
       "BasePayment": 500000,
-      "_": "30000 kg on a B5 rig over 4.24 km (Aerotyne_International->Water_Storage) = 500,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "30000 kg on a B5 rig over 3.93 km (Braila_Port->Hospital) = 500,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "base_payment": 500000
     },
     {
@@ -596,7 +598,7 @@
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
       "BasePayment": 1200000,
-      "_": "60000 kg on a B5 rig over 6.81 km (Aerotyne_International->Dorna_Beer_Factory) = 1,200,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "60000 kg on a B5 rig over 6.50 km (Braila_Port->Dorna_Beer_Factory) = 1,200,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "base_payment": 1200000
     },
     {
@@ -845,7 +847,7 @@
       "BasePayment": 2640000,
       "base_payment": 2640000,
       "requires": "proxy",
-      "_": "80000 kg on a B5 rig over 6.03 km (Galati_Port->Aerotyne_International) = 2,640,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "80000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 2,640,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1005,7 +1007,7 @@
       "BasePayment": 945000,
       "base_payment": 945000,
       "requires": "proxy",
-      "_": "35000 kg on a B5 rig over 6.03 km (Galati_Port->Aerotyne_International) = 945,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "35000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 945,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1499,10 +1501,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 2624040,
+      "BasePayment": 2216675,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "40000 kg on a B5 rig over 6.03 km (Galati_Port->Aerotyne_International) = 2,624,040 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "40000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 2,216,675 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "rockettruck",
@@ -1607,10 +1609,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 1389668,
+      "BasePayment": 3157025,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "30000 kg on a B5 rig over 2.00 km (South_Depot->Aerotyne_International) = 1,389,668 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "30000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 3,157,025 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "TelecomTowerBase1",
@@ -1625,10 +1627,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 1389668,
+      "BasePayment": 3157025,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "30000 kg on a B5 rig over 2.00 km (South_Depot->Aerotyne_International) = 1,389,668 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "30000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 3,157,025 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "tele",
@@ -1643,10 +1645,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 1414524,
+      "BasePayment": 1194928,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "15000 kg on a B5 rig over 6.03 km (Galati_Port->Aerotyne_International) = 1,414,524 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "15000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 1,194,928 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "utilitypole",
@@ -1733,10 +1735,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 176320,
+      "BasePayment": 272962,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1814 kg on a B3 rig over 2.57 km (Abbandoned_Gas_Station->Dorna_Wood_Storage) = 176,320 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1814 kg on a B3 rig over 8.42 km (Abbandoned_Gas_Station->South_Depot) = 272,962 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "bricks",
@@ -1841,10 +1843,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 65221,
+      "BasePayment": 148167,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1000 kg on a B2 rig over 2.00 km (South_Depot->Aerotyne_International) = 65,221 flat. Computed by pricing.py \u2014 do not hand-edit."
+      "_": "1000 kg on a B2 rig over 10.91 km (Braila_Port->Aerotyne_International) = 148,167 flat. Computed by pricing.py \u2014 do not hand-edit."
     },
     {
       "copy_from": "FloodLight",
@@ -3015,39 +3017,7 @@
       },
       {
         "inputs": {
-          "SteelCoilX": 2,
-          "CopperRodCoil_2tX": 2,
-          "HBeamX": 1,
-          "PlasticPipes_6mX": 1
-        },
-        "outputs": {
-          "Transformer_20MVAX": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "HBeamX": 2
-        },
-        "outputs": {
-          "Transformer_50MVAX": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 400.0
-      },
-      {
-        "inputs": {
           "TransformerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "CraneHub70tP": 1
         },
         "outputs": {},
         "speed": 1.0,
@@ -3064,30 +3034,12 @@
         "requires": "proxy"
       },
       {
-        "inputs": {
-          "TelecomTowerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
         "inputs": {},
         "outputs": {
           "Transformer_50MVAXT": 1
         },
         "speed": 1.0,
         "time_seconds": 400.0
-      },
-      {
-        "inputs": {
-          "apcP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
       },
       {
         "inputs": {
@@ -3142,15 +3094,6 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "teleP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
       }
     ],
     "template": "construction"
@@ -3164,16 +3107,6 @@
         },
         "outputs": {
           "TrashBag": 2
-        },
-        "speed": 5.0,
-        "time_seconds": 20.0
-      },
-      {
-        "inputs": {
-          "JetFuel": 2
-        },
-        "outputs": {
-          "MilitarySupplyBox_01_Empty": 2
         },
         "speed": 5.0,
         "time_seconds": 20.0
@@ -3219,17 +3152,6 @@
   "South_Depot": {
     "label": "Arini South Depot",
     "recipes": [
-      {
-        "inputs": {
-          "Container_40ft_01X": 1
-        },
-        "outputs": {
-          "BoxPallete_01X": 4,
-          "SmallBoxX": 6
-        },
-        "speed": 1.0,
-        "time_seconds": 120.0
-      },
       {
         "inputs": {
           "SteelCoilX": 2
@@ -3345,34 +3267,7 @@
       {
         "inputs": {},
         "outputs": {
-          "TelecomTowerBaseP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "TelecomTowerBase1P": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
           "PrefabScaffoldP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "WireSpoolP": 1
         },
         "speed": 1.0,
         "time_seconds": 300.0,
@@ -3426,6 +3321,51 @@
       {
         "inputs": {
           "ironP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "CraneHub70tP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "TelecomTowerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "apcP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "teleP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "cinderblocksP": 1
         },
         "outputs": {},
         "speed": 1.0,
@@ -4043,6 +3983,66 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "SteelCoilX": 2,
+          "CopperRodCoil_2tX": 2,
+          "HBeamX": 1,
+          "PlasticPipes_6mX": 1
+        },
+        "outputs": {
+          "Transformer_20MVAX": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "HBeamX": 2
+        },
+        "outputs": {
+          "Transformer_50MVAX": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 400.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "TelecomTowerBaseP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "TelecomTowerBase1P": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "WireSpoolP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "JetFuel": 2
+        },
+        "outputs": {
+          "MilitarySupplyBox_01_Empty": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
       }
     ],
     "template": "warehouse"
@@ -4749,15 +4749,6 @@
       },
       {
         "inputs": {
-          "cinderblocksP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
           "SheetrockP": 1
         },
         "outputs": {},
@@ -4870,6 +4861,22 @@
         "outputs": {},
         "speed": 1.0,
         "time_seconds": 400.0
+      },
+      {
+        "inputs": {
+          "Container_20ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_40ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
       }
     ],
     "template": "construction",
