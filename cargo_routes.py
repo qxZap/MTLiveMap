@@ -48,7 +48,10 @@ ABUSE_RATE = 50_000
 # both ways across 12 km and is exactly what the island is for, while a 2 km
 # one-way haul paying 500,000 is farmable whether or not anything comes back.
 # So: near AND lucrative, with loops reported separately as information.
-NEAR_KM = 3.0
+# 3.0 km let a 4.3 km route billing 920,000/km through untouched. Rate is
+# already distance-normalised, so the window only needs to be wide enough to
+# exclude genuine long hauls.
+NEAR_KM = 8.0
 
 
 def collect(layer: str | None = None):
@@ -100,7 +103,12 @@ def collect(layer: str | None = None):
     pairs = {(r["from"], r["to"]) for r in rows}
     for r in rows:
         r["loop"] = (r["to"], r["from"]) in pairs
-        r["abuse"] = bool(r["perkm"] and r["perkm"] > ABUSE_RATE and r["km"] < NEAR_KM)
+        # A hand-set price is the author's explicit choice -- the Dish Tower
+        # runs bill 3,000,000/km on purpose, because getting 300 t up a 40
+        # degree slope is the point. Only prices the MODEL produced are judged.
+        hand = "base_payment" in (custom.get(r["cargo"]) or {})
+        r["abuse"] = bool(not hand and r["perkm"]
+                          and r["perkm"] > ABUSE_RATE and r["km"] < NEAR_KM)
     rows.sort(key=lambda r: -r["pay"])
 
     # Trade that leaves or enters the island has only one end here, so it forms

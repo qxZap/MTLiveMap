@@ -277,7 +277,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 100000,
       "BasePayment": 100000,
-      "_": "1700 kg on a B2 rig over 6.50 km (Dorna_Beer_Factory->Braila_Port) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 0.00 km (NO ROUTE) = 100,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 2,
       "CargoType": "None"
     },
@@ -367,7 +367,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 250000,
       "BasePayment": 250000,
-      "_": "30000 kg on a B5 rig over 5.49 km (Galati_Port->Dorna_Beer_Factory) = 250,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "30000 kg on a B5 rig over 5.19 km (Galati_Port->Dorna_Old_Market) = 250,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 5,
       "CargoType": "None"
     },
@@ -385,7 +385,7 @@
       "MaxDeliveryDistance": 0,
       "base_payment": 250000,
       "BasePayment": 250000,
-      "_": "30000 kg on a B5 rig over 6.50 km (Braila_Port->Dorna_Beer_Factory) = 250,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "30000 kg on a B5 rig over 5.19 km (Galati_Port->Dorna_Old_Market) = 250,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "batch": 5,
       "CargoType": "None"
     },
@@ -847,7 +847,7 @@
       "BasePayment": 2640000,
       "base_payment": 2640000,
       "requires": "proxy",
-      "_": "80000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 2,640,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "80000 kg on a B5 rig over 11.92 km (Galati_Port->Braila_Port) = 2,640,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1007,7 +1007,7 @@
       "BasePayment": 945000,
       "base_payment": 945000,
       "requires": "proxy",
-      "_": "35000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 945,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "35000 kg on a B5 rig over 6.58 km (Galati_Port->Dish_Tower) = 945,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1511,10 +1511,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 2216675,
+      "BasePayment": 4025629,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "40000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 2,216,675 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "40000 kg on a B5 rig over 11.92 km (Galati_Port->Braila_Port) = 4,025,629 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1663,10 +1663,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 1194928,
+      "BasePayment": 2170069,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "15000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 1,194,928 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "15000 kg on a B5 rig over 11.92 km (Galati_Port->Braila_Port) = 2,170,069 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -2227,28 +2227,10 @@
       {
         "inputs": {},
         "outputs": {
-          "Container_20ft_01X": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 240.0
-      },
-      {
-        "inputs": {},
-        "outputs": {
           "CrudeOil": 6
         },
         "speed": 1.0,
         "time_seconds": 180.0
-      },
-      {
-        "inputs": {
-          "Container_20ft_01X": 1
-        },
-        "outputs": {
-          "BoxPallete_01X": 4
-        },
-        "speed": 1.0,
-        "time_seconds": 150.0
       },
       {
         "inputs": {},
@@ -2741,6 +2723,38 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_20ft_01X": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_40ft_01X": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_20ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_40ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
       }
     ],
     "template": "warehouse"
@@ -3377,42 +3391,6 @@
       },
       {
         "inputs": {
-          "CraneHub70tP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "TelecomTowerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "apcP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "teleP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
           "cinderblocksP": 1
         },
         "outputs": {},
@@ -3681,51 +3659,12 @@
     "label": "Arini Braila Port",
     "recipes": [
       {
-        "outputs": {
-          "Container_20ft_01X": 2,
-          "Container_40ft_01X": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 150
-      },
-      {
         "inputs": {
           "GiftBox_01": 2,
           "SmallBoxX": 4
         },
         "speed": 1.0,
         "time_seconds": 120
-      },
-      {
-        "inputs": {
-          "Sofa_01": 2,
-          "Bed_01": 2
-        },
-        "outputs": {
-          "Container_40ft_01X": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 180.0
-      },
-      {
-        "inputs": {
-          "BoxPallete_01X": 4
-        },
-        "outputs": {
-          "Container_20ft_01X": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 150.0
-      },
-      {
-        "inputs": {
-          "BottlePalleteX": 4
-        },
-        "outputs": {
-          "Container_20ft_01X": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 120.0
       },
       {
         "inputs": {
@@ -4117,6 +4056,74 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "CraneHub70tP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "TelecomTowerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "apcP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "teleP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_20ft_01X": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_40ft_01X": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_20ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_40ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
       }
     ],
     "template": "warehouse"
@@ -4982,6 +4989,22 @@
         },
         "speed": 2.0,
         "time_seconds": 45.0
+      },
+      {
+        "inputs": {
+          "Container_20ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_40ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
       }
     ],
     "template": "supermarket",
@@ -5096,6 +5119,22 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "Container_20ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_40ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
       }
     ],
     "template": "construction",

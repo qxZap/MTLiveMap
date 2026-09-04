@@ -139,6 +139,51 @@ def load_weights() -> dict[str, float]:
                 out[parts[0].strip()] = float(parts[2])
             except ValueError:
                 pass
+    out.update(_mod_weights())
+    return out
+
+
+def _mod_weights() -> dict[str, float]:
+    """Weights from the cargo table of every mod this layer can see.
+
+    CargoImport is generated from vanilla, so a row another mod ships had no
+    weight here at all and fell through to DEFAULT_KG. A 52.7 tonne bulldozer
+    counted as 500 kg, which put it in B1 -- the licence tier for a van. Third
+    place the vanilla-only assumption has cost something; the recipe allowlist
+    and the delivery-point dump were the other two.
+    """
+    try:
+        import subprocess
+        from mods import load as _mods_load, visible_mods as _vis
+        from mt_paths import MAPPINGS as _MAP, effective_asset as _eff
+    except Exception:
+        return {}
+    inj = REPO / "MTBPInjector" / "bin" / "Release" / "net8.0" / "MTBPInjector.exe"
+    if not inj.is_file():
+        return {}
+    mods, _ = _mods_load()
+    out: dict[str, float] = {}
+    for key in _vis():
+        for rel in (mods.get(key) or {}).get("provides") or []:
+            if "cargo" not in rel.lower():
+                continue
+            if not rel.endswith(".uasset"):
+                rel += ".uasset"
+            try:
+                r = subprocess.run([str(inj), "dump-cargo-weights", "--mappings",
+                                    str(_MAP), "--uasset", str(_eff(rel))],
+                                   capture_output=True, text=True)
+            except Exception:
+                continue
+            if r.returncode != 0:
+                continue
+            for line in r.stdout.splitlines():
+                q = line.split("	")
+                if len(q) >= 3:
+                    try:
+                        out[q[0].strip()] = float(q[2])
+                    except ValueError:
+                        pass
     return out
 
 
