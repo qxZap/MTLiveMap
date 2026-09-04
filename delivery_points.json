@@ -687,7 +687,7 @@
       "BasePayment": 9900000,
       "base_payment": 9900000,
       "requires": "proxy",
-      "_": "300000 kg on a B5 rig over 5.49 km (Galati_Port->Dorna_Beer_Factory) = 9,900,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "300000 kg on a B5 rig over 6.50 km (Braila_Port->Dorna_Beer_Factory) = 9,900,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -707,7 +707,7 @@
       "BasePayment": 5280000,
       "base_payment": 5280000,
       "requires": "proxy",
-      "_": "160000 kg on a B5 rig over 5.49 km (Galati_Port->Dorna_Beer_Factory) = 5,280,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "160000 kg on a B5 rig over 6.50 km (Braila_Port->Dorna_Beer_Factory) = 5,280,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -767,7 +767,7 @@
       "BasePayment": 3300000,
       "base_payment": 3300000,
       "requires": "proxy",
-      "_": "100000 kg on a B5 rig over 8.30 km (Galati_Port->Fuel_Rafinery) = 3,300,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "100000 kg on a B5 rig over 7.29 km (Braila_Port->Fuel_Rafinery) = 3,300,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -787,7 +787,7 @@
       "BasePayment": 3300000,
       "base_payment": 3300000,
       "requires": "proxy",
-      "_": "100000 kg on a B5 rig over 5.49 km (Galati_Port->Dorna_Beer_Factory) = 3,300,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "100000 kg on a B5 rig over 6.50 km (Braila_Port->Dorna_Beer_Factory) = 3,300,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -847,7 +847,7 @@
       "BasePayment": 2640000,
       "base_payment": 2640000,
       "requires": "proxy",
-      "_": "80000 kg on a B5 rig over 11.92 km (Galati_Port->Braila_Port) = 2,640,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "80000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 2,640,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1007,7 +1007,7 @@
       "BasePayment": 945000,
       "base_payment": 945000,
       "requires": "proxy",
-      "_": "35000 kg on a B5 rig over 6.58 km (Galati_Port->Dish_Tower) = 945,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "35000 kg on a B5 rig over 5.37 km (Braila_Port->Dish_Tower) = 945,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1245,7 +1245,7 @@
       "BasePayment": 19800000,
       "base_payment": 19800000,
       "requires": "proxy",
-      "_": "300000 kg on a B5 rig over 6.58 km (Galati_Port->Dish_Tower) = 19,800,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "300000 kg on a B5 rig over 5.37 km (Braila_Port->Dish_Tower) = 19,800,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1265,7 +1265,7 @@
       "BasePayment": 10560000,
       "base_payment": 10560000,
       "requires": "proxy",
-      "_": "160000 kg on a B5 rig over 6.58 km (Galati_Port->Dish_Tower) = 10,560,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "160000 kg on a B5 rig over 5.37 km (Braila_Port->Dish_Tower) = 10,560,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1285,7 +1285,7 @@
       "BasePayment": 6600000,
       "base_payment": 6600000,
       "requires": "proxy",
-      "_": "100000 kg on a B5 rig over 6.58 km (Galati_Port->Dish_Tower) = 6,600,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "100000 kg on a B5 rig over 5.37 km (Braila_Port->Dish_Tower) = 6,600,000 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "source_table": "DataAsset/Cargos_Proxy.uasset"
     },
     {
@@ -1340,10 +1340,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 3570279,
+      "BasePayment": 4203937,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "52700 kg on a B5 rig over 7.61 km (Galati_Port->South_Iron_Quary) = 3,570,279 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "52700 kg on a B5 rig over 9.85 km (Braila_Port->South_Iron_Quary) = 4,203,937 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1359,10 +1359,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 3449553,
+      "BasePayment": 4375855,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "52000 kg on a B5 rig over 7.29 km (Braila_Port->Fuel_Rafinery) = 3,449,553 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "52000 kg on a B5 rig over 10.59 km (Braila_Port->South_Fuel_Storage) = 4,375,855 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1378,10 +1378,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 3819568,
+      "BasePayment": 3805742,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "45000 kg on a B5 rig over 9.91 km (Galati_Port->Trap_Cave) = 3,819,568 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "45000 kg on a B5 rig over 9.85 km (Braila_Port->South_Iron_Quary) = 3,805,742 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1416,10 +1416,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 3546404,
+      "BasePayment": 3533567,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "40000 kg on a B5 rig over 9.91 km (Galati_Port->Trap_Cave) = 3,546,404 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "40000 kg on a B5 rig over 9.85 km (Braila_Port->South_Iron_Quary) = 3,533,567 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1435,10 +1435,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 1621859,
+      "BasePayment": 1918032,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "15000 kg on a B5 rig over 7.65 km (Galati_Port->South_Barn) = 1,621,859 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "15000 kg on a B5 rig over 9.96 km (Braila_Port->GrainTrailer) = 1,918,032 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 3
     },
     {
@@ -1454,10 +1454,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 841201,
+      "BasePayment": 1032654,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "8000 kg on a B4 rig over 7.18 km (Galati_Port->GrainTrailer) = 841,201 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "8000 kg on a B4 rig over 9.96 km (Braila_Port->GrainTrailer) = 1,032,654 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 3
     },
     {
@@ -1473,10 +1473,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 370648,
+      "BasePayment": 583229,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "5100 kg on a B3 rig over 4.50 km (Braila_Port->South_Barn) = 370,648 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "5100 kg on a B3 rig over 9.96 km (Braila_Port->GrainTrailer) = 583,229 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 3
     },
     {
@@ -1514,7 +1514,7 @@
       "BasePayment": 4025629,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "40000 kg on a B5 rig over 11.92 km (Galati_Port->Braila_Port) = 4,025,629 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "40000 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 4,025,629 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1530,10 +1530,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 2742993,
+      "BasePayment": 2917891,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "24000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 2,742,993 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "24000 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 2,917,891 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1549,10 +1549,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 2323795,
+      "BasePayment": 2348112,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "17000 kg on a B5 rig over 11.75 km (Braila_Port->South_Depot) = 2,323,795 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "17000 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 2,348,112 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1568,10 +1568,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 2025070,
+      "BasePayment": 2993906,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "25000 kg on a B5 rig over 6.45 km (Galati_Port->Alpine_Rescue_Post) = 2,025,070 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "25000 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 2,993,906 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1587,10 +1587,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 226544,
+      "BasePayment": 335578,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "2000 kg on a B3 rig over 5.48 km (Braila_Port->Alpine_Rescue_Post) = 226,544 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "2000 kg on a B3 rig over 10.52 km (Braila_Port->West_Wood_Cutting) = 335,578 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 1
     },
     {
@@ -1663,10 +1663,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 2170069,
+      "BasePayment": 2039995,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "15000 kg on a B5 rig over 11.92 km (Galati_Port->Braila_Port) = 2,170,069 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "15000 kg on a B5 rig over 10.91 km (Braila_Port->Aerotyne_International) = 2,039,995 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1720,10 +1720,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 458422,
+      "BasePayment": 698022,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "5100 kg on a B4 rig over 3.82 km (Abbandoned_Gas_Station->Braila_Port) = 458,422 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "5100 kg on a B4 rig over 8.42 km (Abbandoned_Gas_Station->South_Depot) = 698,022 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 3
     },
     {
@@ -1739,10 +1739,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 396161,
+      "BasePayment": 405502,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "3400 kg on a B3 rig over 8.11 km (Abbandoned_Gas_Station->Galati_Port) = 396,161 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "3400 kg on a B3 rig over 8.42 km (Abbandoned_Gas_Station->South_Depot) = 405,502 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 2
     },
     {
@@ -1815,10 +1815,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 271496,
+      "BasePayment": 488583,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "3400 kg on a B3 rig over 3.99 km (Trap_Cave->Braila_Port) = 271,496 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "3400 kg on a B3 rig over 11.17 km (Trap_Cave->South_Depot) = 488,583 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 2
     },
     {
@@ -1853,10 +1853,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 819223,
+      "BasePayment": 725943,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "4000 kg on a B4 rig over 6.48 km (Aerotyne_International->Dish_Tower) = 819,223 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "4000 kg on a B4 rig over 11.27 km (Aerotyne_International->Beach_Lumbering) = 725,943 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 2
     },
     {
@@ -1929,10 +1929,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 2601267,
+      "BasePayment": 2574328,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "20000 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 2,601,267 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "20000 kg on a B5 rig over 11.75 km (Braila_Port->South_Depot) = 2,574,328 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -1948,10 +1948,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 1344702,
+      "BasePayment": 1330776,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "10000 kg on a B4 rig over 11.92 km (Galati_Port->Braila_Port) = 1,344,702 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "10000 kg on a B4 rig over 11.75 km (Braila_Port->South_Depot) = 1,330,776 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 3
     },
     {
@@ -1967,10 +1967,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 1432363,
+      "BasePayment": 2574328,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "20000 kg on a B5 rig over 4.32 km (Galati_Port->South_Depot) = 1,432,363 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "20000 kg on a B5 rig over 11.75 km (Braila_Port->South_Depot) = 2,574,328 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 3
     },
     {
@@ -2024,10 +2024,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 363350,
+      "BasePayment": 653034,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "5100 kg on a B3 rig over 4.32 km (Galati_Port->South_Depot) = 363,350 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "5100 kg on a B3 rig over 11.75 km (Braila_Port->South_Depot) = 653,034 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 3
     },
     {
@@ -2043,10 +2043,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 234079,
+      "BasePayment": 340744,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "3400 kg on a B2 rig over 6.62 km (Braila_Port->Valley_Trailer) = 234,079 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "3400 kg on a B2 rig over 11.92 km (Braila_Port->Galati_Port) = 340,744 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 2
     },
     {
@@ -2062,10 +2062,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 1593509,
+      "BasePayment": 2124027,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "14498 kg on a B5 rig over 7.69 km (Galati_Port->Abandoned_Market) = 1,593,509 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "14498 kg on a B5 rig over 11.92 km (Braila_Port->Galati_Port) = 2,124,027 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 4
     },
     {
@@ -2100,10 +2100,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 246064,
+      "BasePayment": 410959,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "5100 kg on a B2 rig over 4.46 km (Galati_Port->Water_Storage) = 246,064 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "5100 kg on a B2 rig over 10.81 km (Braila_Port->East_Water_Store) = 410,959 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 3
     },
     {
@@ -2214,10 +2214,10 @@
       "PaymentSqrtRatioMinCapcity": 0,
       "MinDeliveryDistance": 0,
       "MaxDeliveryDistance": 0,
-      "BasePayment": 165186,
+      "BasePayment": 220180,
       "requires": "proxy",
       "source_table": "DataAsset/Cargos_Proxy.uasset",
-      "_": "1700 kg on a B2 rig over 7.69 km (Galati_Port->Abandoned_Market) = 165,186 flat. Computed by pricing.py \u2014 do not hand-edit.",
+      "_": "1700 kg on a B2 rig over 11.92 km (Braila_Port->Galati_Port) = 220,180 flat. Computed by pricing.py \u2014 do not hand-edit.",
       "VolumeSize": 1
     }
   ],
@@ -2231,6 +2231,1445 @@
         },
         "speed": 1.0,
         "time_seconds": 180.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_20ft_01X": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_40ft_01X": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_20ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "Container_40ft_01X": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "MillitaryCargoP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "SmallTrailerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "UnKnownCargoP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "apcP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "genflatbedP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "rockettruckP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "strickerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "warehouse"
+  },
+  "Fuel_Rafinery": {
+    "label": "Arini Fuel Refinery",
+    "recipes": [
+      {
+        "inputs": {
+          "CrudeOil": 3
+        },
+        "outputs": {
+          "Fuel": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      },
+      {
+        "inputs": {
+          "CrudeOil": 3
+        },
+        "outputs": {
+          "JetFuel": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "CrudeOil": 2
+        },
+        "outputs": {
+          "MoltenPlastic": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "SteelCoilX": 3,
+          "HBeamX": 1,
+          "PlasticPipes_6mX": 1
+        },
+        "outputs": {
+          "Tank_250kLX": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "oiltankP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "OilderrickP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "pipesP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "refinery",
+    "output_storage_cap": 1200
+  },
+  "South_Fuel_Storage": {
+    "label": "Arini Fuel Storage",
+    "recipes": [
+      {
+        "inputs": {
+          "CrudeOil": 4
+        },
+        "outputs": {
+          "Fuel": 6
+        },
+        "speed": 2.0,
+        "time_seconds": 60.0
+      },
+      {
+        "inputs": {
+          "pipesandgenP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "liquid"
+  },
+  "West_Wood_Cutting": {
+    "label": "Arini Wood Cutting",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "Log_Oak_12ft": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "Fuel": 1
+        },
+        "outputs": {
+          "Log_Oak_12ft": 6
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      },
+      {
+        "inputs": {
+          "CovertP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "logsupply",
+    "output_storage_cap": 40
+  },
+  "GrainTrailer": {
+    "label": "Arini Grain Silo",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "CornPalletX": 3,
+          "SunflowerSeedX": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "Fuel": 1
+        },
+        "outputs": {
+          "CornPalletX": 5,
+          "SunflowerSeedX": 6
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "CattleP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "tractorP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "balerplanterP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "harvesterP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "ploughP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "tractorFLP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "farm",
+    "output_storage_cap": 600
+  },
+  "South_Iron_Quary": {
+    "label": "Arini Iron Quarry",
+    "recipes": [
+      {
+        "inputs": {},
+        "outputs": {
+          "IronOreX": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "Fuel": 10,
+          "MeatBoxX": 1
+        },
+        "outputs": {
+          "IronOreX": 6
+        },
+        "speed": 1.5,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "CopperOreX": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      },
+      {
+        "inputs": {
+          "rollerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "DumpBedP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "loggingP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "GravelP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "SoilDumpBedP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "ironP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "BullDP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "Cat797BedP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "diggerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "loaderP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "mine",
+    "output_storage_cap": 800
+  },
+  "Aerotyne_International": {
+    "label": "Arini Aerotyne International",
+    "recipes": [
+      {
+        "inputs": {
+          "PlasticPipes_6mX": 1
+        },
+        "outputs": {
+          "PowerBoxX": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 150
+      },
+      {
+        "inputs": {
+          "JetFuel": 3
+        },
+        "outputs": {
+          "LiquidNitrogen": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 240.0
+      },
+      {
+        "inputs": {
+          "TransformerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "trussesP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Transformer_50MVAXT": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 400.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "PowerLineCableP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "FloodLightP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "TelecomTowerBase1P": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "TelecomTowerBaseP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "WireSpoolP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "teleP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "CraneHub70tP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "construction"
+  },
+  "South_East_Gas_Station": {
+    "label": "Arini Rusty Gas Station",
+    "recipes": [
+      {
+        "inputs": {
+          "Fuel": 4
+        },
+        "outputs": {
+          "TrashBag": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      }
+    ],
+    "template": "liquid",
+    "output_storage_cap": 1400
+  },
+  "East_Water_Store": {
+    "label": "Arini Water Store",
+    "recipes": [
+      {
+        "inputs": {
+          "Water": 3
+        },
+        "outputs": {
+          "GlassBottleBoxX": 6
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "Tank_250kLX": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "DinghyP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "dingysP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "liquid",
+    "output_storage_cap": 1250
+  },
+  "South_Depot": {
+    "label": "Arini South Depot",
+    "recipes": [
+      {
+        "inputs": {
+          "SteelCoilX": 2
+        },
+        "outputs": {
+          "CopperRodCoil_2tX": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "MilitarySupplyBox_01_Empty": 2
+        },
+        "outputs": {
+          "MilitarySupplyBox_01": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "IronOreX": 2
+        },
+        "outputs": {
+          "HBeamX": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      },
+      {
+        "inputs": {
+          "CopperOreX": 3
+        },
+        "outputs": {
+          "CopperRodCoil_2tX": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 180.0
+      },
+      {
+        "inputs": {
+          "pipesP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "tankP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "rollerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "DumpBedP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "LeadDumpBedP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "BridgePartP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "PrefabScaffoldP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "SteelCableP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "EmptyDumpBedP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "LeadP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "ironP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "cinderblocksP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "CementX": 2
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 150.0
+      },
+      {
+        "inputs": {
+          "TreesP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "BigTrailerP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "CraneProtectorP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "CraneWheelP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "PTS797WheelP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "ShunterP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "conbarrier20ftP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "tetrapodP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "conbarrier10ftP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "LimestoneX": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      }
+    ],
+    "template": "warehouse"
+  },
+  "Water_Storage": {
+    "label": "Arini Water Storage",
+    "recipes": [
+      {
+        "inputs": {
+          "Water": 8
+        },
+        "outputs": {
+          "BottlePalleteX": 4
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Water": 12
+        },
+        "speed": 1.0,
+        "time_seconds": 120.0
+      },
+      {
+        "inputs": {
+          "Transformer_20MVAX": 1
+        },
+        "outputs": {
+          "Water": 24
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      },
+      {
+        "inputs": {
+          "Tank_250kLX": 1
+        },
+        "outputs": {
+          "Water": 24
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      }
+    ],
+    "template": "liquid",
+    "output_storage_cap": 1250
+  },
+  "Water_Storage_Depot": {
+    "label": "Arini Water Depot",
+    "recipes": [
+      {
+        "inputs": {
+          "MoltenPlastic": 3
+        },
+        "outputs": {
+          "PlasticPipes_6mX": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      },
+      {
+        "inputs": {
+          "PlasticPipes_6mX": 3
+        },
+        "outputs": {
+          "BoxPallete_01X": 3
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      }
+    ],
+    "template": "warehouse",
+    "output_storage_cap": 1250
+  },
+  "Cheese_Factory": {
+    "label": "Arini Cheese Factory",
+    "recipes": [
+      {
+        "inputs": {
+          "Milk": 4
+        },
+        "outputs": {
+          "CheesePalletX": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      }
+    ],
+    "template": "construction"
+  },
+  "Cheese_Shop": {
+    "label": "Arini Cheese Shop",
+    "recipes": [
+      {
+        "inputs": {
+          "CheeseBoxX": 3
+        },
+        "outputs": {
+          "GroceryBag": 6
+        },
+        "speed": 2.0,
+        "time_seconds": 45.0
+      }
+    ],
+    "template": "supermarket"
+  },
+  "South_Barn": {
+    "label": "Arini South Barn",
+    "recipes": [
+      {
+        "inputs": {
+          "CornPalletX": 1,
+          "SunflowerSeedX": 2
+        },
+        "outputs": {
+          "Milk": 4,
+          "MeatBoxX": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "HempBale": 3
+        },
+        "speed": 1.0,
+        "time_seconds": 240.0
+      },
+      {
+        "inputs": {
+          "Fuel": 1
+        },
+        "outputs": {
+          "HempBale": 5
+        },
+        "speed": 5.0,
+        "time_seconds": 60.0
+      },
+      {
+        "inputs": {
+          "Tank_250kLX": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "CattleP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "tractorP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "forkliftP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      }
+    ],
+    "template": "farm"
+  },
+  "Valley_Trailer": {
+    "label": "Arini Valley Trailer",
+    "recipes": [
+      {
+        "inputs": {
+          "HempPallet": 2
+        },
+        "outputs": {
+          "GiftBox_01": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 180
+      },
+      {
+        "inputs": {
+          "HempBale": 2
+        },
+        "outputs": {
+          "GiftBox_01": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 150.0
+      }
+    ],
+    "template": "farm"
+  },
+  "Braila_Port": {
+    "label": "Arini Braila Port",
+    "recipes": [
+      {
+        "inputs": {
+          "GiftBox_01": 2,
+          "SmallBoxX": 4
+        },
+        "speed": 1.0,
+        "time_seconds": 120
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "TransformerP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "PTS797BodyP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "CraneTrolleyP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "tankP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "pipesP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "bigboatP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "heliP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "CranyP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "CraneTrolleyPT": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 400.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "ShunterP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "pipesandgenP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "diggerP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "tractorFLP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "ploughP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "rockettruckP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "strickerP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "CovertP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "BridgePartP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "FloodLightP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "SteelCableP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "CraneProtectorP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "SmallTrailerP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "DinghyP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "BullD": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "digger": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "loader": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "balerplanter": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "harvester": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "plough": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "tractorFL": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "SteelCoilX": 2,
+          "CopperRodCoil_2tX": 2,
+          "HBeamX": 1,
+          "PlasticPipes_6mX": 1
+        },
+        "outputs": {
+          "Transformer_20MVAX": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "HBeamX": 2
+        },
+        "outputs": {
+          "Transformer_50MVAX": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 400.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "TelecomTowerBaseP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "TelecomTowerBase1P": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "WireSpoolP": 1
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "JetFuel": 2
+        },
+        "outputs": {
+          "MilitarySupplyBox_01_Empty": 2
+        },
+        "speed": 5.0,
+        "time_seconds": 20.0
+      },
+      {
+        "inputs": {
+          "utilitypoleP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_20ft_01X": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {},
+        "outputs": {
+          "Container_40ft_01X": 2
+        },
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "BottlePalleteX": 2
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
       },
       {
         "inputs": {},
@@ -2272,15 +3711,6 @@
         "inputs": {},
         "outputs": {
           "CraneHub70tP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "PTS797BodyP": 1
         },
         "speed": 1.0,
         "time_seconds": 300.0,
@@ -2450,24 +3880,6 @@
         "outputs": {
           "teleP": 1
         },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "conbarrier10ftP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "CraneProtectorP": 1
-        },
-        "outputs": {},
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
@@ -2723,1415 +4135,6 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "Container_20ft_01X": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "Container_40ft_01X": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "Container_20ft_01X": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "Container_40ft_01X": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
-      }
-    ],
-    "template": "warehouse"
-  },
-  "Fuel_Rafinery": {
-    "label": "Arini Fuel Refinery",
-    "recipes": [
-      {
-        "inputs": {
-          "CrudeOil": 3
-        },
-        "outputs": {
-          "Fuel": 4
-        },
-        "speed": 1.0,
-        "time_seconds": 120
-      },
-      {
-        "inputs": {
-          "CrudeOil": 3
-        },
-        "outputs": {
-          "JetFuel": 3
-        },
-        "speed": 1.0,
-        "time_seconds": 180.0
-      },
-      {
-        "inputs": {
-          "CrudeOil": 2
-        },
-        "outputs": {
-          "MoltenPlastic": 3
-        },
-        "speed": 1.0,
-        "time_seconds": 180.0
-      },
-      {
-        "inputs": {
-          "SteelCoilX": 3,
-          "HBeamX": 1,
-          "PlasticPipes_6mX": 1
-        },
-        "outputs": {
-          "Tank_250kLX": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "oiltankP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "OilderrickP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "pipesP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "pipesandgenP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "refinery",
-    "output_storage_cap": 1200
-  },
-  "South_Fuel_Storage": {
-    "label": "Arini Fuel Storage",
-    "recipes": [
-      {
-        "inputs": {
-          "CrudeOil": 4
-        },
-        "outputs": {
-          "Fuel": 6
-        },
-        "speed": 2.0,
-        "time_seconds": 60.0
-      }
-    ],
-    "template": "liquid"
-  },
-  "West_Wood_Cutting": {
-    "label": "Arini Wood Cutting",
-    "recipes": [
-      {
-        "inputs": {},
-        "outputs": {
-          "Log_Oak_12ft": 4
-        },
-        "speed": 1.0,
-        "time_seconds": 120.0
-      },
-      {
-        "inputs": {
-          "Fuel": 1
-        },
-        "outputs": {
-          "Log_Oak_12ft": 6
-        },
-        "speed": 5.0,
-        "time_seconds": 60.0
-      }
-    ],
-    "template": "logsupply",
-    "output_storage_cap": 40
-  },
-  "GrainTrailer": {
-    "label": "Arini Grain Silo",
-    "recipes": [
-      {
-        "inputs": {},
-        "outputs": {
-          "CornPalletX": 3,
-          "SunflowerSeedX": 4
-        },
-        "speed": 1.0,
-        "time_seconds": 120.0
-      },
-      {
-        "inputs": {
-          "Fuel": 1
-        },
-        "outputs": {
-          "CornPalletX": 5,
-          "SunflowerSeedX": 6
-        },
-        "speed": 5.0,
-        "time_seconds": 60.0
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "CattleP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "tractorP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "balerplanterP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "ploughP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "farm",
-    "output_storage_cap": 600
-  },
-  "South_Iron_Quary": {
-    "label": "Arini Iron Quarry",
-    "recipes": [
-      {
-        "inputs": {},
-        "outputs": {
-          "IronOreX": 4
-        },
-        "speed": 1.0,
-        "time_seconds": 120.0
-      },
-      {
-        "inputs": {
-          "Fuel": 10,
-          "MeatBoxX": 1
-        },
-        "outputs": {
-          "IronOreX": 6
-        },
-        "speed": 1.5,
-        "time_seconds": 120.0
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "CopperOreX": 4
-        },
-        "speed": 1.0,
-        "time_seconds": 150.0
-      },
-      {
-        "inputs": {
-          "rollerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "DumpBedP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "loggingP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "BullDP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "diggerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "GravelP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "SoilDumpBedP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "ironP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "mine",
-    "output_storage_cap": 800
-  },
-  "Aerotyne_International": {
-    "label": "Arini Aerotyne International",
-    "recipes": [
-      {
-        "inputs": {
-          "PlasticPipes_6mX": 1
-        },
-        "outputs": {
-          "PowerBoxX": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 150
-      },
-      {
-        "inputs": {
-          "JetFuel": 3
-        },
-        "outputs": {
-          "LiquidNitrogen": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 240.0
-      },
-      {
-        "inputs": {
-          "TransformerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "trussesP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "Transformer_50MVAXT": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 400.0
-      },
-      {
-        "inputs": {
-          "rockettruckP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "TelecomTowerBase1P": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "PowerLineCableP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "WireSpoolP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "FloodLightP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "TelecomTowerBaseP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "construction"
-  },
-  "South_East_Gas_Station": {
-    "label": "Arini Rusty Gas Station",
-    "recipes": [
-      {
-        "inputs": {
-          "Fuel": 4
-        },
-        "outputs": {
-          "TrashBag": 2
-        },
-        "speed": 5.0,
-        "time_seconds": 20.0
-      }
-    ],
-    "template": "liquid",
-    "output_storage_cap": 1400
-  },
-  "East_Water_Store": {
-    "label": "Arini Water Store",
-    "recipes": [
-      {
-        "inputs": {
-          "Water": 3
-        },
-        "outputs": {
-          "GlassBottleBoxX": 6
-        },
-        "speed": 5.0,
-        "time_seconds": 20.0
-      },
-      {
-        "inputs": {
-          "Tank_250kLX": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "DinghyP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "liquid",
-    "output_storage_cap": 1250
-  },
-  "South_Depot": {
-    "label": "Arini South Depot",
-    "recipes": [
-      {
-        "inputs": {
-          "SteelCoilX": 2
-        },
-        "outputs": {
-          "CopperRodCoil_2tX": 2
-        },
-        "speed": 5.0,
-        "time_seconds": 20.0
-      },
-      {
-        "inputs": {
-          "MilitarySupplyBox_01_Empty": 2
-        },
-        "outputs": {
-          "MilitarySupplyBox_01": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 180.0
-      },
-      {
-        "inputs": {
-          "IronOreX": 2
-        },
-        "outputs": {
-          "HBeamX": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 150.0
-      },
-      {
-        "inputs": {
-          "CopperOreX": 3
-        },
-        "outputs": {
-          "CopperRodCoil_2tX": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 180.0
-      },
-      {
-        "inputs": {
-          "pipesP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "tankP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "rollerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "DumpBedP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "LeadDumpBedP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "ShunterP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "strickerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "BridgePartP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "PrefabScaffoldP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "SteelCableP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "PTS797WheelP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "EmptyDumpBedP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "BigTrailerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "LeadP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "ironP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "cinderblocksP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "CementX": 2
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 150.0
-      },
-      {
-        "inputs": {
-          "TreesP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "warehouse"
-  },
-  "Water_Storage": {
-    "label": "Arini Water Storage",
-    "recipes": [
-      {
-        "inputs": {
-          "Water": 8
-        },
-        "outputs": {
-          "BottlePalleteX": 4
-        },
-        "speed": 5.0,
-        "time_seconds": 20.0
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "Water": 12
-        },
-        "speed": 1.0,
-        "time_seconds": 120.0
-      },
-      {
-        "inputs": {
-          "Transformer_20MVAX": 1
-        },
-        "outputs": {
-          "Water": 24
-        },
-        "speed": 5.0,
-        "time_seconds": 60.0
-      },
-      {
-        "inputs": {
-          "Tank_250kLX": 1
-        },
-        "outputs": {
-          "Water": 24
-        },
-        "speed": 5.0,
-        "time_seconds": 60.0
-      },
-      {
-        "inputs": {
-          "dingysP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "liquid",
-    "output_storage_cap": 1250
-  },
-  "Water_Storage_Depot": {
-    "label": "Arini Water Depot",
-    "recipes": [
-      {
-        "inputs": {
-          "MoltenPlastic": 3
-        },
-        "outputs": {
-          "PlasticPipes_6mX": 4
-        },
-        "speed": 1.0,
-        "time_seconds": 150.0
-      },
-      {
-        "inputs": {
-          "PlasticPipes_6mX": 3
-        },
-        "outputs": {
-          "BoxPallete_01X": 3
-        },
-        "speed": 5.0,
-        "time_seconds": 20.0
-      }
-    ],
-    "template": "warehouse",
-    "output_storage_cap": 1250
-  },
-  "Cheese_Factory": {
-    "label": "Arini Cheese Factory",
-    "recipes": [
-      {
-        "inputs": {
-          "Milk": 4
-        },
-        "outputs": {
-          "CheesePalletX": 3
-        },
-        "speed": 1.0,
-        "time_seconds": 120
-      }
-    ],
-    "template": "construction"
-  },
-  "Cheese_Shop": {
-    "label": "Arini Cheese Shop",
-    "recipes": [
-      {
-        "inputs": {
-          "CheeseBoxX": 3
-        },
-        "outputs": {
-          "GroceryBag": 6
-        },
-        "speed": 2.0,
-        "time_seconds": 45.0
-      }
-    ],
-    "template": "supermarket"
-  },
-  "South_Barn": {
-    "label": "Arini South Barn",
-    "recipes": [
-      {
-        "inputs": {
-          "CornPalletX": 1,
-          "SunflowerSeedX": 2
-        },
-        "outputs": {
-          "Milk": 4,
-          "MeatBoxX": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 120
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "HempBale": 3
-        },
-        "speed": 1.0,
-        "time_seconds": 240.0
-      },
-      {
-        "inputs": {
-          "Fuel": 1
-        },
-        "outputs": {
-          "HempBale": 5
-        },
-        "speed": 5.0,
-        "time_seconds": 60.0
-      },
-      {
-        "inputs": {
-          "Tank_250kLX": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "CattleP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "tractorP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "forkliftP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "harvesterP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "tractorFLP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "farm"
-  },
-  "Valley_Trailer": {
-    "label": "Arini Valley Trailer",
-    "recipes": [
-      {
-        "inputs": {
-          "HempPallet": 2
-        },
-        "outputs": {
-          "GiftBox_01": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 180
-      },
-      {
-        "inputs": {
-          "HempBale": 2
-        },
-        "outputs": {
-          "GiftBox_01": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 150.0
-      },
-      {
-        "inputs": {
-          "SmallTrailerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      }
-    ],
-    "template": "farm"
-  },
-  "Braila_Port": {
-    "label": "Arini Braila Port",
-    "recipes": [
-      {
-        "inputs": {
-          "GiftBox_01": 2,
-          "SmallBoxX": 4
-        },
-        "speed": 1.0,
-        "time_seconds": 120
-      },
-      {
-        "inputs": {
-          "Transformer_20MVAX": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "Transformer_50MVAX": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "TransformerP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "PTS797BodyP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "CraneTrolleyP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "tankP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "pipesP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "bigboatP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "heliP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "heliP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "CranyP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "CraneTrolleyPT": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 400.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "ShunterP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "pipesandgenP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "diggerP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "tractorFLP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "ploughP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "rockettruckP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "strickerP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "CovertP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "BridgePartP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "conbarrier20ftP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "tetrapodP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "FloodLightP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "SteelCableP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "CraneProtectorP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "CraneWheelP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "SmallTrailerP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "DinghyP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "BullD": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "digger": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "loader": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "balerplanter": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "harvester": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "plough": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "tractorFL": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "SteelCoilX": 2,
-          "CopperRodCoil_2tX": 2,
-          "HBeamX": 1,
-          "PlasticPipes_6mX": 1
-        },
-        "outputs": {
-          "Transformer_20MVAX": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "HBeamX": 2
-        },
-        "outputs": {
-          "Transformer_50MVAX": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 400.0
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "TelecomTowerBaseP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "TelecomTowerBase1P": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "WireSpoolP": 1
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "JetFuel": 2
-        },
-        "outputs": {
-          "MilitarySupplyBox_01_Empty": 2
-        },
-        "speed": 5.0,
-        "time_seconds": 20.0
-      },
-      {
-        "inputs": {
-          "utilitypoleP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "CraneHub70tP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "TelecomTowerP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "apcP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "teleP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "Container_20ft_01X": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {},
-        "outputs": {
-          "Container_40ft_01X": 2
-        },
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "Container_20ft_01X": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "Container_40ft_01X": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
-      },
-      {
-        "inputs": {
-          "BottlePalleteX": 2
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0
       }
     ],
     "template": "warehouse"
@@ -4215,24 +4218,6 @@
       {
         "inputs": {
           "stackjunkcarsP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "Cat797BedP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "loaderP": 1
         },
         "outputs": {},
         "speed": 1.0,
@@ -4371,6 +4356,14 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "JetFuel": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
       }
     ],
     "template": "liquid"
@@ -4445,28 +4438,10 @@
         "requires": "proxy"
       },
       {
-        "inputs": {
-          "genflatbedP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
         "inputs": {},
         "outputs": {
           "MrBunsCarPartsP": 1
         },
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "UnKnownCargoP": 1
-        },
-        "outputs": {},
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
@@ -4574,6 +4549,39 @@
         "speed": 1.0,
         "time_seconds": 300.0,
         "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "PowerLineCableP": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0,
+        "requires": "proxy"
+      },
+      {
+        "inputs": {
+          "LiquidNitrogen": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "CopperOreX": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
+      },
+      {
+        "inputs": {
+          "IronOreX": 1
+        },
+        "outputs": {},
+        "speed": 1.0,
+        "time_seconds": 300.0
       }
     ],
     "template": "logsupply"
@@ -5121,15 +5129,6 @@
       },
       {
         "inputs": {
-          "PowerLineCableP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
           "Container_20ft_01X": 1
         },
         "outputs": {},
@@ -5170,24 +5169,6 @@
         },
         "speed": 1.0,
         "time_seconds": 120.0
-      },
-      {
-        "inputs": {
-          "MillitaryCargoP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
-      },
-      {
-        "inputs": {
-          "CovertP": 1
-        },
-        "outputs": {},
-        "speed": 1.0,
-        "time_seconds": 300.0,
-        "requires": "proxy"
       }
     ],
     "template": "warehouse"
