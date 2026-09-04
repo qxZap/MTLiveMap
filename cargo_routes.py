@@ -90,12 +90,24 @@ def collect(layer: str | None = None):
                     continue
                 km = E.km(co, a, b)
                 pay = int(base + perkm * km)
+                # Straight-line km is not the journey. Getting a heavy load up
+                # to Dorna means the long way round and then the dangerous
+                # road, which is why those points carry a difficulty and why
+                # pricing pays more for them. The detector never read it, so
+                # the island's best-designed hauls looked like its worst
+                # shortcuts. Judge the rate on what the terrain does NOT
+                # explain.
+                diff = float((dps.get(b) or {}).get("difficulty", 1.0))
+                terrain = P.terrain_mult(diff, kg)
                 rows.append({
                     "cargo": name,
                     "from": label(a), "to": label(b),
                     "km": round(km, 2), "kg": kg, "pay": pay,
                     "store": storage(b),
                     "perkm": int(pay / km) if km >= 0.05 else None,
+                    # what the rate would be on flat ground
+                    "flatkm": int(pay / km / terrain) if km >= 0.05 else None,
+                    "difficulty": round(diff, 2),
                     "custom": name in custom,
                 })
     # A loop is two points that feed each other. Flat pay plus a short loop is
@@ -107,8 +119,8 @@ def collect(layer: str | None = None):
         # runs bill 3,000,000/km on purpose, because getting 300 t up a 40
         # degree slope is the point. Only prices the MODEL produced are judged.
         hand = "base_payment" in (custom.get(r["cargo"]) or {})
-        r["abuse"] = bool(not hand and r["perkm"]
-                          and r["perkm"] > ABUSE_RATE and r["km"] < NEAR_KM)
+        r["abuse"] = bool(not hand and r["flatkm"]
+                          and r["flatkm"] > ABUSE_RATE and r["km"] < NEAR_KM)
     rows.sort(key=lambda r: -r["pay"])
 
     # Trade that leaves or enters the island has only one end here, so it forms
